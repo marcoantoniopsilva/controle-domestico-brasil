@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -13,27 +14,33 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simular um login bem-sucedido
-    setTimeout(() => {
-      // Mock de login - seria substituído por autenticação real
-      if (email && senha) {
-        // Login bem-sucedido
-        localStorage.setItem("usuarioLogado", JSON.stringify({ 
-          id: "1", 
-          nome: email.split("@")[0], 
-          email 
-        }));
-        toast.success("Login realizado com sucesso!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Por favor, preencha todos os campos");
-      }
+
+    // Autenticação com Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (error) {
+      toast.error("E-mail ou senha inválidos: " + error.message);
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    if (!data?.session) {
+      toast.error("Falha ao autenticar.");
+      setIsLoading(false);
+      return;
+    }
+
+    toast.success("Login realizado com sucesso!");
+    // Salva sessão e usuário no localStorage
+    localStorage.setItem("supabaseSession", JSON.stringify(data.session));
+    localStorage.setItem("usuarioLogado", JSON.stringify({ 
+      id: data.user.id,
+      nome: data.user.email?.split("@")[0],
+      email: data.user.email
+    }));
+    setIsLoading(false);
+    navigate("/dashboard");
   };
 
   return (

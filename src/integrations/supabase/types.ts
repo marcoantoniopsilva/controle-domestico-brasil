@@ -24,6 +24,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lancamentos: {
+        Row: {
+          categoria: string
+          created_at: string
+          data: string
+          descricao: string | null
+          id: number
+          parcelas: number
+          quem_gastou: string
+          tipo: string
+          usuario_id: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          data: string
+          descricao?: string | null
+          id?: number
+          parcelas?: number
+          quem_gastou: string
+          tipo: string
+          usuario_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          id?: number
+          parcelas?: number
+          quem_gastou?: string
+          tipo?: string
+          usuario_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

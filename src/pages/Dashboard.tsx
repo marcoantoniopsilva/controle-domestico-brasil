@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import AddTransacaoForm from "@/components/financas/AddTransacaoForm";
 import GraficoGastosDiarios from "@/components/financas/GraficoGastosDiarios";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 import { categorias as categoriasIniciais, calcularCicloAtual, formatarMoeda } from "@/utils/financas";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,30 +21,50 @@ const Dashboard = () => {
   const [categorias, setCategorias] = useState<Categoria[]>(categoriasIniciais);
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   const [activeTab, setActiveTab] = useState("resumo");
-  
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    // Verificar se existe um usuário logado
-    const usuarioLogadoJSON = localStorage.getItem("usuarioLogado");
-    if (!usuarioLogadoJSON) {
-      navigate("/login");
-      return;
-    }
-    
-    const usuarioLogado = JSON.parse(usuarioLogadoJSON);
-    setUsuario(usuarioLogado);
-    
-    // Carregar transações do localStorage
-    const transacoesJSON = localStorage.getItem("transacoes");
-    if (transacoesJSON) {
-      const transacoesCarregadas = JSON.parse(transacoesJSON);
-      setTransacoes(transacoesCarregadas.map((t: any) => ({
+    // Verificar autenticação Supabase ao invés de localStorage
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        navigate("/login");
+        return;
+      }
+      setUsuario({
+        id: session.user.id,
+        nome: session.user.email?.split("@")[0],
+        email: session.user.email
+      });
+      // Carrega transações do Supabase
+      fetchTransacoes();
+    });
+    // eslint-disable-next-line
+  }, [navigate]);
+
+  // Buscar transações do banco
+  const fetchTransacoes = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("lancamentos")
+      .select("*");
+    if (error) {
+      toast.error("Erro ao carregar lançamentos: " + error.message);
+    } else {
+      setTransacoes((data || []).map((t: any) => ({
         ...t,
-        data: new Date(t.data)
+        id: t.id.toString(),
+        data: new Date(t.data),
+        categoria: t.categoria,
+        valor: Number(t.valor),
+        parcelas: t.parcelas,
+        quemGastou: t.quem_gastou,
+        descricao: t.descricao,
+        tipo: t.tipo,
       })));
     }
-  }, [navigate]);
-  
-  // Atualizar categorias quando as transações mudarem
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (transacoes.length > 0) {
       const categoriasAtualizadas = [...categoriasIniciais];
@@ -64,45 +84,45 @@ const Dashboard = () => {
       setCategorias(categoriasAtualizadas);
     }
   }, [transacoes, cicloAtual]);
-  
-  // Salvar transações no localStorage quando mudarem
-  useEffect(() => {
-    localStorage.setItem("transacoes", JSON.stringify(transacoes));
-  }, [transacoes]);
-  
-  const handleAddTransacao = (novaTransacao: Omit<Transacao, "id">) => {
-    const id = Date.now().toString();
-    const transacaoCompleta = { ...novaTransacao, id };
-    
-    setTransacoes(prev => [...prev, transacaoCompleta]);
-    
-    // Se for uma transação parcelada, criar as parcelas futuras
-    if (novaTransacao.parcelas > 1) {
-      const valorParcela = novaTransacao.valor / novaTransacao.parcelas;
-      
-      const parcelasFuturas = Array.from({ length: novaTransacao.parcelas - 1 }, (_, i) => {
-        const dataOriginal = new Date(novaTransacao.data);
-        const dataParcela = new Date(dataOriginal);
-        dataParcela.setMonth(dataOriginal.getMonth() + i + 1);
-        
-        return {
-          ...novaTransacao,
-          id: `${id}-parcela-${i+2}`,
-          data: dataParcela,
-          valor: valorParcela,
-          descricao: novaTransacao.descricao ? `${novaTransacao.descricao} (Parcela ${i+2}/${novaTransacao.parcelas})` : `Parcela ${i+2}/${novaTransacao.parcelas}`
-        };
-      });
-      
-      setTransacoes(prev => [...prev, ...parcelasFuturas]);
+
+  // Salvar transações no localStorage foi removido (agora é tudo no Supabase)
+
+  const handleAddTransacao = async (novaTransacao: Omit<Transacao, "id">) => {
+    // Adiciona nova transação ao Supabase
+    const usuarioLogado = usuario;
+    const insertObj: any = {
+      data: novaTransacao.data,
+      categoria: novaTransacao.categoria,
+      valor: novaTransacao.valor,
+      parcelas: novaTransacao.parcelas,
+      quem_gastou: novaTransacao.quemGastou,
+      descricao: novaTransacao.descricao || null,
+      tipo: novaTransacao.tipo,
+      usuario_id: usuarioLogado.id,
+    };
+    const { data, error } = await supabase.from("lancamentos").insert([insertObj]);
+    if (error) {
+      toast.error("Erro ao adicionar transação: " + error.message);
+    } else {
+      fetchTransacoes();
+      toast.success("Transação registrada!");
     }
   };
-  
-  const handleExcluirTransacao = (id: string) => {
-    setTransacoes(prev => prev.filter(t => t.id !== id));
-    toast.success("Transação excluída com sucesso!");
+
+  const handleExcluirTransacao = async (id: string) => {
+    // Excluir somente se for do usuário
+    const { error } = await supabase
+      .from("lancamentos")
+      .delete()
+      .eq("id", Number(id));
+    if (error) {
+      toast.error("Erro ao excluir transação: " + error.message);
+    } else {
+      fetchTransacoes();
+      toast.success("Transação excluída com sucesso!");
+    }
   };
-  
+
   // Filtrar transações para o ciclo atual
   const transacoesCicloAtual = transacoes.filter(t => {
     const data = new Date(t.data);
@@ -125,11 +145,11 @@ const Dashboard = () => {
   const transacoesOrdenadas = [...transacoesCicloAtual].sort(
     (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
   );
-  
+  // Outros códigos permanecem o mesmo, exceto remoção de uso do localStorage
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -216,6 +236,7 @@ const Dashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
+        {isLoading && <div className="text-center py-6">Carregando dados...</div>}
       </main>
     </div>
   );

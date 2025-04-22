@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignUpForm = () => {
   const [nome, setNome] = useState("");
@@ -15,33 +16,44 @@ const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (senha !== confirmarSenha) {
       toast.error("As senhas não coincidem");
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // Simular um cadastro bem-sucedido
-    setTimeout(() => {
-      // Mock de cadastro - seria substituído por autenticação real
-      if (nome && email && senha) {
-        // Cadastro bem-sucedido
-        localStorage.setItem("usuarioLogado", JSON.stringify({ 
-          id: "1", 
-          nome,
-          email 
-        }));
-        toast.success("Cadastro realizado com sucesso!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Por favor, preencha todos os campos");
+
+    // Cadastro supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        data: {
+          nome: nome,
+        }
       }
+    });
+
+    if (error || !data.user) {
+      toast.error(error?.message ?? "Erro ao cadastrar");
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+
+    // Cadastro bem-sucedido
+    localStorage.setItem("usuarioLogado", JSON.stringify({ 
+      id: data.user.id, 
+      nome: nome || data.user.email?.split("@")[0],
+      email: data.user.email 
+    }));
+    localStorage.setItem("supabaseSession", JSON.stringify(data.session));
+
+    toast.success("Cadastro realizado com sucesso!");
+    setIsLoading(false);
+    navigate("/dashboard");
   };
 
   return (
