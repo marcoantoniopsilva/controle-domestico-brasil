@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Transacao, CicloFinanceiro } from "@/types";
 import { format, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -77,8 +76,6 @@ const GraficoGastosDiarios: React.FC<GraficoGastosDiariosProps> = ({
                 radius={[4, 4, 0, 0]}
                 fill={COLOR_NORMAL}
                 fillOpacity={0.9}
-                // Preenche a barra de acordo com o excedente
-                // Usar callback para cor exige uso de cell, não fill direto!
               >
                 {dadosDiarios.map((entry, index) => (
                   <Cell
