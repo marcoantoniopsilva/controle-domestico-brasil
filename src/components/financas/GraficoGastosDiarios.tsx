@@ -12,6 +12,11 @@ interface GraficoGastosDiariosProps {
   orcamentoTotal: number;
 }
 
+// Define colors for the chart
+const COLOR_NORMAL = "#3B82F6"; // blue
+const COLOR_EXCESS = "#EF4444"; // red
+const COLOR_LIMIT = "#10B981"; // green
+
 const GraficoGastosDiarios: React.FC<GraficoGastosDiariosProps> = ({ 
   transacoes, 
   ciclo,
@@ -34,13 +39,12 @@ const GraficoGastosDiarios: React.FC<GraficoGastosDiariosProps> = ({
       })
       .reduce((acc, t) => acc + Math.abs(t.valor), 0);
     
-    const statusColor = gastosNoDia > limiteDiario ? "#EF4444" : "#3B82F6";
-    
     return {
       data: format(dia, 'dd/MM'),
       gastos: gastosNoDia,
       limite: limiteDiario,
-      statusColor
+      // Store the status for later use in custom color function
+      excedido: gastosNoDia > limiteDiario
     };
   });
   
@@ -73,12 +77,20 @@ const GraficoGastosDiarios: React.FC<GraficoGastosDiariosProps> = ({
                 dataKey="gastos" 
                 name="Gastos" 
                 radius={[4, 4, 0, 0]}
-                fill={(entry: any) => entry.statusColor} 
+                fill={COLOR_NORMAL}
+                // Use a function that returns a string, not another function
+                fillOpacity={0.9}
+                // Use a Bar's props.fill to handle conditional colors
+                fill={(data) => {
+                  // TypeScript requires this type assertion
+                  const entry = data as any;
+                  return entry.excedido ? COLOR_EXCESS : COLOR_NORMAL;
+                }}
               />
               <Bar 
                 dataKey="limite" 
                 name="Limite Diário" 
-                fill="#10B981" 
+                fill={COLOR_LIMIT} 
                 fillOpacity={0.3}
                 radius={[4, 4, 0, 0]}
               />
