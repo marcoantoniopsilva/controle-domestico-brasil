@@ -4,13 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NavBar from "@/components/layout/NavBar";
 import ResumoOrcamento from "@/components/financas/ResumoOrcamento";
 import { categorias } from "@/utils/financas";
-import SeletorCiclo from "@/components/financas/SeletorCiclo";
-import { useState } from "react";
-import { CicloFinanceiro } from "@/types";
 
 const Home = () => {
-  const [cicloSelecionado, setCicloSelecionado] = useState<CicloFinanceiro | null>(null);
-
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
@@ -43,11 +38,6 @@ const Home = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Relatórios</h2>
-            
-            <div className="mb-8 flex justify-center">
-              <SeletorCiclo onCicloChange={setCicloSelecionado} />
-            </div>
-
             <div className="grid grid-cols-1 gap-8">
               <Card>
                 <CardHeader>

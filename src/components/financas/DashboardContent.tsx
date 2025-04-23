@@ -7,6 +7,7 @@ import ResumoOrcamento from "./ResumoOrcamento";
 import ListaTransacoes from "./ListaTransacoes";
 import GraficoGastosDiarios from "./GraficoGastosDiarios";
 import ProgressoCategoria from "./ProgressoCategoria";
+import SeletorCiclo from "./SeletorCiclo";
 import { CicloFinanceiro } from "@/types";
 
 interface DashboardContentProps {
@@ -19,6 +20,7 @@ interface DashboardContentProps {
   saldo: number;
   orcamentoTotal: number;
   isLoading?: boolean;
+  onCicloChange: (ciclo: CicloFinanceiro) => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -30,12 +32,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   totalDespesas,
   saldo,
   orcamentoTotal,
-  isLoading
+  isLoading,
+  onCicloChange
 }) => {
   const [activeTab, setActiveTab] = useState("resumo");
 
   return (
     <div className="space-y-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Dashboard Financeiro</h2>
+        <SeletorCiclo onCicloChange={onCicloChange} />
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CardResumo titulo="Receitas" valor={totalReceitas} tipo="primary" />
         <CardResumo titulo="Despesas" valor={totalDespesas} tipo="destructive" />

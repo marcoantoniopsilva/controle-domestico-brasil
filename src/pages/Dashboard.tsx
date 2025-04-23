@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -157,13 +156,15 @@ const Dashboard = () => {
     }
   };
 
-  // Filtrar transações para o ciclo atual
+  const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
+    setCicloAtual(novoCiclo);
+  };
+
   const transacoesCicloAtual = transacoes.filter(t => {
     const data = new Date(t.data);
     return data >= cicloAtual.inicio && data <= cicloAtual.fim;
   }).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
   
-  // Calcular totais
   const totalReceitas = transacoesCicloAtual
     .filter(t => t.valor > 0)
     .reduce((acc, t) => acc + t.valor, 0);
@@ -221,6 +222,7 @@ const Dashboard = () => {
           saldo={saldo}
           orcamentoTotal={orcamentoTotal}
           isLoading={isLoading}
+          onCicloChange={handleCicloChange}
         />
       </main>
     </div>
