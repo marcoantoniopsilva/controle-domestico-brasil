@@ -6,7 +6,7 @@ export const categorias: Categoria[] = [
   { nome: "Supermercado", orcamento: 2000, gastosAtuais: 0 },
   { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0 },
   { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0 },
-  { nome: "Farmácia", orcamento: 1000, gastosAtuais: 0 },
+  { nome: "Farmácia", orcamento: 600, gastosAtuais: 0 },
   { nome: "Compras parceladas", orcamento: 1800, gastosAtuais: 0 },
   { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0 },
   { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0 },
@@ -15,6 +15,8 @@ export const categorias: Categoria[] = [
   { nome: "Poupança/investimento", orcamento: 100, gastosAtuais: 0 },
   { nome: "Doações", orcamento: 100, gastosAtuais: 0 },
   { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0 },
+  { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0 },
+  { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0 },
   { nome: "Outros", orcamento: 500, gastosAtuais: 0 },
 ];
 

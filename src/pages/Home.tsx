@@ -1,14 +1,21 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NavBar from "@/components/layout/NavBar";
+import ResumoOrcamento from "@/components/financas/ResumoOrcamento";
+import { categorias } from "@/utils/financas";
+import SeletorCiclo from "@/components/financas/SeletorCiclo";
+import { useState } from "react";
+import { CicloFinanceiro } from "@/types";
 
 const Home = () => {
+  const [cicloSelecionado, setCicloSelecionado] = useState<CicloFinanceiro | null>(null);
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
       
-      <main className="flex-1">
+      <main className="flex-1 container mx-auto px-4">
         {/* Hero Section */}
         <section className="bg-gradient-to-b from-white to-gray-50 py-20">
           <div className="container mx-auto px-4 text-center">
@@ -28,6 +35,28 @@ const Home = () => {
                   Já tenho uma conta
                 </Button>
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Relatórios Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Relatórios</h2>
+            
+            <div className="mb-8 flex justify-center">
+              <SeletorCiclo onCicloChange={setCicloSelecionado} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Orçamento por Categorias</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResumoOrcamento categorias={categorias} />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
