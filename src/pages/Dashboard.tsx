@@ -1,19 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NavBar from "@/components/layout/NavBar";
-import ProgressoCategoria from "@/components/financas/ProgressoCategoria";
-import ResumoOrcamento from "@/components/financas/ResumoOrcamento";
-import ListaTransacoes from "@/components/financas/ListaTransacoes";
 import AddTransacaoForm from "@/components/financas/AddTransacaoForm";
-import GraficoGastosDiarios from "@/components/financas/GraficoGastosDiarios";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
-import { categorias as categoriasIniciais, calcularCicloAtual, formatarMoeda } from "@/utils/financas";
+import { categorias as categoriasIniciais, calcularCicloAtual } from "@/utils/financas";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardContent from "@/components/financas/DashboardContent";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,7 +17,6 @@ const Dashboard = () => {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>(categoriasIniciais);
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
-  const [activeTab, setActiveTab] = useState("resumo");
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -40,13 +35,11 @@ const Dashboard = () => {
         email: session.user.email
       });
       
-      // Carrega transações do Supabase
       fetchTransacoes();
     };
     
     checkAuth();
     
-    // Monitorar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_OUT') {
@@ -58,7 +51,6 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Buscar transações do banco
   const fetchTransacoes = async () => {
     setIsLoading(true);
     
@@ -94,7 +86,6 @@ const Dashboard = () => {
     if (transacoes.length > 0) {
       const categoriasAtualizadas = [...categoriasIniciais];
       
-      // Filtrar transações para o ciclo atual e calcular gastos por categoria
       transacoes.forEach(transacao => {
         const dataTransacao = new Date(transacao.data);
         
@@ -117,7 +108,6 @@ const Dashboard = () => {
     }
     
     try {
-      // Adiciona nova transação ao Supabase
       const insertObj = {
         data: novaTransacao.data.toISOString().split('T')[0],
         categoria: novaTransacao.categoria,
@@ -148,7 +138,6 @@ const Dashboard = () => {
 
   const handleExcluirTransacao = async (id: string) => {
     try {
-      // Excluir transação
       const { error } = await supabase
         .from("lancamentos")
         .delete()
@@ -172,9 +161,9 @@ const Dashboard = () => {
   const transacoesCicloAtual = transacoes.filter(t => {
     const data = new Date(t.data);
     return data >= cicloAtual.inicio && data <= cicloAtual.fim;
-  });
+  }).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
   
-  // Calcular total de receitas e despesas
+  // Calcular totais
   const totalReceitas = transacoesCicloAtual
     .filter(t => t.valor > 0)
     .reduce((acc, t) => acc + t.valor, 0);
@@ -185,11 +174,6 @@ const Dashboard = () => {
     
   const saldo = totalReceitas - totalDespesas;
   const orcamentoTotal = categorias.reduce((acc, cat) => acc + cat.orcamento, 0);
-  
-  // Ordenar transações por data (mais recente primeiro)
-  const transacoesOrdenadas = [...transacoesCicloAtual].sort(
-    (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
-  );
 
   if (isLoading && !usuario) {
     return (
@@ -227,72 +211,17 @@ const Dashboard = () => {
           </Dialog>
         </div>
         
-        {/* Cartões de resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 border">
-            <p className="text-sm text-muted-foreground">Receitas</p>
-            <p className="text-2xl font-bold text-primary">{formatarMoeda(totalReceitas)}</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6 border">
-            <p className="text-sm text-muted-foreground">Despesas</p>
-            <p className="text-2xl font-bold text-destructive">{formatarMoeda(totalDespesas)}</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6 border">
-            <p className="text-sm text-muted-foreground">Saldo</p>
-            <p className={`text-2xl font-bold ${saldo >= 0 ? "text-primary" : "text-destructive"}`}>
-              {formatarMoeda(saldo)}
-            </p>
-          </div>
-        </div>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="resumo">Resumo</TabsTrigger>
-            <TabsTrigger value="categorias">Categorias</TabsTrigger>
-            <TabsTrigger value="transacoes">Transações</TabsTrigger>
-            <TabsTrigger value="graficos">Gráficos</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="resumo" className="space-y-4">
-            <ResumoOrcamento categorias={categorias} />
-            <ListaTransacoes 
-              transacoes={transacoesOrdenadas.slice(0, 5)} 
-              onExcluir={handleExcluirTransacao}
-            />
-          </TabsContent>
-          
-          <TabsContent value="categorias">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {categorias.map((categoria) => (
-                <ProgressoCategoria 
-                  key={categoria.nome} 
-                  categoria={categoria} 
-                />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="transacoes">
-            <ListaTransacoes 
-              transacoes={transacoesOrdenadas} 
-              onExcluir={handleExcluirTransacao}
-            />
-          </TabsContent>
-          
-          <TabsContent value="graficos">
-            <div className="space-y-6">
-              <GraficoGastosDiarios 
-                transacoes={transacoesCicloAtual} 
-                ciclo={cicloAtual} 
-                orcamentoTotal={orcamentoTotal}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        {isLoading && <div className="text-center py-6">Carregando dados...</div>}
+        <DashboardContent 
+          transacoes={transacoesCicloAtual}
+          categorias={categorias}
+          cicloAtual={cicloAtual}
+          onExcluirTransacao={handleExcluirTransacao}
+          totalReceitas={totalReceitas}
+          totalDespesas={totalDespesas}
+          saldo={saldo}
+          orcamentoTotal={orcamentoTotal}
+          isLoading={isLoading}
+        />
       </main>
     </div>
   );
