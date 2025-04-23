@@ -6,6 +6,7 @@ import CardResumo from "./CardResumo";
 import ResumoOrcamento from "./ResumoOrcamento";
 import ListaTransacoes from "./ListaTransacoes";
 import GraficoGastosDiarios from "./GraficoGastosDiarios";
+import ProgressoCategoria from "./ProgressoCategoria";
 import { CicloFinanceiro } from "@/types";
 
 interface DashboardContentProps {
