@@ -18,29 +18,32 @@ const LoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Autenticação com Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
-    if (error) {
-      toast.error("E-mail ou senha inválidos: " + error.message);
-      setIsLoading(false);
-      return;
-    }
-    if (!data?.session) {
-      toast.error("Falha ao autenticar.");
-      setIsLoading(false);
-      return;
-    }
+    try {
+      // Autenticação com Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password: senha 
+      });
+      
+      if (error) {
+        toast.error("E-mail ou senha inválidos: " + error.message);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!data?.session) {
+        toast.error("Falha ao autenticar.");
+        setIsLoading(false);
+        return;
+      }
 
-    toast.success("Login realizado com sucesso!");
-    // Salva sessão e usuário no localStorage
-    localStorage.setItem("supabaseSession", JSON.stringify(data.session));
-    localStorage.setItem("usuarioLogado", JSON.stringify({ 
-      id: data.user.id,
-      nome: data.user.email?.split("@")[0],
-      email: data.user.email
-    }));
-    setIsLoading(false);
-    navigate("/dashboard");
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error("Erro ao fazer login: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

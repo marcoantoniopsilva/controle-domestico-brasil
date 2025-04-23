@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,47 +23,71 @@ const Dashboard = () => {
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   const [activeTab, setActiveTab] = useState("resumo");
   const [isLoading, setIsLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Verificar autenticação Supabase ao invés de localStorage
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session?.user) {
         navigate("/login");
         return;
       }
+      
       setUsuario({
         id: session.user.id,
         nome: session.user.email?.split("@")[0],
         email: session.user.email
       });
+      
       // Carrega transações do Supabase
       fetchTransacoes();
-    });
-    // eslint-disable-next-line
+    };
+    
+    checkAuth();
+    
+    // Monitorar mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          navigate("/login");
+        }
+      }
+    );
+    
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   // Buscar transações do banco
   const fetchTransacoes = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("lancamentos")
-      .select("*");
-    if (error) {
-      toast.error("Erro ao carregar lançamentos: " + error.message);
-    } else {
-      setTransacoes((data || []).map((t: any) => ({
-        ...t,
-        id: t.id.toString(),
-        data: new Date(t.data),
-        categoria: t.categoria,
-        valor: Number(t.valor),
-        parcelas: t.parcelas,
-        quemGastou: t.quem_gastou,
-        descricao: t.descricao,
-        tipo: t.tipo,
-      })));
+    
+    try {
+      const { data, error } = await supabase
+        .from("lancamentos")
+        .select("*");
+        
+      if (error) {
+        console.error("Erro ao carregar lançamentos:", error);
+        toast.error("Erro ao carregar lançamentos: " + error.message);
+      } else {
+        setTransacoes((data || []).map((t: any) => ({
+          id: t.id.toString(),
+          data: new Date(t.data),
+          categoria: t.categoria,
+          valor: Number(t.valor),
+          parcelas: t.parcelas,
+          quemGastou: t.quem_gastou,
+          descricao: t.descricao,
+          tipo: t.tipo,
+        })));
+      }
+    } catch (error: any) {
+      console.error("Erro ao buscar transações:", error);
+      toast.error("Erro ao buscar transações: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -85,41 +110,61 @@ const Dashboard = () => {
     }
   }, [transacoes, cicloAtual]);
 
-  // Salvar transações no localStorage foi removido (agora é tudo no Supabase)
-
   const handleAddTransacao = async (novaTransacao: Omit<Transacao, "id">) => {
-    // Adiciona nova transação ao Supabase
-    const usuarioLogado = usuario;
-    const insertObj: any = {
-      data: novaTransacao.data,
-      categoria: novaTransacao.categoria,
-      valor: novaTransacao.valor,
-      parcelas: novaTransacao.parcelas,
-      quem_gastou: novaTransacao.quemGastou,
-      descricao: novaTransacao.descricao || null,
-      tipo: novaTransacao.tipo,
-      usuario_id: usuarioLogado.id,
-    };
-    const { data, error } = await supabase.from("lancamentos").insert([insertObj]);
-    if (error) {
+    if (!usuario) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+    
+    try {
+      // Adiciona nova transação ao Supabase
+      const insertObj = {
+        data: novaTransacao.data.toISOString().split('T')[0],
+        categoria: novaTransacao.categoria,
+        valor: novaTransacao.valor,
+        parcelas: novaTransacao.parcelas,
+        quem_gastou: novaTransacao.quemGastou,
+        descricao: novaTransacao.descricao || null,
+        tipo: novaTransacao.tipo,
+        usuario_id: usuario.id,
+      };
+      
+      const { error } = await supabase.from("lancamentos").insert([insertObj]);
+      
+      if (error) {
+        console.error("Erro ao adicionar transação:", error);
+        toast.error("Erro ao adicionar transação: " + error.message);
+        return;
+      }
+      
+      await fetchTransacoes();
+      toast.success("Transação registrada com sucesso!");
+      setDialogOpen(false);
+    } catch (error: any) {
+      console.error("Erro ao adicionar transação:", error);
       toast.error("Erro ao adicionar transação: " + error.message);
-    } else {
-      fetchTransacoes();
-      toast.success("Transação registrada!");
     }
   };
 
   const handleExcluirTransacao = async (id: string) => {
-    // Excluir somente se for do usuário
-    const { error } = await supabase
-      .from("lancamentos")
-      .delete()
-      .eq("id", Number(id));
-    if (error) {
-      toast.error("Erro ao excluir transação: " + error.message);
-    } else {
-      fetchTransacoes();
+    try {
+      // Excluir transação
+      const { error } = await supabase
+        .from("lancamentos")
+        .delete()
+        .eq("id", Number(id));
+        
+      if (error) {
+        console.error("Erro ao excluir transação:", error);
+        toast.error("Erro ao excluir transação: " + error.message);
+        return;
+      }
+      
+      await fetchTransacoes();
       toast.success("Transação excluída com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao excluir transação:", error);
+      toast.error("Erro ao excluir transação: " + error.message);
     }
   };
 
@@ -145,7 +190,17 @@ const Dashboard = () => {
   const transacoesOrdenadas = [...transacoesCicloAtual].sort(
     (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
   );
-  // Outros códigos permanecem o mesmo, exceto remoção de uso do localStorage
+
+  if (isLoading && !usuario) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Carregando...</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -159,7 +214,7 @@ const Dashboard = () => {
             </p>
           </div>
           
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>Adicionar Transação</Button>
             </DialogTrigger>
@@ -236,6 +291,7 @@ const Dashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
+        
         {isLoading && <div className="text-center py-6">Carregando dados...</div>}
       </main>
     </div>

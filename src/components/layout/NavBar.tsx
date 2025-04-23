@@ -1,19 +1,40 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const NavBar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    const usuarioLogado = localStorage.getItem("usuarioLogado");
-    return !!usuarioLogado;
-  });
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   
-  const handleLogout = () => {
-    localStorage.removeItem("usuarioLogado");
+  useEffect(() => {
+    // Verificar session do Supabase
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
+    
+    checkSession();
+    
+    // Atualizar estado quando autenticação mudar
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsLoggedIn(!!session);
+      }
+    );
+    
+    return () => subscription.unsubscribe();
+  }, []);
+  
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Erro ao fazer logout: " + error.message);
+      return;
+    }
+    
     setIsLoggedIn(false);
     toast.success("Logout realizado com sucesso");
     navigate("/");

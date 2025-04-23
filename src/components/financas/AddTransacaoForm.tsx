@@ -28,6 +28,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
   const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">("Marco");
   const [descricao, setDescricao] = useState("");
   const [tipo, setTipo] = useState<"despesa" | "receita">("despesa");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +55,8 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
       return;
     }
     
+    setIsSubmitting(true);
+    
     const novaTransacao: Omit<Transacao, "id"> = {
       data,
       categoria,
@@ -64,18 +67,23 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
       tipo
     };
     
-    onAddTransacao(novaTransacao);
-    
-    // Resetar o formulário
-    setData(hoje);
-    setCategoria("");
-    setValor("");
-    setParcelas("1");
-    setQuemGastou("Marco");
-    setDescricao("");
-    setTipo("despesa");
-    
-    toast.success(`${tipo === "despesa" ? "Despesa" : "Receita"} adicionada com sucesso!`);
+    try {
+      onAddTransacao(novaTransacao);
+      
+      // Resetar o formulário
+      setData(hoje);
+      setCategoria("");
+      setValor("");
+      setParcelas("1");
+      setQuemGastou("Marco");
+      setDescricao("");
+      setTipo("despesa");
+    } catch (error) {
+      console.error("Erro ao adicionar transação:", error);
+      toast.error("Erro ao adicionar transação");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -201,8 +209,8 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
         />
       </div>
       
-      <Button type="submit" className="w-full">
-        Adicionar {tipo === "despesa" ? "Despesa" : "Receita"}
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Adicionando..." : `Adicionar ${tipo === "despesa" ? "Despesa" : "Receita"}`}
       </Button>
     </form>
   );

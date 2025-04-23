@@ -26,34 +26,37 @@ const SignUpForm = () => {
 
     setIsLoading(true);
 
-    // Cadastro supabase
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: {
-        data: {
-          nome: nome,
+    try {
+      // Cadastro supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome: nome,
+          }
         }
+      });
+
+      if (error) {
+        toast.error(error.message || "Erro ao cadastrar");
+        setIsLoading(false);
+        return;
       }
-    });
 
-    if (error || !data.user) {
-      toast.error(error?.message ?? "Erro ao cadastrar");
+      if (!data.user) {
+        toast.error("Erro ao criar usuário");
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success("Cadastro realizado com sucesso!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error("Erro ao fazer cadastro: " + error.message);
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // Cadastro bem-sucedido
-    localStorage.setItem("usuarioLogado", JSON.stringify({ 
-      id: data.user.id, 
-      nome: nome || data.user.email?.split("@")[0],
-      email: data.user.email 
-    }));
-    localStorage.setItem("supabaseSession", JSON.stringify(data.session));
-
-    toast.success("Cadastro realizado com sucesso!");
-    setIsLoading(false);
-    navigate("/dashboard");
   };
 
   return (
