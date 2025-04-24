@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -83,12 +84,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (transacoes.length > 0) {
-      const categoriasAtualizadas = [...categoriasIniciais];
+      // Criar uma cópia das categorias iniciais para evitar acumulação de valores
+      const categoriasAtualizadas = categoriasIniciais.map(cat => ({
+        ...cat,
+        gastosAtuais: 0 // Resetar os gastos antes de calcular
+      }));
       
-      transacoes.forEach(transacao => {
-        const dataTransacao = new Date(transacao.data);
-        
-        if (dataTransacao >= cicloAtual.inicio && dataTransacao <= cicloAtual.fim && transacao.valor < 0) {
+      // Filtrar transações do ciclo atual e somar os gastos por categoria
+      const transacoesDoCiclo = transacoes.filter(t => {
+        const dataTransacao = new Date(t.data);
+        return dataTransacao >= cicloAtual.inicio && dataTransacao <= cicloAtual.fim;
+      });
+      
+      transacoesDoCiclo.forEach(transacao => {
+        if (transacao.valor < 0) { // Apenas despesas
           const categoriaIndex = categoriasAtualizadas.findIndex(c => c.nome === transacao.categoria);
           if (categoriaIndex !== -1) {
             categoriasAtualizadas[categoriaIndex].gastosAtuais += Math.abs(transacao.valor);
