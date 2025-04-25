@@ -7,7 +7,8 @@ export const categorias: Categoria[] = [
   { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0 },
   { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0 },
   { nome: "Farmácia", orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras parceladas", orcamento: 1800, gastosAtuais: 0 },
+  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0 }, // Updated name and limit
+  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0 }, // New category
   { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0 },
   { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0 },
   { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0 },
@@ -17,6 +18,8 @@ export const categorias: Categoria[] = [
   { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0 },
   { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0 },
   { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0 },
+  { nome: "Essence", orcamento: 0, gastosAtuais: 0 }, // New category without limit
+  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0 }, // New category
   { nome: "Outros", orcamento: 500, gastosAtuais: 0 },
 ];
 
