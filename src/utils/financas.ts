@@ -80,16 +80,19 @@ export function formatarMoeda(valor: number): string {
 // Função para calcular limite diário ideal
 export function calcularLimiteDiario(ciclo: CicloFinanceiro, orcamentoTotal: number): number {
   const umDia = 24 * 60 * 60 * 1000; // milissegundos em um dia
-  const diasNoCiclo = Math.round((ciclo.fim.getTime() - ciclo.inicio.getTime()) / umDia) + 1;
+  const inicio = new Date(ciclo.inicio);
+  const fim = new Date(ciclo.fim);
+  const diasNoCiclo = Math.round((fim.getTime() - inicio.getTime()) / umDia) + 1;
   return orcamentoTotal / diasNoCiclo;
 }
 
 // Função para filtrar transações por ciclo - melhorada para garantir comparação correta
 export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloFinanceiro): Transacao[] {
+  // Certifique-se de que ciclo.inicio e ciclo.fim são instâncias de Date
   const inicio = new Date(ciclo.inicio);
   const fim = new Date(ciclo.fim);
   
-  // Certifique-se de que as datas estejam na hora 00:00:00 para comparação
+  // Certifique-se de que as datas estejam na hora 00:00:00 para início e 23:59:59 para fim
   inicio.setHours(0, 0, 0, 0);
   fim.setHours(23, 59, 59, 999);
   
@@ -99,7 +102,7 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   
   return transacoes.filter(transacao => {
     // Certifique-se de que estamos trabalhando com objetos Date
-    let dataTransacao = new Date(transacao.data);
+    const dataTransacao = new Date(transacao.data);
     dataTransacao.setHours(0, 0, 0, 0);
     
     const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;

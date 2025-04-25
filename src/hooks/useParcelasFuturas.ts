@@ -5,6 +5,17 @@ import { Transacao, CicloFinanceiro } from "@/types";
 export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFinanceiro) {
   // Função para gerar projeções de parcelas futuras
   const parcelasFuturas = useMemo(() => {
+    // Converter cicloAtual para garantir que são objetos Date
+    const ciclo = {
+      inicio: new Date(cicloAtual.inicio),
+      fim: new Date(cicloAtual.fim),
+      nome: cicloAtual.nome
+    };
+    
+    console.log(`Gerando parcelas futuras para ciclo: ${ciclo.nome}`);
+    console.log(`Data início do ciclo: ${ciclo.inicio.toISOString()}`);
+    console.log(`Data fim do ciclo: ${ciclo.fim.toISOString()}`);
+    
     // Filtra apenas transações parceladas (parcelas > 1)
     const transacoesParceladas = transacoes.filter(t => t.parcelas > 1);
     
@@ -73,7 +84,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     });
     
     return todasParcelas;
-  }, [transacoes]);
+  }, [transacoes, cicloAtual]);
   
   return parcelasFuturas;
 }

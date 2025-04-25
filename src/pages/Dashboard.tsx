@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/financas/DashboardHeader";
 import { CicloFinanceiro } from "@/types";
 import { useParcelasFuturas } from "@/hooks/useParcelasFuturas";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
@@ -24,12 +25,15 @@ const Dashboard = () => {
     
     // Criar novas instâncias de Date para evitar referências de objeto
     const cicloAtualizado: CicloFinanceiro = {
-      inicio: novoCiclo.inicio instanceof Date ? new Date(novoCiclo.inicio) : new Date(novoCiclo.inicio),
-      fim: novoCiclo.fim instanceof Date ? new Date(novoCiclo.fim) : new Date(novoCiclo.fim),
+      inicio: new Date(novoCiclo.inicio),
+      fim: new Date(novoCiclo.fim),
       nome: novoCiclo.nome
     };
     
     setCicloAtual(cicloAtualizado);
+    
+    // Feedback visual para o usuário
+    toast.info(`Ciclo alterado para ${novoCiclo.nome}`);
   };
 
   // Recarregar transações quando o componente é montado ou quando o usuário muda
@@ -40,6 +44,20 @@ const Dashboard = () => {
     }
   }, [usuario, fetchTransacoes]);
 
+  // Log detalhado de todas as transações para diagnóstico
+  useEffect(() => {
+    if (transacoes.length > 0) {
+      console.log("Todas as transações carregadas:", transacoes.length);
+      transacoes.forEach((t, idx) => {
+        console.log(`Transação ${idx + 1}:`, 
+          `ID: ${t.id}`,
+          `Descrição: ${t.descricao || t.categoria}`,
+          `Data: ${new Date(t.data).toISOString()}`,
+          `Valor: ${t.valor}`);
+      });
+    }
+  }, [transacoes]);
+
   // Filtragem de transações memorizada para melhor performance
   const transacoesFiltradas = useMemo(() => {
     console.log("Filtrando transações para ciclo:", cicloAtual.nome);
@@ -47,8 +65,8 @@ const Dashboard = () => {
     console.log("Data fim do ciclo:", cicloAtual.fim instanceof Date ? cicloAtual.fim.toISOString() : cicloAtual.fim);
     
     // Garantir que estamos trabalhando com objetos Date
-    const inicio = cicloAtual.inicio instanceof Date ? new Date(cicloAtual.inicio) : new Date(cicloAtual.inicio);
-    const fim = cicloAtual.fim instanceof Date ? new Date(cicloAtual.fim) : new Date(cicloAtual.fim);
+    const inicio = new Date(cicloAtual.inicio);
+    const fim = new Date(cicloAtual.fim);
     
     inicio.setHours(0, 0, 0, 0);
     fim.setHours(23, 59, 59, 999);
