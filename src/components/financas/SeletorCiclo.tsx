@@ -15,24 +15,34 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
   const cicloAtual = calcularCicloAtual();
   const [cicloSelecionado, setCicloSelecionado] = useState<CicloFinanceiro>(cicloAtual);
 
-  // Gera lista de ciclos disponíveis (3 meses para trás e 12 para frente)
+  // Gera lista de ciclos disponíveis (aumentado para 6 meses para trás e 12 para frente)
   const getCiclosDisponiveis = () => {
     const ciclos: CicloFinanceiro[] = [];
     const hoje = new Date();
 
-    // Adiciona ciclos anteriores (3 meses para trás)
-    for (let i = -3; i < 0; i++) {
+    // Adiciona ciclos anteriores (6 meses para trás)
+    for (let i = -6; i < 0; i++) {
       const dataBase = addMonths(hoje, i);
       const mesAnterior = dataBase.getMonth() === 0 ? 11 : dataBase.getMonth() - 1;
       const anoInicio = mesAnterior === 11 ? dataBase.getFullYear() - 1 : dataBase.getFullYear();
+      
       const inicio = new Date(anoInicio, mesAnterior, 25);
       const fim = new Date(dataBase.getFullYear(), dataBase.getMonth(), 24);
+      
       const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
       const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
+      const nomeAnoInicio = format(inicio, 'yyyy', { locale: ptBR });
+      const nomeAnoFim = format(fim, 'yyyy', { locale: ptBR });
+      
+      // Adiciona o ano quando mudar de ano
+      const nomeCompleto = nomeAnoInicio === nomeAnoFim 
+        ? `${nomeMesInicio} - ${nomeMesFim} ${nomeAnoInicio}` 
+        : `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
+      
       ciclos.push({
         inicio,
         fim,
-        nome: `${nomeMesInicio} - ${nomeMesFim}`
+        nome: nomeCompleto
       });
     }
 
@@ -42,16 +52,25 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     // Adiciona ciclos futuros (12 meses para frente)
     for (let i = 1; i <= 12; i++) {
       const dataBase = addMonths(hoje, i);
-      const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth(), 25);
-      const proxMes = dataBase.getMonth() === 11 ? 0 : dataBase.getMonth() + 1;
+      const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth() - 1, 25);
+      const proxMes = dataBase.getMonth();
       const anoFim = proxMes === 0 ? dataBase.getFullYear() + 1 : dataBase.getFullYear();
       const fim = new Date(anoFim, proxMes, 24);
+      
       const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
       const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
+      const nomeAnoInicio = format(inicio, 'yyyy', { locale: ptBR });
+      const nomeAnoFim = format(fim, 'yyyy', { locale: ptBR });
+      
+      // Adiciona o ano quando mudar de ano
+      const nomeCompleto = nomeAnoInicio === nomeAnoFim 
+        ? `${nomeMesInicio} - ${nomeMesFim} ${nomeAnoInicio}` 
+        : `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
+      
       ciclos.push({
         inicio,
         fim,
-        nome: `${nomeMesInicio} - ${nomeMesFim}`
+        nome: nomeCompleto
       });
     }
 
@@ -62,6 +81,9 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
 
   const handleCicloChange = (cicloIndex: string) => {
     const ciclo = ciclosDisponiveis[Number(cicloIndex)];
+    console.log("Alterando para ciclo:", ciclo.nome);
+    console.log("Data início:", ciclo.inicio);
+    console.log("Data fim:", ciclo.fim);
     setCicloSelecionado(ciclo);
     onCicloChange(ciclo);
   };
@@ -84,7 +106,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
           isSameMonth(c.inicio, cicloSelecionado.inicio)).toString()}
         onValueChange={handleCicloChange}
       >
-        <SelectTrigger className="w-[240px]">
+        <SelectTrigger className="w-[280px]">
           <SelectValue placeholder="Selecione o ciclo" />
         </SelectTrigger>
         <SelectContent>

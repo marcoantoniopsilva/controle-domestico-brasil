@@ -54,7 +54,15 @@ export function calcularCicloAtual(): CicloFinanceiro {
   
   const mesInicioNome = meses[inicioMes.getMonth()];
   const mesFimNome = meses[fimMes.getMonth()];
-  const nomeCiclo = `${mesInicioNome} - ${mesFimNome}`;
+  const anoInicio = inicioMes.getFullYear();
+  const anoFim = fimMes.getFullYear();
+  
+  // Adiciona o ano quando for ciclo entre anos diferentes
+  const nomeCiclo = anoInicio === anoFim 
+    ? `${mesInicioNome} - ${mesFimNome} ${anoInicio}` 
+    : `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
+  
+  console.log(`Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
   
   return {
     inicio: inicioMes,
@@ -78,15 +86,20 @@ export function calcularLimiteDiario(ciclo: CicloFinanceiro, orcamentoTotal: num
   return orcamentoTotal / diasNoCiclo;
 }
 
-// Função para filtrar transações por ciclo
+// Função para filtrar transações por ciclo - melhorada para garantir comparação correta
 export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloFinanceiro): Transacao[] {
+  const inicio = new Date(ciclo.inicio);
+  const fim = new Date(ciclo.fim);
+  
   return transacoes.filter(transacao => {
     const dataTransacao = new Date(transacao.data);
-    return dataTransacao >= ciclo.inicio && dataTransacao <= ciclo.fim;
+    return dataTransacao >= inicio && dataTransacao <= fim;
   });
 }
 
-// Função para verificar se uma data está dentro do ciclo
+// Função para verificar se uma data está dentro do ciclo - melhorada para garantir comparação correta
 export function dataEstaNoCiclo(data: Date, ciclo: CicloFinanceiro): boolean {
-  return data >= ciclo.inicio && data <= ciclo.fim;
+  const inicio = new Date(ciclo.inicio);
+  const fim = new Date(ciclo.fim);
+  return data >= inicio && data <= fim;
 }

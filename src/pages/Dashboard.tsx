@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import NavBar from "@/components/layout/NavBar";
-import { calcularCicloAtual, categorias } from "@/utils/financas";
+import { calcularCicloAtual, categorias, dataEstaNoCiclo } from "@/utils/financas";
 import DashboardContent from "@/components/financas/DashboardContent";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,9 @@ const Dashboard = () => {
   const parcelasFuturas = useParcelasFuturas(transacoes, cicloAtual);
 
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
+    console.log("Alterando ciclo para:", novoCiclo.nome);
+    console.log("Nova data de início:", novoCiclo.inicio);
+    console.log("Nova data de fim:", novoCiclo.fim);
     setCicloAtual(novoCiclo);
   };
 
@@ -27,18 +30,26 @@ const Dashboard = () => {
       console.log("Recarregando transações para o usuário:", usuario.id);
       fetchTransacoes();
     }
-  }, [usuario]);
+  }, [usuario, fetchTransacoes]);
 
-  // Filtrar transações do ciclo atual
+  // Filtrar transações do ciclo atual - garantir conversão para datas
   const transacoesCicloAtual = transacoes.filter(t => {
     const data = new Date(t.data);
-    return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+    const inicio = new Date(cicloAtual.inicio);
+    const fim = new Date(cicloAtual.fim);
+    
+    const estaNoCiclo = data >= inicio && data <= fim;
+    
+    return estaNoCiclo;
   });
   
   // Filtrar parcelas futuras para este ciclo
   const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
     const data = new Date(t.data);
-    return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+    const inicio = new Date(cicloAtual.inicio);
+    const fim = new Date(cicloAtual.fim);
+    
+    return data >= inicio && data <= fim;
   });
   
   // Combinar transações reais e parcelas futuras para este ciclo
@@ -47,7 +58,9 @@ const Dashboard = () => {
     ...parcelasFuturasCicloAtual
   ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
   
-  console.log("Ciclo atual:", cicloAtual);
+  console.log("Ciclo atual:", cicloAtual.nome);
+  console.log("Data início do ciclo:", cicloAtual.inicio);
+  console.log("Data fim do ciclo:", cicloAtual.fim);
   console.log("Transações do ciclo atual:", transacoesCicloAtual.length);
   console.log("Parcelas futuras do ciclo atual:", parcelasFuturasCicloAtual.length);
   console.log("Total de transações combinadas:", todasTransacoesCiclo.length);

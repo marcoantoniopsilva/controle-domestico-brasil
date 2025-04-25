@@ -1,17 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Transacao, CicloFinanceiro } from "@/types";
+import { Transacao } from "@/types";
 import { toast } from "sonner";
 
 export function useTransacoes() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchTransacoes = async () => {
+  const fetchTransacoes = useCallback(async () => {
     setIsLoading(true);
     
     try {
+      console.log("Buscando transações...");
       const { data, error } = await supabase
         .from("lancamentos")
         .select("*")
@@ -35,6 +36,12 @@ export function useTransacoes() {
         }));
         
         console.log("Transações convertidas:", transacoesConvertidas.length);
+        // Log para depuração: listar as datas das transações
+        transacoesConvertidas.forEach((t, idx) => {
+          if (idx < 10) { // Limitar a 10 registros para não sobrecarregar o console
+            console.log(`Transação ${idx}: data=${t.data.toISOString()}, valor=${t.valor}, categoria=${t.categoria}`);
+          }
+        });
         setTransacoes(transacoesConvertidas);
       }
     } catch (error: any) {
@@ -43,7 +50,7 @@ export function useTransacoes() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const handleAddTransacao = async (novaTransacao: Omit<Transacao, "id">, usuarioId: string) => {
     try {
@@ -128,7 +135,7 @@ export function useTransacoes() {
   // Inicialização - carrega transações na montagem do componente
   useEffect(() => {
     fetchTransacoes();
-  }, []);
+  }, [fetchTransacoes]);
 
   return {
     transacoes,

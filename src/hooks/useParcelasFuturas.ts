@@ -1,7 +1,6 @@
 
 import { useMemo } from "react";
 import { Transacao, CicloFinanceiro } from "@/types";
-import { dataEstaNoCiclo } from "@/utils/financas";
 
 export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFinanceiro) {
   // Função para gerar projeções de parcelas futuras
@@ -27,6 +26,18 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
         const dataParcela = new Date(dataTransacao);
         dataParcela.setMonth(dataTransacao.getMonth() + (i - 1));
         
+        // Ajusta o dia se necessário para evitar problemas com meses com diferentes números de dias
+        // Por exemplo, se a data original é 31/01, a próxima parcela será 28/02 em anos não bissextos
+        const ultimoDiaDoMes = new Date(
+          dataParcela.getFullYear(),
+          dataParcela.getMonth() + 1,
+          0
+        ).getDate();
+        
+        if (dataParcela.getDate() > ultimoDiaDoMes) {
+          dataParcela.setDate(ultimoDiaDoMes);
+        }
+        
         // Criamos um novo objeto para a parcela futura
         const parcela: Transacao = {
           ...transacao,
@@ -43,7 +54,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     
     console.log("Parcelas futuras geradas:", todasParcelas.length);
     return todasParcelas;
-  }, [transacoes, cicloAtual]);
+  }, [transacoes]);
   
   return parcelasFuturas;
 }
