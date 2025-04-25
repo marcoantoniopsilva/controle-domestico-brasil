@@ -1,70 +1,78 @@
 
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
 import { Transacao } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ListaTransacoesProps {
   transacoes: Transacao[];
-  onExcluir?: (id: string) => void;
+  onExcluir: (id: string) => Promise<void>;
 }
 
 const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir }) => {
+  if (transacoes.length === 0) {
+    return <p className="text-center py-6 text-muted-foreground">Nenhuma transação encontrada.</p>;
+  }
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Transações Recentes</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {transacoes.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              Nenhuma transação encontrada
-            </div>
-          ) : (
-            transacoes.map((transacao) => (
-              <div
-                key={transacao.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex flex-col">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium">{transacao.categoria}</span>
-                    <span className="text-xs text-muted-foreground">
-                      • {format(new Date(transacao.data), "dd MMM yyyy", { locale: ptBR })}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {transacao.descricao && <span>{transacao.descricao} • </span>}
-                    <span>{transacao.quemGastou}</span>
-                    {transacao.parcelas > 1 && 
-                      <span> • Parcela 1/{transacao.parcelas}</span>
-                    }
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={transacao.valor < 0 ? "text-destructive" : "text-primary"}>
-                    {formatarMoeda(transacao.valor)}
-                  </span>
-                  {onExcluir && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onExcluir(transacao.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      ✕
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="border rounded-lg overflow-hidden shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Data</TableHead>
+            <TableHead>Categoria</TableHead>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Quem realizou</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
+            <TableHead>Parcelas</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transacoes.map((transacao) => (
+            <TableRow key={transacao.id}>
+              <TableCell>
+                {format(new Date(transacao.data), 'dd/MM/yyyy', { locale: ptBR })}
+              </TableCell>
+              <TableCell>{transacao.categoria}</TableCell>
+              <TableCell className="max-w-[200px] truncate">
+                {transacao.descricao || '-'}
+                {transacao.isParcela && (
+                  <Badge variant="outline" className="ml-2">Projeção</Badge>
+                )}
+              </TableCell>
+              <TableCell>{transacao.quemGastou}</TableCell>
+              <TableCell className={`text-right ${transacao.valor < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                {formatarMoeda(transacao.valor)}
+              </TableCell>
+              <TableCell>
+                {transacao.parcelas > 1 
+                  ? `${transacao.parcelaAtual || 1}/${transacao.parcelas}`
+                  : '-'
+                }
+              </TableCell>
+              <TableCell className="text-right">
+                {!transacao.isParcela && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onExcluir(transacao.id)}
+                    title="Excluir transação"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

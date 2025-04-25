@@ -7,11 +7,15 @@ import { useTransacoes } from "@/hooks/useTransacoes";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/financas/DashboardHeader";
 import { CicloFinanceiro } from "@/types";
+import { useParcelasFuturas } from "@/hooks/useParcelasFuturas";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
   const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
+  
+  // Obter as parcelas futuras projetadas
+  const parcelasFuturas = useParcelasFuturas(transacoes, cicloAtual);
 
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     setCicloAtual(novoCiclo);
@@ -28,10 +32,17 @@ const Dashboard = () => {
     );
   }
 
-  const transacoesCicloAtual = transacoes.filter(t => {
-    const data = new Date(t.data);
-    return data >= cicloAtual.inicio && data <= cicloAtual.fim;
-  }).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  // Filtrar transações do ciclo atual + parcelas projetadas para este ciclo
+  const transacoesCicloAtual = [
+    ...transacoes.filter(t => {
+      const data = new Date(t.data);
+      return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+    }),
+    ...parcelasFuturas.filter(t => {
+      const data = new Date(t.data);
+      return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+    })
+  ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
   
   const totalReceitas = transacoesCicloAtual
     .filter(t => t.valor > 0)

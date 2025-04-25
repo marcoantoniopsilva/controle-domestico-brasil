@@ -14,6 +14,8 @@ export interface Transacao {
   quemGastou: 'Marco' | 'Bruna';
   descricao?: string;
   tipo: 'despesa' | 'receita';
+  isParcela?: boolean; // Indica se é uma parcela projetada
+  parcelaAtual?: number; // Número da parcela atual
 }
 
 export interface Categoria {
