@@ -18,26 +18,17 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     
     // Para cada transação parcelada, projeta as parcelas futuras
     transacoesParceladas.forEach(transacao => {
-      // Verifica se a data da transação está no ciclo atual
+      // Data da transação original
       const dataTransacao = new Date(transacao.data);
-      const estaNoCicloAtual = dataEstaNoCiclo(dataTransacao, cicloAtual);
       
-      // Se estiver no ciclo atual, calcula quais parcelas já foram criadas
-      let parcelaInicial = 1;
+      // Verifica se a primeira parcela está no ciclo atual
+      const primeiraParcelaNoCicloAtual = dataEstaNoCiclo(dataTransacao, cicloAtual);
       
-      if (estaNoCicloAtual) {
-        // No ciclo atual, só projetamos parcelas futuras
-        parcelaInicial = 2;
-      }
-      
-      // Gera as parcelas futuras
-      for (let i = parcelaInicial; i <= transacao.parcelas; i++) {
+      // Gera as parcelas para todos os meses além do primeiro (que já está na lista de transações)
+      for (let i = 2; i <= transacao.parcelas; i++) {
         // Calcula a data da parcela (um mês adicional por parcela)
         const dataParcela = new Date(dataTransacao);
-        dataParcela.setMonth(dataParcela.getMonth() + (i - 1));
-        
-        // Não incluímos parcelas do ciclo atual que já estão nos lançamentos
-        if (i === 1 && estaNoCicloAtual) continue;
+        dataParcela.setMonth(dataTransacao.getMonth() + (i - 1));
         
         // Criamos um novo objeto para a parcela futura
         const parcela: Transacao = {
@@ -53,6 +44,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       }
     });
     
+    console.log("Parcelas futuras geradas:", todasParcelas.length);
     return todasParcelas;
   }, [transacoes, cicloAtual]);
   

@@ -27,9 +27,9 @@ export function useTransacoes() {
           categoria: t.categoria,
           valor: Number(t.valor),
           parcelas: t.parcelas || 1,
-          quemGastou: t.quem_gastou,
+          quemGastou: t.quem_gastou as "Marco" | "Bruna", // Corrected type assertion
           descricao: t.descricao,
-          tipo: t.tipo,
+          tipo: t.tipo as "despesa" | "receita", // Corrected type assertion
         })));
       }
     } catch (error: any) {
@@ -77,9 +77,9 @@ export function useTransacoes() {
           categoria: data[0].categoria,
           valor: Number(data[0].valor),
           parcelas: data[0].parcelas,
-          quemGastou: data[0].quem_gastou,
+          quemGastou: data[0].quem_gastou as "Marco" | "Bruna", // Corrected type assertion
           descricao: data[0].descricao,
-          tipo: data[0].tipo,
+          tipo: data[0].tipo as "despesa" | "receita", // Corrected type assertion
         };
         setTransacoes(prev => [novaTransacaoComId, ...prev]);
       }

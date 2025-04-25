@@ -54,6 +54,7 @@ const Dashboard = () => {
   console.log("Transações no ciclo atual:", transacoesCicloAtual);
   console.log("Total de transações carregadas:", transacoes.length);
   console.log("Total de parcelas futuras:", parcelasFuturas.length);
+  console.log("Ciclo atual:", cicloAtual);
   
   const totalReceitas = transacoesCicloAtual
     .filter(t => t.valor > 0)
