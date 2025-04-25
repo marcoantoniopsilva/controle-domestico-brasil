@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import NavBar from "@/components/layout/NavBar";
-import { calcularCicloAtual } from "@/utils/financas";
+import { calcularCicloAtual, categorias } from "@/utils/financas";
 import DashboardContent from "@/components/financas/DashboardContent";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useAuth } from "@/hooks/useAuth";
