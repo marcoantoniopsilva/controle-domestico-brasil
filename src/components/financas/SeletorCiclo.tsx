@@ -15,13 +15,13 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
   const cicloAtual = calcularCicloAtual();
   const [cicloSelecionado, setCicloSelecionado] = useState<CicloFinanceiro>(cicloAtual);
 
-  // Gera lista de ciclos disponíveis (aumentado para 6 meses para trás e 12 para frente)
+  // Gera lista de ciclos disponíveis (aumentado para 12 meses para trás e 12 para frente)
   const getCiclosDisponiveis = () => {
     const ciclos: CicloFinanceiro[] = [];
     const hoje = new Date();
 
-    // Adiciona ciclos anteriores (6 meses para trás)
-    for (let i = -6; i < 0; i++) {
+    // Adiciona ciclos anteriores (12 meses para trás)
+    for (let i = -12; i < 0; i++) {
       const dataBase = addMonths(hoje, i);
       const mesAnterior = dataBase.getMonth() === 0 ? 11 : dataBase.getMonth() - 1;
       const anoInicio = mesAnterior === 11 ? dataBase.getFullYear() - 1 : dataBase.getFullYear();
@@ -31,13 +31,11 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       
       const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
       const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
-      const nomeAnoInicio = format(inicio, 'yyyy', { locale: ptBR });
-      const nomeAnoFim = format(fim, 'yyyy', { locale: ptBR });
+      const nomeAnoInicio = format(inicio, 'yyyy');
+      const nomeAnoFim = format(fim, 'yyyy');
       
-      // Adiciona o ano quando mudar de ano
-      const nomeCompleto = nomeAnoInicio === nomeAnoFim 
-        ? `${nomeMesInicio} - ${nomeMesFim} ${nomeAnoInicio}` 
-        : `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
+      // Sempre mostrar o ano para evitar confusão
+      const nomeCompleto = `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
       
       ciclos.push({
         inicio,
@@ -47,7 +45,18 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     }
 
     // Adiciona ciclo atual
-    ciclos.push(cicloAtual);
+    const nomeMesInicioAtual = format(cicloAtual.inicio, 'MMMM', { locale: ptBR });
+    const nomeMesFimAtual = format(cicloAtual.fim, 'MMMM', { locale: ptBR });
+    const nomeAnoInicioAtual = format(cicloAtual.inicio, 'yyyy');
+    const nomeAnoFimAtual = format(cicloAtual.fim, 'yyyy');
+    
+    // Sempre mostrar o ano para evitar confusão
+    const nomeCompletoAtual = `${nomeMesInicioAtual} ${nomeAnoInicioAtual} - ${nomeMesFimAtual} ${nomeAnoFimAtual}`;
+    
+    ciclos.push({
+      ...cicloAtual,
+      nome: nomeCompletoAtual
+    });
 
     // Adiciona ciclos futuros (12 meses para frente)
     for (let i = 1; i <= 12; i++) {
@@ -59,13 +68,11 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       
       const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
       const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
-      const nomeAnoInicio = format(inicio, 'yyyy', { locale: ptBR });
-      const nomeAnoFim = format(fim, 'yyyy', { locale: ptBR });
+      const nomeAnoInicio = format(inicio, 'yyyy');
+      const nomeAnoFim = format(fim, 'yyyy');
       
-      // Adiciona o ano quando mudar de ano
-      const nomeCompleto = nomeAnoInicio === nomeAnoFim 
-        ? `${nomeMesInicio} - ${nomeMesFim} ${nomeAnoInicio}` 
-        : `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
+      // Sempre mostrar o ano para evitar confusão
+      const nomeCompleto = `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
       
       ciclos.push({
         inicio,
@@ -74,10 +81,38 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       });
     }
 
-    return ciclos;
+    // Adicionar março-abril 2025 se não estiver na lista
+    const marcoAbril2025Encontrado = ciclos.some(ciclo => {
+      const mesInicio = format(ciclo.inicio, 'MMMM', { locale: ptBR });
+      const anoInicio = format(ciclo.inicio, 'yyyy');
+      return mesInicio.toLowerCase() === 'março' && anoInicio === '2025';
+    });
+    
+    if (!marcoAbril2025Encontrado) {
+      const inicioMarco2025 = new Date(2025, 2, 25); // Março é 2 (zero-based)
+      const fimAbril2025 = new Date(2025, 3, 24);    // Abril é 3 (zero-based)
+      
+      ciclos.push({
+        inicio: inicioMarco2025,
+        fim: fimAbril2025,
+        nome: `março 2025 - abril 2025`
+      });
+      
+      console.log("Adicionado ciclo março-abril 2025 manualmente");
+    }
+
+    // Ordenar ciclos por data (mais antigos primeiro)
+    return ciclos.sort((a, b) => a.inicio.getTime() - b.inicio.getTime());
   };
 
   const ciclosDisponiveis = getCiclosDisponiveis();
+  
+  // Log para verificação
+  console.log("Ciclos disponíveis:", ciclosDisponiveis.map(c => ({
+    nome: c.nome,
+    inicio: c.inicio.toISOString(),
+    fim: c.fim.toISOString()
+  })));
 
   const handleCicloChange = (cicloIndex: string) => {
     const ciclo = ciclosDisponiveis[Number(cicloIndex)];
@@ -111,7 +146,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
         </SelectTrigger>
         <SelectContent>
           {ciclosDisponiveis.map((ciclo, index) => (
-            <SelectItem key={ciclo.nome} value={index.toString()}>
+            <SelectItem key={index} value={index.toString()}>
               {ciclo.nome}
             </SelectItem>
           ))}

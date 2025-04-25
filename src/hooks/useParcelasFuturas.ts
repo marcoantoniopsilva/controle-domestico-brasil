@@ -13,12 +13,19 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       return [];
     }
 
+    console.log(`Gerando parcelas futuras para ${transacoesParceladas.length} transações parceladas`);
+    
     const todasParcelas: Transacao[] = [];
     
     // Para cada transação parcelada, projeta as parcelas futuras
     transacoesParceladas.forEach(transacao => {
       // Data da transação original
       const dataTransacao = new Date(transacao.data);
+      
+      console.log(`Gerando parcelas para transação: ${transacao.descricao || transacao.categoria}`, 
+                  `ID: ${transacao.id}`,
+                  `Data: ${dataTransacao.toISOString()}`,
+                  `Total parcelas: ${transacao.parcelas}`);
       
       // Gera as parcelas para todos os meses além do primeiro (que já está na lista de transações)
       for (let i = 2; i <= transacao.parcelas; i++) {
@@ -43,16 +50,23 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
           ...transacao,
           id: `projecao-${transacao.id}-parcela-${i}`,
           data: dataParcela,
-          descricao: `${transacao.descricao || ''} (Parcela ${i}/${transacao.parcelas})`,
+          descricao: `${transacao.descricao || transacao.categoria} (Parcela ${i}/${transacao.parcelas})`,
           isParcela: true, // Marca como uma parcela projetada
           parcelaAtual: i
         };
         
+        console.log(`Gerada parcela ${i}/${transacao.parcelas} para data: ${dataParcela.toISOString()}`);
         todasParcelas.push(parcela);
       }
     });
     
     console.log("Parcelas futuras geradas:", todasParcelas.length);
+    todasParcelas.forEach((parcela, index) => {
+      if (index < 10) { // Limitar a 10 para não sobrecarregar o console
+        console.log(`Parcela ${index}: ${parcela.descricao}, data: ${new Date(parcela.data).toISOString()}`);
+      }
+    });
+    
     return todasParcelas;
   }, [transacoes]);
   

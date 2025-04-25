@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import NavBar from "@/components/layout/NavBar";
-import { calcularCicloAtual, categorias, dataEstaNoCiclo } from "@/utils/financas";
+import { calcularCicloAtual, categorias } from "@/utils/financas";
 import DashboardContent from "@/components/financas/DashboardContent";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,63 +32,83 @@ const Dashboard = () => {
     }
   }, [usuario, fetchTransacoes]);
 
-  // Filtrar transações do ciclo atual - garantir conversão para datas
-  const transacoesCicloAtual = transacoes.filter(t => {
-    const data = new Date(t.data);
-    const inicio = new Date(cicloAtual.inicio);
-    const fim = new Date(cicloAtual.fim);
+  // Filtragem de transações memorizada para melhor performance
+  const transacoesFiltradas = useMemo(() => {
+    console.log("Filtrando transações para ciclo:", cicloAtual.nome);
     
-    const estaNoCiclo = data >= inicio && data <= fim;
+    // Filtrar transações do ciclo atual - garantir conversão para datas
+    const transacoesCicloAtual = transacoes.filter(t => {
+      const data = new Date(t.data);
+      const inicio = new Date(cicloAtual.inicio);
+      const fim = new Date(cicloAtual.fim);
+      
+      const estaNoCiclo = data >= inicio && data <= fim;
+      return estaNoCiclo;
+    });
     
-    return estaNoCiclo;
-  });
-  
-  // Filtrar parcelas futuras para este ciclo
-  const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
-    const data = new Date(t.data);
-    const inicio = new Date(cicloAtual.inicio);
-    const fim = new Date(cicloAtual.fim);
+    // Filtrar parcelas futuras para este ciclo
+    const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
+      const data = new Date(t.data);
+      const inicio = new Date(cicloAtual.inicio);
+      const fim = new Date(cicloAtual.fim);
+      
+      return data >= inicio && data <= fim;
+    });
     
-    return data >= inicio && data <= fim;
-  });
+    console.log("Transações do ciclo atual:", transacoesCicloAtual.length);
+    console.log("Parcelas futuras do ciclo atual:", parcelasFuturasCicloAtual.length);
+    
+    // Combinar transações reais e parcelas futuras para este ciclo
+    return [
+      ...transacoesCicloAtual,
+      ...parcelasFuturasCicloAtual
+    ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    
+  }, [transacoes, parcelasFuturas, cicloAtual]);
   
-  // Combinar transações reais e parcelas futuras para este ciclo
-  const todasTransacoesCiclo = [
-    ...transacoesCicloAtual,
-    ...parcelasFuturasCicloAtual
-  ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
-  
-  console.log("Ciclo atual:", cicloAtual.nome);
-  console.log("Data início do ciclo:", cicloAtual.inicio);
-  console.log("Data fim do ciclo:", cicloAtual.fim);
-  console.log("Transações do ciclo atual:", transacoesCicloAtual.length);
-  console.log("Parcelas futuras do ciclo atual:", parcelasFuturasCicloAtual.length);
-  console.log("Total de transações combinadas:", todasTransacoesCiclo.length);
-  console.log("Total de transações carregadas:", transacoes.length);
-  console.log("Total de parcelas futuras:", parcelasFuturas.length);
-  
-  // Calcular totais para cada categoria
-  const categoriasAtualizadas = categorias.map(cat => {
-    const gastosNaCategoria = todasTransacoesCiclo
-      .filter(t => t.categoria === cat.nome && t.valor < 0)
+  // Cálculo dos totais por categoria e totais gerais
+  const {
+    categoriasAtualizadas,
+    totalReceitas,
+    totalDespesas,
+    saldo
+  } = useMemo(() => {
+    // Calcular totais para cada categoria
+    const categoriasAtuais = categorias.map(cat => {
+      const gastosNaCategoria = transacoesFiltradas
+        .filter(t => t.categoria === cat.nome && t.valor < 0)
+        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      
+      return {
+        ...cat,
+        gastosAtuais: gastosNaCategoria
+      };
+    });
+    
+    const receitas = transacoesFiltradas
+      .filter(t => t.valor > 0)
+      .reduce((acc, t) => acc + t.valor, 0);
+      
+    const despesas = transacoesFiltradas
+      .filter(t => t.valor < 0)
       .reduce((acc, t) => acc + Math.abs(t.valor), 0);
     
     return {
-      ...cat,
-      gastosAtuais: gastosNaCategoria
+      categoriasAtualizadas: categoriasAtuais,
+      totalReceitas: receitas,
+      totalDespesas: despesas,
+      saldo: receitas - despesas
     };
-  });
-  
-  const totalReceitas = todasTransacoesCiclo
-    .filter(t => t.valor > 0)
-    .reduce((acc, t) => acc + t.valor, 0);
     
-  const totalDespesas = todasTransacoesCiclo
-    .filter(t => t.valor < 0)
-    .reduce((acc, t) => acc + Math.abs(t.valor), 0);
-    
-  const saldo = totalReceitas - totalDespesas;
+  }, [transacoesFiltradas]);
 
+  console.log("Ciclo atual:", cicloAtual.nome);
+  console.log("Data início do ciclo:", cicloAtual.inicio);
+  console.log("Data fim do ciclo:", cicloAtual.fim);
+  console.log("Total de transações combinadas:", transacoesFiltradas.length);
+  console.log("Total de transações carregadas:", transacoes.length);
+  console.log("Total de parcelas futuras:", parcelasFuturas.length);
+  
   if (isLoading && !usuario) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -112,7 +132,7 @@ const Dashboard = () => {
             />
             
             <DashboardContent 
-              transacoes={todasTransacoesCiclo}
+              transacoes={transacoesFiltradas}
               categorias={categoriasAtualizadas}
               cicloAtual={cicloAtual}
               onExcluirTransacao={handleExcluirTransacao}

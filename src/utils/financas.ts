@@ -1,4 +1,3 @@
-
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 
 // Definição das categorias com orçamentos
@@ -57,10 +56,8 @@ export function calcularCicloAtual(): CicloFinanceiro {
   const anoInicio = inicioMes.getFullYear();
   const anoFim = fimMes.getFullYear();
   
-  // Adiciona o ano quando for ciclo entre anos diferentes
-  const nomeCiclo = anoInicio === anoFim 
-    ? `${mesInicioNome} - ${mesFimNome} ${anoInicio}` 
-    : `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
+  // Sempre incluir o ano para evitar confusão
+  const nomeCiclo = `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
   
   console.log(`Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
   
