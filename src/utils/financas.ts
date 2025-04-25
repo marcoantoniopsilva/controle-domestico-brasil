@@ -60,7 +60,7 @@ export function calcularCicloAtual(): CicloFinanceiro {
   // Sempre incluir os anos no nome do ciclo
   const nomeCiclo = `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
   
-  console.log(`Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
+  console.log(`[financas.ts] Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
   
   return {
     inicio: inicioMes,
@@ -96,9 +96,9 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   inicio.setHours(0, 0, 0, 0);
   fim.setHours(23, 59, 59, 999);
   
-  console.log("Filtrando transações para o ciclo:", ciclo.nome);
-  console.log("Data início do ciclo:", inicio.toISOString());
-  console.log("Data fim do ciclo:", fim.toISOString());
+  console.log("[financas.ts] Filtrando transações para o ciclo:", ciclo.nome);
+  console.log("[financas.ts] Data início do ciclo:", inicio.toISOString());
+  console.log("[financas.ts] Data fim do ciclo:", fim.toISOString());
   
   return transacoes.filter(transacao => {
     // Certifique-se de que estamos trabalhando com objetos Date
@@ -108,8 +108,8 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
     const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
     
     if (estaNoCiclo) {
-      console.log(`Transação ${transacao.id} está no ciclo ${ciclo.nome}`);
-      console.log(`Data da transação: ${dataTransacao.toISOString()}`);
+      console.log(`[financas.ts] Transação ${transacao.id} está no ciclo ${ciclo.nome}`);
+      console.log(`[financas.ts] Data da transação: ${dataTransacao.toISOString()}`);
     }
     
     return estaNoCiclo;
