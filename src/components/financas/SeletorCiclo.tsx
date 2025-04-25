@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CicloFinanceiro } from "@/types";
 import { calcularCicloAtual } from "@/utils/financas";
-import { addMonths, format, isSameMonth } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface SeletorCicloProps {
@@ -23,19 +22,17 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     // Adiciona ciclos anteriores (3 meses para trás)
     for (let i = -3; i < 0; i++) {
       const dataBase = addMonths(hoje, i);
-      if (dataBase.getDate() < 25) {
-        const mesAnterior = dataBase.getMonth() === 0 ? 11 : dataBase.getMonth() - 1;
-        const anoInicio = mesAnterior === 11 ? dataBase.getFullYear() - 1 : dataBase.getFullYear();
-        const inicio = new Date(anoInicio, mesAnterior, 25);
-        const fim = new Date(dataBase.getFullYear(), dataBase.getMonth(), 24);
-        const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
-        const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
-        ciclos.push({
-          inicio,
-          fim,
-          nome: `${nomeMesInicio} - ${nomeMesFim}`
-        });
-      }
+      const mesAnterior = dataBase.getMonth() === 0 ? 11 : dataBase.getMonth() - 1;
+      const anoInicio = mesAnterior === 11 ? dataBase.getFullYear() - 1 : dataBase.getFullYear();
+      const inicio = new Date(anoInicio, mesAnterior, 25);
+      const fim = new Date(dataBase.getFullYear(), dataBase.getMonth(), 24);
+      const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
+      const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
+      ciclos.push({
+        inicio,
+        fim,
+        nome: `${nomeMesInicio} - ${nomeMesFim}`
+      });
     }
 
     // Adiciona ciclo atual
@@ -44,19 +41,17 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     // Adiciona ciclos futuros (12 meses para frente)
     for (let i = 1; i <= 12; i++) {
       const dataBase = addMonths(hoje, i);
-      if (dataBase.getDate() >= 25) {
-        const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth(), 25);
-        const proxMes = dataBase.getMonth() === 11 ? 0 : dataBase.getMonth() + 1;
-        const anoFim = proxMes === 0 ? dataBase.getFullYear() + 1 : dataBase.getFullYear();
-        const fim = new Date(anoFim, proxMes, 24);
-        const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
-        const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
-        ciclos.push({
-          inicio,
-          fim,
-          nome: `${nomeMesInicio} - ${nomeMesFim}`
-        });
-      }
+      const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth(), 25);
+      const proxMes = dataBase.getMonth() === 11 ? 0 : dataBase.getMonth() + 1;
+      const anoFim = proxMes === 0 ? dataBase.getFullYear() + 1 : dataBase.getFullYear();
+      const fim = new Date(anoFim, proxMes, 24);
+      const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
+      const nomeMesFim = format(fim, 'MMMM', { locale: ptBR });
+      ciclos.push({
+        inicio,
+        fim,
+        nome: `${nomeMesInicio} - ${nomeMesFim}`
+      });
     }
 
     return ciclos;
