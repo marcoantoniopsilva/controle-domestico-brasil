@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CicloFinanceiro } from "@/types";
 import { calcularCicloAtual } from "@/utils/financas";
-import { addMonths, format } from "date-fns";
+import { addMonths, format, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface SeletorCicloProps {
