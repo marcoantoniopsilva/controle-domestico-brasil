@@ -10,6 +10,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     
     // Se não tiver transações parceladas, retorna array vazio
     if (transacoesParceladas.length === 0) {
+      console.log("Nenhuma transação parcelada encontrada");
       return [];
     }
 
@@ -19,7 +20,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     
     // Para cada transação parcelada, projeta as parcelas futuras
     transacoesParceladas.forEach(transacao => {
-      // Data da transação original
+      // Garantir que estamos trabalhando com um objeto Date
       const dataTransacao = new Date(transacao.data);
       
       console.log(`Gerando parcelas para transação: ${transacao.descricao || transacao.categoria}`, 
@@ -34,7 +35,6 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
         dataParcela.setMonth(dataTransacao.getMonth() + (i - 1));
         
         // Ajusta o dia se necessário para evitar problemas com meses com diferentes números de dias
-        // Por exemplo, se a data original é 31/01, a próxima parcela será 28/02 em anos não bissextos
         const ultimoDiaDoMes = new Date(
           dataParcela.getFullYear(),
           dataParcela.getMonth() + 1,
@@ -49,21 +49,26 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
         const parcela: Transacao = {
           ...transacao,
           id: `projecao-${transacao.id}-parcela-${i}`,
-          data: dataParcela,
+          data: new Date(dataParcela),  // Garantir que é um novo objeto Date
           descricao: `${transacao.descricao || transacao.categoria} (Parcela ${i}/${transacao.parcelas})`,
           isParcela: true, // Marca como uma parcela projetada
           parcelaAtual: i
         };
         
-        console.log(`Gerada parcela ${i}/${transacao.parcelas} para data: ${dataParcela.toISOString()}`);
+        console.log(`Gerada parcela ${i}/${transacao.parcelas} para data: ${parcela.data.toISOString()}`);
         todasParcelas.push(parcela);
       }
     });
     
-    console.log("Parcelas futuras geradas:", todasParcelas.length);
+    console.log("Total de parcelas futuras geradas:", todasParcelas.length);
+    
+    // Log detalhado das primeiras parcelas para depuração
     todasParcelas.forEach((parcela, index) => {
       if (index < 10) { // Limitar a 10 para não sobrecarregar o console
-        console.log(`Parcela ${index}: ${parcela.descricao}, data: ${new Date(parcela.data).toISOString()}`);
+        console.log(`Parcela ${index}: ${parcela.descricao}`);
+        console.log(`  Data: ${new Date(parcela.data).toISOString()}`);
+        console.log(`  Categoria: ${parcela.categoria}`);
+        console.log(`  Valor: ${parcela.valor}`);
       }
     });
     

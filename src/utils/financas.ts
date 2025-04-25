@@ -1,3 +1,4 @@
+
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 
 // Definição das categorias com orçamentos
@@ -6,8 +7,8 @@ export const categorias: Categoria[] = [
   { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0 },
   { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0 },
   { nome: "Farmácia", orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0 }, // Updated name and limit
-  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0 }, // New category
+  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0 }, 
+  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0 }, 
   { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0 },
   { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0 },
   { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0 },
@@ -17,8 +18,8 @@ export const categorias: Categoria[] = [
   { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0 },
   { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0 },
   { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0 },
-  { nome: "Essence", orcamento: 0, gastosAtuais: 0 }, // New category without limit
-  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0 }, // New category
+  { nome: "Essence", orcamento: 0, gastosAtuais: 0 }, 
+  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0 }, 
   { nome: "Outros", orcamento: 500, gastosAtuais: 0 },
 ];
 
@@ -45,18 +46,18 @@ export function calcularCicloAtual(): CicloFinanceiro {
     fimMes = new Date(anoFim, proxMes, 24);
   }
   
-  // Formatação do nome do ciclo
+  // Formatação do nome do ciclo com os anos sempre incluídos
   const meses = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
   
-  const mesInicioNome = meses[inicioMes.getMonth()];
-  const mesFimNome = meses[fimMes.getMonth()];
+  const mesInicioNome = meses[inicioMes.getMonth()].toLowerCase();
+  const mesFimNome = meses[fimMes.getMonth()].toLowerCase();
   const anoInicio = inicioMes.getFullYear();
   const anoFim = fimMes.getFullYear();
   
-  // Sempre incluir o ano para evitar confusão
+  // Sempre incluir os anos no nome do ciclo
   const nomeCiclo = `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
   
   console.log(`Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
@@ -88,15 +89,41 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   const inicio = new Date(ciclo.inicio);
   const fim = new Date(ciclo.fim);
   
+  // Certifique-se de que as datas estejam na hora 00:00:00 para comparação
+  inicio.setHours(0, 0, 0, 0);
+  fim.setHours(23, 59, 59, 999);
+  
+  console.log("Filtrando transações para o ciclo:", ciclo.nome);
+  console.log("Data início do ciclo:", inicio.toISOString());
+  console.log("Data fim do ciclo:", fim.toISOString());
+  
   return transacoes.filter(transacao => {
-    const dataTransacao = new Date(transacao.data);
-    return dataTransacao >= inicio && dataTransacao <= fim;
+    // Certifique-se de que estamos trabalhando com objetos Date
+    let dataTransacao = new Date(transacao.data);
+    dataTransacao.setHours(0, 0, 0, 0);
+    
+    const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
+    
+    if (estaNoCiclo) {
+      console.log(`Transação ${transacao.id} está no ciclo ${ciclo.nome}`);
+      console.log(`Data da transação: ${dataTransacao.toISOString()}`);
+    }
+    
+    return estaNoCiclo;
   });
 }
 
 // Função para verificar se uma data está dentro do ciclo - melhorada para garantir comparação correta
 export function dataEstaNoCiclo(data: Date, ciclo: CicloFinanceiro): boolean {
+  // Certifique-se de que estamos trabalhando com objetos Date
+  const dataParaComparar = new Date(data);
   const inicio = new Date(ciclo.inicio);
   const fim = new Date(ciclo.fim);
-  return data >= inicio && data <= fim;
+  
+  // Configure as horas para garantir comparação correta
+  dataParaComparar.setHours(0, 0, 0, 0);
+  inicio.setHours(0, 0, 0, 0);
+  fim.setHours(23, 59, 59, 999);
+  
+  return dataParaComparar >= inicio && dataParaComparar <= fim;
 }

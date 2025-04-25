@@ -20,6 +20,20 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     const ciclos: CicloFinanceiro[] = [];
     const hoje = new Date();
 
+    console.log("Gerando ciclos disponíveis");
+    
+    // Adiciona ciclos específicos que queremos garantir que existam
+    const ciclosEspecificos = [
+      {
+        inicio: new Date(2025, 2, 25), // Março (0-based index, então 2)
+        fim: new Date(2025, 3, 24),    // Abril
+        nome: "março 2025 - abril 2025"
+      }
+    ];
+    
+    console.log("Ciclos específicos adicionados:", ciclosEspecificos);
+    ciclosEspecificos.forEach(ciclo => ciclos.push(ciclo));
+
     // Adiciona ciclos anteriores (12 meses para trás)
     for (let i = -12; i < 0; i++) {
       const dataBase = addMonths(hoje, i);
@@ -38,8 +52,8 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       const nomeCompleto = `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
       
       ciclos.push({
-        inicio,
-        fim,
+        inicio: new Date(inicio),
+        fim: new Date(fim),
         nome: nomeCompleto
       });
     }
@@ -54,7 +68,8 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     const nomeCompletoAtual = `${nomeMesInicioAtual} ${nomeAnoInicioAtual} - ${nomeMesFimAtual} ${nomeAnoFimAtual}`;
     
     ciclos.push({
-      ...cicloAtual,
+      inicio: new Date(cicloAtual.inicio),
+      fim: new Date(cicloAtual.fim),
       nome: nomeCompletoAtual
     });
 
@@ -75,70 +90,94 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       const nomeCompleto = `${nomeMesInicio} ${nomeAnoInicio} - ${nomeMesFim} ${nomeAnoFim}`;
       
       ciclos.push({
-        inicio,
-        fim,
+        inicio: new Date(inicio),
+        fim: new Date(fim),
         nome: nomeCompleto
       });
     }
 
-    // Adicionar março-abril 2025 se não estiver na lista
-    const marcoAbril2025Encontrado = ciclos.some(ciclo => {
-      const mesInicio = format(ciclo.inicio, 'MMMM', { locale: ptBR });
-      const anoInicio = format(ciclo.inicio, 'yyyy');
-      return mesInicio.toLowerCase() === 'março' && anoInicio === '2025';
+    // Ordenar ciclos por data (mais antigos primeiro)
+    ciclos.sort((a, b) => a.inicio.getTime() - b.inicio.getTime());
+
+    // Verificar se março-abril 2025 está na lista e imprimir
+    const encontrado = ciclos.some(c => {
+      const isMarcoAbril2025 = c.inicio.getFullYear() === 2025 && c.inicio.getMonth() === 2;
+      if (isMarcoAbril2025) {
+        console.log("Ciclo março-abril 2025 encontrado na lista:", 
+          c.nome, 
+          "início:", c.inicio.toISOString(), 
+          "fim:", c.fim.toISOString());
+      }
+      return isMarcoAbril2025;
     });
-    
-    if (!marcoAbril2025Encontrado) {
-      const inicioMarco2025 = new Date(2025, 2, 25); // Março é 2 (zero-based)
-      const fimAbril2025 = new Date(2025, 3, 24);    // Abril é 3 (zero-based)
-      
-      ciclos.push({
-        inicio: inicioMarco2025,
-        fim: fimAbril2025,
-        nome: `março 2025 - abril 2025`
-      });
-      
-      console.log("Adicionado ciclo março-abril 2025 manualmente");
+
+    if (!encontrado) {
+      console.log("ERRO: Ciclo março-abril 2025 NÃO encontrado na lista após adição!");
     }
 
-    // Ordenar ciclos por data (mais antigos primeiro)
-    return ciclos.sort((a, b) => a.inicio.getTime() - b.inicio.getTime());
+    // Imprimir todos os ciclos para depuração
+    console.log("Total de ciclos disponíveis:", ciclos.length);
+    ciclos.forEach((c, idx) => {
+      console.log(`Ciclo ${idx}: ${c.nome}, início: ${c.inicio.toISOString()}, fim: ${c.fim.toISOString()}`);
+    });
+    
+    return ciclos;
   };
 
   const ciclosDisponiveis = getCiclosDisponiveis();
-  
-  // Log para verificação
-  console.log("Ciclos disponíveis:", ciclosDisponiveis.map(c => ({
-    nome: c.nome,
-    inicio: c.inicio.toISOString(),
-    fim: c.fim.toISOString()
-  })));
 
   const handleCicloChange = (cicloIndex: string) => {
-    const ciclo = ciclosDisponiveis[Number(cicloIndex)];
-    console.log("Alterando para ciclo:", ciclo.nome);
-    console.log("Data início:", ciclo.inicio);
-    console.log("Data fim:", ciclo.fim);
-    setCicloSelecionado(ciclo);
-    onCicloChange(ciclo);
+    const index = Number(cicloIndex);
+    if (index >= 0 && index < ciclosDisponiveis.length) {
+      const ciclo = ciclosDisponiveis[index];
+      console.log("Selecionando ciclo:", ciclo.nome);
+      console.log("Data início:", ciclo.inicio.toISOString());
+      console.log("Data fim:", ciclo.fim.toISOString());
+      
+      // Criando nova instância do objeto para garantir que as datas sejam corretamente tratadas
+      const cicloCopy = {
+        inicio: new Date(ciclo.inicio),
+        fim: new Date(ciclo.fim),
+        nome: ciclo.nome
+      };
+      
+      setCicloSelecionado(cicloCopy);
+      onCicloChange(cicloCopy);
+    } else {
+      console.error("Índice de ciclo inválido:", index, "Total de ciclos:", ciclosDisponiveis.length);
+    }
   };
+
+  // Encontra o índice do ciclo atual na lista
+  const cicloAtualIndex = ciclosDisponiveis.findIndex(
+    c => isSameMonth(c.inicio, cicloSelecionado.inicio) && 
+         c.inicio.getFullYear() === cicloSelecionado.inicio.getFullYear()
+  );
 
   return (
     <div className="flex items-center gap-4">
       <Button
         variant="outline"
         onClick={() => {
-          setCicloSelecionado(cicloAtual);
-          onCicloChange(cicloAtual);
+          console.log("Botão 'Ciclo Atual' clicado");
+          const cicloCopy = {
+            inicio: new Date(cicloAtual.inicio),
+            fim: new Date(cicloAtual.fim),
+            nome: cicloAtual.nome
+          };
+          setCicloSelecionado(cicloCopy);
+          onCicloChange(cicloCopy);
         }}
-        disabled={isSameMonth(cicloSelecionado.inicio, cicloAtual.inicio)}
+        disabled={
+          isSameMonth(cicloSelecionado.inicio, cicloAtual.inicio) && 
+          cicloSelecionado.inicio.getFullYear() === cicloAtual.inicio.getFullYear()
+        }
       >
         Ciclo Atual
       </Button>
       
       <Select
-        value={ciclosDisponiveis.findIndex(c => 
-          isSameMonth(c.inicio, cicloSelecionado.inicio)).toString()}
+        value={cicloAtualIndex !== -1 ? cicloAtualIndex.toString() : ""}
         onValueChange={handleCicloChange}
       >
         <SelectTrigger className="w-[280px]">

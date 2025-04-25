@@ -19,9 +19,17 @@ const Dashboard = () => {
 
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     console.log("Alterando ciclo para:", novoCiclo.nome);
-    console.log("Nova data de início:", novoCiclo.inicio);
-    console.log("Nova data de fim:", novoCiclo.fim);
-    setCicloAtual(novoCiclo);
+    console.log("Nova data de início:", novoCiclo.inicio instanceof Date ? novoCiclo.inicio.toISOString() : novoCiclo.inicio);
+    console.log("Nova data de fim:", novoCiclo.fim instanceof Date ? novoCiclo.fim.toISOString() : novoCiclo.fim);
+    
+    // Criar novas instâncias de Date para evitar referências de objeto
+    const cicloAtualizado: CicloFinanceiro = {
+      inicio: novoCiclo.inicio instanceof Date ? new Date(novoCiclo.inicio) : new Date(novoCiclo.inicio),
+      fim: novoCiclo.fim instanceof Date ? new Date(novoCiclo.fim) : new Date(novoCiclo.fim),
+      nome: novoCiclo.nome
+    };
+    
+    setCicloAtual(cicloAtualizado);
   };
 
   // Recarregar transações quando o componente é montado ou quando o usuário muda
@@ -35,34 +43,60 @@ const Dashboard = () => {
   // Filtragem de transações memorizada para melhor performance
   const transacoesFiltradas = useMemo(() => {
     console.log("Filtrando transações para ciclo:", cicloAtual.nome);
+    console.log("Data início do ciclo:", cicloAtual.inicio instanceof Date ? cicloAtual.inicio.toISOString() : cicloAtual.inicio);
+    console.log("Data fim do ciclo:", cicloAtual.fim instanceof Date ? cicloAtual.fim.toISOString() : cicloAtual.fim);
     
-    // Filtrar transações do ciclo atual - garantir conversão para datas
+    // Garantir que estamos trabalhando com objetos Date
+    const inicio = cicloAtual.inicio instanceof Date ? new Date(cicloAtual.inicio) : new Date(cicloAtual.inicio);
+    const fim = cicloAtual.fim instanceof Date ? new Date(cicloAtual.fim) : new Date(cicloAtual.fim);
+    
+    inicio.setHours(0, 0, 0, 0);
+    fim.setHours(23, 59, 59, 999);
+    
+    // Filtrar transações do ciclo atual
     const transacoesCicloAtual = transacoes.filter(t => {
       const data = new Date(t.data);
-      const inicio = new Date(cicloAtual.inicio);
-      const fim = new Date(cicloAtual.fim);
+      data.setHours(0, 0, 0, 0);
       
       const estaNoCiclo = data >= inicio && data <= fim;
+      
+      if (estaNoCiclo) {
+        console.log(`Transação ${t.id} (${t.descricao || t.categoria}) está no ciclo ${cicloAtual.nome}`);
+        console.log(`Data da transação: ${data.toISOString()}`);
+      }
+      
       return estaNoCiclo;
     });
+    
+    console.log(`Encontradas ${transacoesCicloAtual.length} transações no ciclo ${cicloAtual.nome}`);
     
     // Filtrar parcelas futuras para este ciclo
     const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
       const data = new Date(t.data);
-      const inicio = new Date(cicloAtual.inicio);
-      const fim = new Date(cicloAtual.fim);
+      data.setHours(0, 0, 0, 0);
       
-      return data >= inicio && data <= fim;
+      const estaNoCiclo = data >= inicio && data <= fim;
+      
+      if (estaNoCiclo) {
+        console.log(`Parcela futura ${t.id} (${t.descricao}) está no ciclo ${cicloAtual.nome}`);
+        console.log(`Data da parcela: ${data.toISOString()}`);
+      }
+      
+      return estaNoCiclo;
     });
     
     console.log("Transações do ciclo atual:", transacoesCicloAtual.length);
     console.log("Parcelas futuras do ciclo atual:", parcelasFuturasCicloAtual.length);
     
     // Combinar transações reais e parcelas futuras para este ciclo
-    return [
+    const todasTransacoes = [
       ...transacoesCicloAtual,
       ...parcelasFuturasCicloAtual
     ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    
+    console.log(`Total combinado de transações para o ciclo ${cicloAtual.nome}: ${todasTransacoes.length}`);
+    
+    return todasTransacoes;
     
   }, [transacoes, parcelasFuturas, cicloAtual]);
   
@@ -73,11 +107,15 @@ const Dashboard = () => {
     totalDespesas,
     saldo
   } = useMemo(() => {
+    console.log(`Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
+    
     // Calcular totais para cada categoria
     const categoriasAtuais = categorias.map(cat => {
       const gastosNaCategoria = transacoesFiltradas
         .filter(t => t.categoria === cat.nome && t.valor < 0)
         .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      
+      console.log(`Categoria ${cat.nome}: ${gastosNaCategoria}`);
       
       return {
         ...cat,
@@ -93,6 +131,8 @@ const Dashboard = () => {
       .filter(t => t.valor < 0)
       .reduce((acc, t) => acc + Math.abs(t.valor), 0);
     
+    console.log(`Receitas: ${receitas}, Despesas: ${despesas}, Saldo: ${receitas - despesas}`);
+    
     return {
       categoriasAtualizadas: categoriasAtuais,
       totalReceitas: receitas,
@@ -100,14 +140,9 @@ const Dashboard = () => {
       saldo: receitas - despesas
     };
     
-  }, [transacoesFiltradas]);
+  }, [transacoesFiltradas, cicloAtual]);
 
-  console.log("Ciclo atual:", cicloAtual.nome);
-  console.log("Data início do ciclo:", cicloAtual.inicio);
-  console.log("Data fim do ciclo:", cicloAtual.fim);
-  console.log("Total de transações combinadas:", transacoesFiltradas.length);
-  console.log("Total de transações carregadas:", transacoes.length);
-  console.log("Total de parcelas futuras:", parcelasFuturas.length);
+  console.log("Renderizando Dashboard com ciclo:", cicloAtual.nome);
   
   if (isLoading && !usuario) {
     return (
