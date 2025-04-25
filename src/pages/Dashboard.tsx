@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "@/components/layout/NavBar";
 import { calcularCicloAtual, categorias } from "@/utils/financas";
 import DashboardContent from "@/components/financas/DashboardContent";
@@ -11,7 +11,7 @@ import { useParcelasFuturas } from "@/hooks/useParcelasFuturas";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
-  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao } = useTransacoes();
+  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   
   // Obter as parcelas futuras projetadas
@@ -20,6 +20,13 @@ const Dashboard = () => {
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     setCicloAtual(novoCiclo);
   };
+
+  // Recarregar transações quando o componente é montado ou quando o usuário muda
+  useEffect(() => {
+    if (usuario) {
+      fetchTransacoes();
+    }
+  }, [usuario]);
 
   if (isLoading && !usuario) {
     return (
@@ -43,6 +50,10 @@ const Dashboard = () => {
       return data >= cicloAtual.inicio && data <= cicloAtual.fim;
     })
   ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  
+  console.log("Transações no ciclo atual:", transacoesCicloAtual);
+  console.log("Total de transações carregadas:", transacoes.length);
+  console.log("Total de parcelas futuras:", parcelasFuturas.length);
   
   const totalReceitas = transacoesCicloAtual
     .filter(t => t.valor > 0)

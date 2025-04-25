@@ -60,7 +60,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
     const novaTransacao: Omit<Transacao, "id"> = {
       data,
       categoria,
-      valor: tipo === "despesa" ? -valorNumerico : valorNumerico,
+      valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,
       quemGastou,
       descricao: descricao || undefined,
@@ -68,6 +68,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
     };
     
     try {
+      console.log("Enviando transação:", novaTransacao);
       onAddTransacao(novaTransacao);
       
       // Resetar o formulário
