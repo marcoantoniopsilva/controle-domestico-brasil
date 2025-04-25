@@ -14,23 +14,28 @@ export function useTransacoes() {
     try {
       const { data, error } = await supabase
         .from("lancamentos")
-        .select("*");
+        .select("*")
+        .order('data', { ascending: false }); // Ordenar por data, mais recentes primeiro
         
       if (error) {
         console.error("Erro ao carregar lançamentos:", error);
         toast.error("Erro ao carregar lançamentos: " + error.message);
       } else {
         console.log("Dados recebidos do Supabase:", data);
-        setTransacoes((data || []).map((t: any) => ({
+        // Converte datas de string para objeto Date
+        const transacoesConvertidas = (data || []).map((t: any) => ({
           id: t.id.toString(),
           data: new Date(t.data),
           categoria: t.categoria,
           valor: Number(t.valor),
           parcelas: t.parcelas || 1,
-          quemGastou: t.quem_gastou as "Marco" | "Bruna", // Corrected type assertion
+          quemGastou: t.quem_gastou as "Marco" | "Bruna",
           descricao: t.descricao,
-          tipo: t.tipo as "despesa" | "receita", // Corrected type assertion
-        })));
+          tipo: t.tipo as "despesa" | "receita",
+        }));
+        
+        console.log("Transações convertidas:", transacoesConvertidas.length);
+        setTransacoes(transacoesConvertidas);
       }
     } catch (error: any) {
       console.error("Erro ao buscar transações:", error);
@@ -60,7 +65,7 @@ export function useTransacoes() {
       const { data, error } = await supabase
         .from("lancamentos")
         .insert([insertObj])
-        .select(); // Adicionado .select() para retornar os dados inseridos
+        .select(); // Retorna os dados inseridos
       
       if (error) {
         console.error("Erro ao adicionar transação:", error);
@@ -77,9 +82,9 @@ export function useTransacoes() {
           categoria: data[0].categoria,
           valor: Number(data[0].valor),
           parcelas: data[0].parcelas,
-          quemGastou: data[0].quem_gastou as "Marco" | "Bruna", // Corrected type assertion
+          quemGastou: data[0].quem_gastou as "Marco" | "Bruna",
           descricao: data[0].descricao,
-          tipo: data[0].tipo as "despesa" | "receita", // Corrected type assertion
+          tipo: data[0].tipo as "despesa" | "receita",
         };
         setTransacoes(prev => [novaTransacaoComId, ...prev]);
       }
@@ -120,6 +125,7 @@ export function useTransacoes() {
     }
   };
 
+  // Inicialização - carrega transações na montagem do componente
   useEffect(() => {
     fetchTransacoes();
   }, []);

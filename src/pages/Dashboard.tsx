@@ -24,9 +24,57 @@ const Dashboard = () => {
   // Recarregar transações quando o componente é montado ou quando o usuário muda
   useEffect(() => {
     if (usuario) {
+      console.log("Recarregando transações para o usuário:", usuario.id);
       fetchTransacoes();
     }
   }, [usuario]);
+
+  // Filtrar transações do ciclo atual
+  const transacoesCicloAtual = transacoes.filter(t => {
+    const data = new Date(t.data);
+    return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+  });
+  
+  // Filtrar parcelas futuras para este ciclo
+  const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
+    const data = new Date(t.data);
+    return data >= cicloAtual.inicio && data <= cicloAtual.fim;
+  });
+  
+  // Combinar transações reais e parcelas futuras para este ciclo
+  const todasTransacoesCiclo = [
+    ...transacoesCicloAtual,
+    ...parcelasFuturasCicloAtual
+  ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  
+  console.log("Ciclo atual:", cicloAtual);
+  console.log("Transações do ciclo atual:", transacoesCicloAtual.length);
+  console.log("Parcelas futuras do ciclo atual:", parcelasFuturasCicloAtual.length);
+  console.log("Total de transações combinadas:", todasTransacoesCiclo.length);
+  console.log("Total de transações carregadas:", transacoes.length);
+  console.log("Total de parcelas futuras:", parcelasFuturas.length);
+  
+  // Calcular totais para cada categoria
+  const categoriasAtualizadas = categorias.map(cat => {
+    const gastosNaCategoria = todasTransacoesCiclo
+      .filter(t => t.categoria === cat.nome && t.valor < 0)
+      .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    
+    return {
+      ...cat,
+      gastosAtuais: gastosNaCategoria
+    };
+  });
+  
+  const totalReceitas = todasTransacoesCiclo
+    .filter(t => t.valor > 0)
+    .reduce((acc, t) => acc + t.valor, 0);
+    
+  const totalDespesas = todasTransacoesCiclo
+    .filter(t => t.valor < 0)
+    .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    
+  const saldo = totalReceitas - totalDespesas;
 
   if (isLoading && !usuario) {
     return (
@@ -38,33 +86,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Filtrar transações do ciclo atual + parcelas projetadas para este ciclo
-  const transacoesCicloAtual = [
-    ...transacoes.filter(t => {
-      const data = new Date(t.data);
-      return data >= cicloAtual.inicio && data <= cicloAtual.fim;
-    }),
-    ...parcelasFuturas.filter(t => {
-      const data = new Date(t.data);
-      return data >= cicloAtual.inicio && data <= cicloAtual.fim;
-    })
-  ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
-  
-  console.log("Transações no ciclo atual:", transacoesCicloAtual);
-  console.log("Total de transações carregadas:", transacoes.length);
-  console.log("Total de parcelas futuras:", parcelasFuturas.length);
-  console.log("Ciclo atual:", cicloAtual);
-  
-  const totalReceitas = transacoesCicloAtual
-    .filter(t => t.valor > 0)
-    .reduce((acc, t) => acc + t.valor, 0);
-    
-  const totalDespesas = transacoesCicloAtual
-    .filter(t => t.valor < 0)
-    .reduce((acc, t) => acc + Math.abs(t.valor), 0);
-    
-  const saldo = totalReceitas - totalDespesas;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -78,8 +99,8 @@ const Dashboard = () => {
             />
             
             <DashboardContent 
-              transacoes={transacoesCicloAtual}
-              categorias={categorias}
+              transacoes={todasTransacoesCiclo}
+              categorias={categoriasAtualizadas}
               cicloAtual={cicloAtual}
               onExcluirTransacao={handleExcluirTransacao}
               totalReceitas={totalReceitas}

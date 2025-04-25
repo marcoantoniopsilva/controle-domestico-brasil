@@ -21,9 +21,6 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       // Data da transação original
       const dataTransacao = new Date(transacao.data);
       
-      // Verifica se a primeira parcela está no ciclo atual
-      const primeiraParcelaNoCicloAtual = dataEstaNoCiclo(dataTransacao, cicloAtual);
-      
       // Gera as parcelas para todos os meses além do primeiro (que já está na lista de transações)
       for (let i = 2; i <= transacao.parcelas; i++) {
         // Calcula a data da parcela (um mês adicional por parcela)
