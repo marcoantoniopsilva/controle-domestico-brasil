@@ -1,11 +1,15 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NavBar from "@/components/layout/NavBar";
 import ResumoOrcamento from "@/components/financas/ResumoOrcamento";
-import { categorias } from "@/utils/financas";
+import { categorias, calcularCicloAtual } from "@/utils/financas";
 
 const Home = () => {
+  // Get the current financial cycle for the demo display
+  const cicloAtual = calcularCicloAtual();
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
@@ -44,7 +48,10 @@ const Home = () => {
                   <CardTitle>Orçamento por Categorias</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResumoOrcamento categorias={categorias} />
+                  <ResumoOrcamento 
+                    categorias={categorias} 
+                    cicloAtual={cicloAtual}
+                  />
                 </CardContent>
               </Card>
             </div>
