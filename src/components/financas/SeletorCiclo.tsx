@@ -22,6 +22,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       );
       
       if (cicloAtualIndex !== -1) {
+        console.log("[SeletorCiclo] Inicializando com ciclo atual:", cicloAtualIndex, ciclosDisponiveis[cicloAtualIndex].nome);
         setCicloSelecionado(cicloAtualIndex.toString());
       }
     }
@@ -60,11 +61,14 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     );
     
     if (cicloAtualIndex !== -1) {
+      console.log("[SeletorCiclo] Selecionando ciclo atual no índice:", cicloAtualIndex);
       setCicloSelecionado(cicloAtualIndex.toString());
     }
     
     onCicloChange(novoCiclo);
   };
+
+  console.log("[SeletorCiclo] Renderizando com cicloSelecionado:", cicloSelecionado);
 
   return (
     <div className="flex items-center gap-4">

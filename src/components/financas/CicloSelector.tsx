@@ -23,9 +23,12 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
   onCicloChange
 }) => {
   // Determina o texto a ser exibido no botão
-  const displayText = cicloSelecionado !== "" && Number(cicloSelecionado) < ciclosDisponiveis.length
-    ? ciclosDisponiveis[Number(cicloSelecionado)]?.nome
+  const displayText = cicloSelecionado !== "" 
+    ? ciclosDisponiveis[Number(cicloSelecionado)]?.nome || "Selecione o ciclo"
     : "Selecione o ciclo";
+    
+  console.log("[CicloSelector] Renderizando com ciclo selecionado:", cicloSelecionado);
+  console.log("[CicloSelector] Nome do ciclo exibido:", displayText);
 
   return (
     <DropdownMenu>

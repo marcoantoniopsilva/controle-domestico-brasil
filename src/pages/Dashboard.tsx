@@ -40,7 +40,11 @@ const Dashboard = () => {
     console.log("[Dashboard] Nova data fim:", novoCiclo.fim instanceof Date ? 
       novoCiclo.fim.toISOString() : novoCiclo.fim);
     
-    setCicloAtual(novoCiclo);
+    setCicloAtual({
+      inicio: new Date(novoCiclo.inicio),
+      fim: new Date(novoCiclo.fim),
+      nome: novoCiclo.nome
+    });
   };
 
   if (isLoading && !usuario) {
