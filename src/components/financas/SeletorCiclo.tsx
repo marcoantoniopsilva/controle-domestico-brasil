@@ -13,6 +13,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
   const { ciclosDisponiveis, cicloAtual } = useCiclos();
   const [cicloSelecionado, setCicloSelecionado] = useState<string>("");
 
+  // Este useEffect inicializa o ciclo selecionado quando o componente é montado
   useEffect(() => {
     if (ciclosDisponiveis.length > 0) {
       const cicloAtualIndex = ciclosDisponiveis.findIndex(c => 

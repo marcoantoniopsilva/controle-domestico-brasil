@@ -32,21 +32,16 @@ const Dashboard = () => {
     }
   }, [usuario, fetchTransacoes]);
 
-  // Log detalhado de todas as transações para diagnóstico
-  useEffect(() => {
-    if (transacoes.length > 0) {
-      console.log("[Dashboard] Todas as transações carregadas:", transacoes.length);
-      transacoes.forEach((t, idx) => {
-        if (idx < 20) {
-          console.log(`[Dashboard] Transação ${idx + 1}:`, 
-            `ID: ${t.id}`,
-            `Descrição: ${t.descricao || t.categoria}`,
-            `Data: ${new Date(t.data).toISOString()}`,
-            `Valor: ${t.valor}`);
-        }
-      });
-    }
-  }, [transacoes]);
+  // Handler para mudar o ciclo selecionado
+  const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
+    console.log("[Dashboard] Mudando para ciclo:", novoCiclo.nome);
+    console.log("[Dashboard] Nova data início:", novoCiclo.inicio instanceof Date ? 
+      novoCiclo.inicio.toISOString() : novoCiclo.inicio);
+    console.log("[Dashboard] Nova data fim:", novoCiclo.fim instanceof Date ? 
+      novoCiclo.fim.toISOString() : novoCiclo.fim);
+    
+    setCicloAtual(novoCiclo);
+  };
 
   if (isLoading && !usuario) {
     return <DashboardLoading />;
@@ -73,7 +68,7 @@ const Dashboard = () => {
               saldo={saldo}
               orcamentoTotal={categorias.reduce((acc, cat) => acc + cat.orcamento, 0)}
               isLoading={isLoading}
-              onCicloChange={setCicloAtual}
+              onCicloChange={handleCicloChange}
             />
           </>
         )}

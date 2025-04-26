@@ -22,13 +22,16 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
   cicloSelecionado,
   onCicloChange
 }) => {
+  // Determina o texto a ser exibido no botão
+  const displayText = cicloSelecionado !== "" && Number(cicloSelecionado) < ciclosDisponiveis.length
+    ? ciclosDisponiveis[Number(cicloSelecionado)]?.nome
+    : "Selecione o ciclo";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="min-w-[200px] justify-between">
-          {cicloSelecionado ? 
-            ciclosDisponiveis[Number(cicloSelecionado)]?.nome || "Selecione o ciclo" 
-            : "Selecione o ciclo"}
+          {displayText}
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
