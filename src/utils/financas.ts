@@ -1,4 +1,3 @@
-
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 
 // Definição das categorias com orçamentos
@@ -21,6 +20,9 @@ export const categorias: Categoria[] = [
   { nome: "Essence", orcamento: 0, gastosAtuais: 0 }, 
   { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0 }, 
   { nome: "Outros", orcamento: 500, gastosAtuais: 0 },
+  { nome: "Viagens", orcamento: 0, gastosAtuais: 0 },
+  { nome: "Casa", orcamento: 0, gastosAtuais: 0 },
+  { nome: "Gato", orcamento: 0, gastosAtuais: 0 },
 ];
 
 // Função para calcular o início e fim do ciclo atual
