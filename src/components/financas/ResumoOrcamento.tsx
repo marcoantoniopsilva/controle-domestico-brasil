@@ -1,14 +1,18 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Categoria } from "@/types";
+import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import GraficoCategorias from "./GraficoCategorias";
 
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
+  cicloAtual: CicloFinanceiro;
 }
 
-const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ categorias }) => {
+const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ 
+  categorias,
+  cicloAtual
+}) => {
   const totalOrcamento = categorias.reduce((acc, cat) => acc + cat.orcamento, 0);
   const totalGasto = categorias.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
   const percentualGasto = totalOrcamento > 0 
@@ -33,6 +37,9 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ categorias }) => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Resumo do Orçamento</CardTitle>
+        <div className="text-sm text-muted-foreground mt-1">
+          Ciclo: {cicloAtual.nome}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

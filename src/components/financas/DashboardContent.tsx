@@ -59,7 +59,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-4">
-          <ResumoOrcamento categorias={categorias} />
+          <ResumoOrcamento 
+            categorias={categorias} 
+            cicloAtual={cicloAtual}
+          />
           <ListaTransacoes 
             transacoes={transacoes.slice(0, 5)} 
             onExcluir={onExcluirTransacao}
