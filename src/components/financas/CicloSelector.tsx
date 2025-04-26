@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -24,13 +24,18 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
 }) => {
   // Determina o texto a ser exibido no botão
   const selectedIndex = cicloSelecionado !== "" ? Number(cicloSelecionado) : -1;
-  const displayText = selectedIndex >= 0 && selectedIndex < ciclosDisponiveis.length
-    ? ciclosDisponiveis[selectedIndex].nome
+  
+  // Garante que o índice é válido antes de usar
+  const isValidIndex = selectedIndex >= 0 && selectedIndex < ciclosDisponiveis.length;
+  const displayText = isValidIndex 
+    ? ciclosDisponiveis[selectedIndex].nome 
     : "Selecione o ciclo";
     
   console.log("[CicloSelector] Renderizando com ciclo selecionado:", cicloSelecionado);
   console.log("[CicloSelector] Índice selecionado:", selectedIndex);
+  console.log("[CicloSelector] É índice válido:", isValidIndex);
   console.log("[CicloSelector] Nome do ciclo exibido:", displayText);
+  console.log("[CicloSelector] Total de ciclos disponíveis:", ciclosDisponiveis.length);
 
   return (
     <DropdownMenu>

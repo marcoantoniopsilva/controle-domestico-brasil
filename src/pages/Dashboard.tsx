@@ -40,11 +40,15 @@ const Dashboard = () => {
     console.log("[Dashboard] Nova data fim:", novoCiclo.fim instanceof Date ? 
       novoCiclo.fim.toISOString() : novoCiclo.fim);
     
-    setCicloAtual({
+    // Garantir que as datas são objetos Date
+    const cicloParaDefinir = {
       inicio: new Date(novoCiclo.inicio),
       fim: new Date(novoCiclo.fim),
       nome: novoCiclo.nome
-    });
+    };
+    
+    setCicloAtual(cicloParaDefinir);
+    console.log("[Dashboard] Ciclo atualizado para:", cicloParaDefinir.nome);
   };
 
   if (isLoading && !usuario) {
