@@ -29,6 +29,8 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
   }, [ciclosDisponiveis, cicloAtual]);
 
   const handleCicloChange = (value: string) => {
+    setCicloSelecionado(value); // Importante atualizar o estado local primeiro
+    
     const index = Number(value);
     if (index >= 0 && index < ciclosDisponiveis.length) {
       const ciclo = ciclosDisponiveis[index];
@@ -42,7 +44,6 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
         nome: ciclo.nome
       };
       
-      setCicloSelecionado(value);
       onCicloChange(cicloCopy);
     }
   };
