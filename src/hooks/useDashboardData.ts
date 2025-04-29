@@ -142,6 +142,7 @@ export function useDashboardData(
       }
     });
     
+    // Calcular totais gerais para receitas e despesas diretamente das transações
     const receitas = transacoesFiltradas
       .filter(t => t.valor > 0)
       .reduce((acc, t) => acc + t.valor, 0);

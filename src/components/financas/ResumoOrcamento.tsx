@@ -52,10 +52,10 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               <span className="text-sm font-medium">Progresso Geral do Orçamento</span>
               <span className="text-sm font-medium">{percentualGasto}%</span>
             </div>
-            <div className={`h-2 w-full rounded-full ${statusClass}`}>
+            <div className="h-2 w-full rounded-full bg-slate-200">
               <div
-                className="h-2 rounded-full transition-all"
-                style={{ width: `${percentualGasto}%`, backgroundColor: "rgba(255,255,255,0.70)" }}
+                className={`h-2 rounded-full transition-all ${statusClass}`}
+                style={{ width: `${percentualGasto}%` }}
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
