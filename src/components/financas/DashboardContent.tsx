@@ -62,6 +62,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <ResumoOrcamento 
             categorias={categorias} 
             cicloAtual={cicloAtual}
+            totalDespesas={totalDespesas}
           />
           <ListaTransacoes 
             transacoes={transacoes.slice(0, 5)} 

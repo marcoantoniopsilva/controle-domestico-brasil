@@ -7,22 +7,24 @@ import GraficoCategorias from "./GraficoCategorias";
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
+  totalDespesas: number; // Adicionando totalDespesas como prop
 }
 
 const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ 
   categorias,
-  cicloAtual
+  cicloAtual,
+  totalDespesas
 }) => {
   // Filtramos apenas categorias de despesa para o orçamento
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   
   const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
-  const totalGasto = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  // Usamos o totalDespesas passado como prop em vez de recalcular
   
   const percentualGasto = totalOrcamento > 0 
-    ? Math.min(Math.round((totalGasto / totalOrcamento) * 100), 100) 
+    ? Math.min(Math.round((totalDespesas / totalOrcamento) * 100), 100) 
     : 0;
-  const restante = totalOrcamento - totalGasto;
+  const restante = totalOrcamento - totalDespesas;
 
   const dados = categoriasDespesa
     .filter(cat => cat.gastosAtuais > 0)
@@ -59,7 +61,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
-              <span>Gasto: {formatarMoeda(totalGasto)}</span>
+              <span>Gasto: {formatarMoeda(totalDespesas)}</span>
               <span className="text-muted-foreground">
                 Orçamento: {formatarMoeda(totalOrcamento)}
               </span>

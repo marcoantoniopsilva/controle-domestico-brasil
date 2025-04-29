@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { CicloFinanceiro, Transacao } from "@/types";
 import { categorias } from "@/utils/financas";
 import { useParcelasFuturas } from "./useParcelasFuturas";
