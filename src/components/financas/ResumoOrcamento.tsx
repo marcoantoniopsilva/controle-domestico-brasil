@@ -26,6 +26,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
     : 0;
   const restante = totalOrcamento - totalDespesas;
 
+  // Filtramos para o gráfico apenas categorias que têm gastos reais
   const dados = categoriasDespesa
     .filter(cat => cat.gastosAtuais > 0)
     .map(cat => ({

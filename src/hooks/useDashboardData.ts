@@ -38,8 +38,9 @@ export function useDashboardData(
       }
     });
     
-    // Filtrar transações do ciclo atual
+    // Filtrar transações do ciclo atual - estritamente no período
     const transacoesCicloAtual = transacoes.filter(t => {
+      // Certifique-se de que a data da transação é um objeto Date válido
       const dataTransacao = new Date(t.data);
       
       if (isNaN(dataTransacao.getTime())) {
@@ -49,6 +50,7 @@ export function useDashboardData(
       
       dataTransacao.setHours(0, 0, 0, 0);
       
+      // A transação deve estar estritamente entre o início e fim do ciclo
       const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
       
       if (estaNoCiclo) {
@@ -76,7 +78,7 @@ export function useDashboardData(
       console.log("[Dashboard] Tem transações para março-abril 2025:", temTransacoes);
     }
     
-    // Filtrar parcelas futuras para este ciclo
+    // Filtrar parcelas futuras para este ciclo - apenas as que pertencem ao ciclo atual
     const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
       const dataTransacao = new Date(t.data);
       
@@ -87,6 +89,7 @@ export function useDashboardData(
       
       dataTransacao.setHours(0, 0, 0, 0);
       
+      // A parcela deve estar estritamente entre o início e fim do ciclo
       const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
       
       if (estaNoCiclo) {
@@ -110,17 +113,17 @@ export function useDashboardData(
     return todasTransacoes;
   }, [transacoes, parcelasFuturas, cicloAtual]);
 
-  // Cálculo dos totais por categoria e totais gerais
+  // Cálculo dos totais por categoria e totais gerais - melhorado para incluir apenas transações do ciclo atual
   const totais = useMemo(() => {
     console.log(`[Dashboard] Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
     
-    // Calcular totais para cada categoria
+    // Calcular totais para cada categoria usando APENAS transações do ciclo atual
     const categoriasAtuais = categorias.map(cat => {
-      // Para despesas, filtramos valores negativos
-      // Para receitas, filtramos valores positivos
+      // Filtrar transações desta categoria que pertencem ao ciclo atual
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
       if (cat.tipo === "despesa") {
+        // Para despesas, considerar apenas valores negativos
         const gastosNaCategoria = transacoesDaCategoria
           .filter(t => t.valor < 0)
           .reduce((acc, t) => acc + Math.abs(t.valor), 0);
@@ -130,7 +133,7 @@ export function useDashboardData(
           gastosAtuais: gastosNaCategoria
         };
       } else {
-        // Para categorias de receita
+        // Para categorias de receita, considerar apenas valores positivos
         const receitasNaCategoria = transacoesDaCategoria
           .filter(t => t.valor > 0)
           .reduce((acc, t) => acc + t.valor, 0);
@@ -142,7 +145,7 @@ export function useDashboardData(
       }
     });
     
-    // Calcular totais gerais para receitas e despesas diretamente das transações
+    // Calcular totais gerais para receitas e despesas APENAS com transações do ciclo atual
     const receitas = transacoesFiltradas
       .filter(t => t.valor > 0)
       .reduce((acc, t) => acc + t.valor, 0);

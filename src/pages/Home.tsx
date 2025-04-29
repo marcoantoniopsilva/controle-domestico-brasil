@@ -11,6 +11,8 @@ const Home = () => {
   const cicloAtual = calcularCicloAtual();
   
   // Calculate a sample total of expenses for the home page demo
+  // Note: For the home page demo, we're using gastosAtuais which will be 0 by default
+  // This is intentional since the home page is just showing a demo/sample
   const totalDespesas = categorias
     .filter(cat => cat.tipo === "despesa")
     .reduce((acc, cat) => acc + cat.gastosAtuais, 0);

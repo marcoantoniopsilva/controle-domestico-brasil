@@ -100,11 +100,17 @@ export function calcularLimiteDiario(ciclo: CicloFinanceiro, orcamentoTotal: num
   return orcamentoTotal / diasNoCiclo;
 }
 
-// Função para filtrar transações por ciclo - melhorada para garantir comparação correta
+// Função para filtrar transações por ciclo - melhorada para garantir comparação correta e estrita
 export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloFinanceiro): Transacao[] {
-  // Certifique-se de que ciclo.inicio e ciclo.fim são instâncias de Date
+  // Certifique-se de que ciclo.inicio e ciclo.fim são instâncias de Date válidas
   const inicio = new Date(ciclo.inicio);
   const fim = new Date(ciclo.fim);
+  
+  // Verificar se as datas são válidas
+  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
+    console.error("[financas.ts] Datas de ciclo inválidas ao filtrar transações!");
+    return [];
+  }
   
   // Certifique-se de que as datas estejam na hora 00:00:00 para início e 23:59:59 para fim
   inicio.setHours(0, 0, 0, 0);
@@ -115,10 +121,18 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   console.log("[financas.ts] Data fim do ciclo:", fim.toISOString());
   
   return transacoes.filter(transacao => {
-    // Certifique-se de que estamos trabalhando com objetos Date
+    // Certifique-se de que estamos trabalhando com objetos Date válidos
     const dataTransacao = new Date(transacao.data);
+    
+    // Verificar se a data é válida
+    if (isNaN(dataTransacao.getTime())) {
+      console.error(`[financas.ts] Data inválida para transação ${transacao.id}`);
+      return false;
+    }
+    
     dataTransacao.setHours(0, 0, 0, 0);
     
+    // A transação deve estar estritamente entre o início e fim do ciclo
     const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
     
     if (estaNoCiclo) {
@@ -130,12 +144,24 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   });
 }
 
-// Função para verificar se uma data está dentro do ciclo - melhorada para garantir comparação correta
+// Função para verificar se uma data está dentro do ciclo - melhorada para garantir comparação correta e estrita
 export function dataEstaNoCiclo(data: Date, ciclo: CicloFinanceiro): boolean {
-  // Certifique-se de que estamos trabalhando com objetos Date
+  // Verificar se data é válida
+  if (!(data instanceof Date) || isNaN(data.getTime())) {
+    console.error("[financas.ts] Data inválida ao verificar se está no ciclo!");
+    return false;
+  }
+
+  // Certifique-se de que estamos trabalhando com objetos Date válidos
   const dataParaComparar = new Date(data);
   const inicio = new Date(ciclo.inicio);
   const fim = new Date(ciclo.fim);
+  
+  // Verificar se as datas do ciclo são válidas
+  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
+    console.error("[financas.ts] Datas de ciclo inválidas ao verificar se data está no ciclo!");
+    return false;
+  }
   
   // Configure as horas para garantir comparação correta
   dataParaComparar.setHours(0, 0, 0, 0);
