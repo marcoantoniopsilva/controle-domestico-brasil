@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,17 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
   const [descricao, setDescricao] = useState("");
   const [tipo, setTipo] = useState<"despesa" | "receita">("despesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filtramos as categorias com base no tipo selecionado
+  const categoriasFiltradas = useMemo(() => {
+    return categorias.filter(cat => cat.tipo === tipo);
+  }, [tipo]);
+
+  // Resetamos a categoria selecionada quando o tipo muda
+  const handleTipoChange = (novoTipo: "despesa" | "receita") => {
+    setTipo(novoTipo);
+    setCategoria("");  // Resetar categoria quando o tipo muda
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +135,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
           <Label htmlFor="tipo">Tipo</Label>
           <Select 
             value={tipo} 
-            onValueChange={(value) => setTipo(value as "despesa" | "receita")}
+            onValueChange={(value) => handleTipoChange(value as "despesa" | "receita")}
           >
             <SelectTrigger id="tipo">
               <SelectValue placeholder="Selecione o tipo" />
@@ -145,7 +156,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
               <SelectValue placeholder="Selecione uma categoria" />
             </SelectTrigger>
             <SelectContent>
-              {categorias.map((cat) => (
+              {categoriasFiltradas.map((cat) => (
                 <SelectItem key={cat.nome} value={cat.nome}>
                   {cat.nome}
                 </SelectItem>

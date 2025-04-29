@@ -1,28 +1,40 @@
+
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 
 // Definição das categorias com orçamentos
 export const categorias: Categoria[] = [
-  { nome: "Supermercado", orcamento: 2000, gastosAtuais: 0 },
-  { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0 },
-  { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0 },
-  { nome: "Farmácia", orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0 }, 
-  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0 }, 
-  { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0 },
-  { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0 },
-  { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0 },
-  { nome: "Academia", orcamento: 350, gastosAtuais: 0 },
-  { nome: "Poupança/investimento", orcamento: 100, gastosAtuais: 0 },
-  { nome: "Doações", orcamento: 100, gastosAtuais: 0 },
-  { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0 },
-  { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0 },
-  { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0 },
-  { nome: "Essence", orcamento: 0, gastosAtuais: 0 }, 
-  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0 }, 
-  { nome: "Outros", orcamento: 500, gastosAtuais: 0 },
-  { nome: "Viagens", orcamento: 0, gastosAtuais: 0 },
-  { nome: "Casa", orcamento: 0, gastosAtuais: 0 },
-  { nome: "Gato", orcamento: 0, gastosAtuais: 0 },
+  // Categorias de despesas
+  { nome: "Supermercado", orcamento: 2000, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Farmácia", orcamento: 600, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Academia", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Poupança/investimento", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Doações", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Essence", orcamento: 0, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Outros", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Viagens", orcamento: 150, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Casa", orcamento: 120, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Gato", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Despesas fixas no dinheiro", orcamento: 11910, gastosAtuais: 0, tipo: "despesa" },
+  
+  // Categorias de receitas
+  { nome: "Salário", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "13º", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "⅓ de férias", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Restituição", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Pagamento mamãe", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Receita Essence", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Outras receitas", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
 ];
 
 // Função para calcular o início e fim do ciclo atual

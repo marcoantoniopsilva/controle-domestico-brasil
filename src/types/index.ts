@@ -22,6 +22,7 @@ export interface Categoria {
   nome: string;
   orcamento: number;
   gastosAtuais: number;
+  tipo: 'despesa' | 'receita';
 }
 
 export interface CicloFinanceiro {
