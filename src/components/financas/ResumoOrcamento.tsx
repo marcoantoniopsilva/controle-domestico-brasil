@@ -13,14 +13,18 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   categorias,
   cicloAtual
 }) => {
-  const totalOrcamento = categorias.reduce((acc, cat) => acc + cat.orcamento, 0);
-  const totalGasto = categorias.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  // Filtramos apenas categorias de despesa para o orçamento
+  const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
+  
+  const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
+  const totalGasto = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  
   const percentualGasto = totalOrcamento > 0 
     ? Math.min(Math.round((totalGasto / totalOrcamento) * 100), 100) 
     : 0;
   const restante = totalOrcamento - totalGasto;
 
-  const dados = categorias
+  const dados = categoriasDespesa
     .filter(cat => cat.gastosAtuais > 0)
     .map(cat => ({
       name: cat.nome,

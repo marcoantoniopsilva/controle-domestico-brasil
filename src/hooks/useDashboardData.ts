@@ -116,14 +116,30 @@ export function useDashboardData(
     
     // Calcular totais para cada categoria
     const categoriasAtuais = categorias.map(cat => {
-      const gastosNaCategoria = transacoesFiltradas
-        .filter(t => t.categoria === cat.nome && t.valor < 0)
-        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      // Para despesas, filtramos valores negativos
+      // Para receitas, filtramos valores positivos
+      const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
-      return {
-        ...cat,
-        gastosAtuais: gastosNaCategoria
-      };
+      if (cat.tipo === "despesa") {
+        const gastosNaCategoria = transacoesDaCategoria
+          .filter(t => t.valor < 0)
+          .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+        
+        return {
+          ...cat,
+          gastosAtuais: gastosNaCategoria
+        };
+      } else {
+        // Para categorias de receita
+        const receitasNaCategoria = transacoesDaCategoria
+          .filter(t => t.valor > 0)
+          .reduce((acc, t) => acc + t.valor, 0);
+        
+        return {
+          ...cat,
+          gastosAtuais: receitasNaCategoria
+        };
+      }
     });
     
     const receitas = transacoesFiltradas
