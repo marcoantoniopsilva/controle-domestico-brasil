@@ -7,7 +7,7 @@ import GraficoCategorias from "./GraficoCategorias";
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
-  totalDespesas: number; // Adicionando totalDespesas como prop
+  totalDespesas: number;
 }
 
 const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ 
@@ -18,12 +18,15 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   // Filtramos apenas categorias de despesa para o orçamento
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   
+  // Calculamos o total do orçamento planejado
   const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
-  // Usamos o totalDespesas passado como prop em vez de recalcular
   
+  // Calculamos o percentual gasto em relação ao orçamento total (limitado a 100%)
   const percentualGasto = totalOrcamento > 0 
     ? Math.min(Math.round((totalDespesas / totalOrcamento) * 100), 100) 
     : 0;
+    
+  // Calculamos o valor restante (ou excedido)
   const restante = totalOrcamento - totalDespesas;
 
   // Filtramos para o gráfico apenas categorias que têm gastos reais
@@ -34,11 +37,18 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
       value: Math.abs(cat.gastosAtuais)
     }));
 
+  // Definimos a classe de estilo baseada no percentual gasto
   const statusClass = percentualGasto < 80 
     ? "bg-green-500"
     : percentualGasto < 100 
       ? "bg-blue-500" 
       : "bg-red-500";
+
+  // Debug
+  console.log("[ResumoOrcamento] Total de despesas:", totalDespesas);
+  console.log("[ResumoOrcamento] Total de orçamento:", totalOrcamento);
+  console.log("[ResumoOrcamento] Percentual gasto:", percentualGasto);
+  console.log("[ResumoOrcamento] Valor restante:", restante);
 
   return (
     <Card className="w-full">

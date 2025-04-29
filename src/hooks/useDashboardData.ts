@@ -29,15 +29,6 @@ export function useDashboardData(
     inicio.setHours(0, 0, 0, 0);
     fim.setHours(23, 59, 59, 999);
     
-    // Verificar cuidadosamente a data de todas as transações
-    console.log("[Dashboard] Verificando datas de todas as transações:");
-    transacoes.forEach((t, idx) => {
-      if (idx < 10) {
-        const dataTransacao = new Date(t.data);
-        console.log(`[Dashboard] Transação ${t.id} data: ${dataTransacao.toISOString()}, válida: ${!isNaN(dataTransacao.getTime())}`);
-      }
-    });
-    
     // Filtrar transações do ciclo atual - estritamente no período
     const transacoesCicloAtual = transacoes.filter(t => {
       // Certifique-se de que a data da transação é um objeto Date válido
@@ -61,22 +52,6 @@ export function useDashboardData(
     });
     
     console.log(`[Dashboard] Encontradas ${transacoesCicloAtual.length} transações no ciclo ${cicloAtual.nome}`);
-    
-    // Verificar se o ciclo é março-abril 2025
-    if (inicio.getFullYear() === 2025 && inicio.getMonth() === 2 && inicio.getDate() === 25) {
-      console.log("[Dashboard] CICLO ESPECIAL MARÇO-ABRIL 2025 DETECTADO!");
-      console.log("[Dashboard] Início:", inicio.toISOString());
-      console.log("[Dashboard] Fim:", fim.toISOString());
-      
-      // Verificar se alguma transação é desse período
-      const temTransacoes = transacoes.some(t => {
-        const dataT = new Date(t.data);
-        dataT.setHours(0, 0, 0, 0);
-        return dataT >= inicio && dataT <= fim;
-      });
-      
-      console.log("[Dashboard] Tem transações para março-abril 2025:", temTransacoes);
-    }
     
     // Filtrar parcelas futuras para este ciclo - apenas as que pertencem ao ciclo atual
     const parcelasFuturasCicloAtual = parcelasFuturas.filter(t => {
@@ -106,7 +81,7 @@ export function useDashboardData(
     const todasTransacoes = [
       ...transacoesCicloAtual,
       ...parcelasFuturasCicloAtual
-    ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    ];
     
     console.log(`[Dashboard] Total combinado de transações para o ciclo ${cicloAtual.nome}: ${todasTransacoes.length}`);
     
@@ -122,21 +97,28 @@ export function useDashboardData(
       // Filtrar transações desta categoria que pertencem ao ciclo atual
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
+      // Log para depuração
+      console.log(`[Dashboard] Categoria ${cat.nome}: ${transacoesDaCategoria.length} transações no ciclo atual`);
+      
       if (cat.tipo === "despesa") {
-        // Para despesas, considerar apenas valores negativos
+        // Para despesas, considerar apenas valores negativos que pertencem a este ciclo
         const gastosNaCategoria = transacoesDaCategoria
           .filter(t => t.valor < 0)
           .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+        
+        console.log(`[Dashboard] Total de gastos na categoria ${cat.nome}: ${gastosNaCategoria}`);
         
         return {
           ...cat,
           gastosAtuais: gastosNaCategoria
         };
       } else {
-        // Para categorias de receita, considerar apenas valores positivos
+        // Para categorias de receita, considerar apenas valores positivos que pertencem a este ciclo
         const receitasNaCategoria = transacoesDaCategoria
           .filter(t => t.valor > 0)
           .reduce((acc, t) => acc + t.valor, 0);
+        
+        console.log(`[Dashboard] Total de receitas na categoria ${cat.nome}: ${receitasNaCategoria}`);
         
         return {
           ...cat,
@@ -155,6 +137,13 @@ export function useDashboardData(
       .reduce((acc, t) => acc + Math.abs(t.valor), 0);
     
     console.log(`[Dashboard] Receitas: ${receitas}, Despesas: ${despesas}, Saldo: ${receitas - despesas}`);
+    
+    // Listar todas as transações para depuração
+    console.log("[Dashboard] Listagem de todas as transações consideradas:");
+    transacoesFiltradas.forEach(t => {
+      const tipo = t.valor > 0 ? "RECEITA" : "DESPESA";
+      console.log(`[Dashboard] ${tipo} - ${t.id} - ${t.descricao || t.categoria} - ${Math.abs(t.valor)} - Data: ${new Date(t.data).toISOString()}`);
+    });
     
     return {
       categoriasAtualizadas: categoriasAtuais,

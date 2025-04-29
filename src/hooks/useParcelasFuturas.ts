@@ -40,16 +40,16 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       // Garantir que estamos trabalhando com um objeto Date
       const dataTransacao = new Date(transacao.data);
       
-      console.log(`[useParcelasFuturas] Gerando parcelas para transação: ${transacao.descricao || transacao.categoria}`, 
-                 `ID: ${transacao.id}`,
-                 `Data: ${dataTransacao.toISOString()}`,
-                 `Total parcelas: ${transacao.parcelas}`);
-      
       // Verificar se a data é válida
       if (isNaN(dataTransacao.getTime())) {
         console.error(`[useParcelasFuturas] Data inválida para transação ${transacao.id}`);
         return;
       }
+      
+      console.log(`[useParcelasFuturas] Gerando parcelas para transação: ${transacao.descricao || transacao.categoria}`, 
+                 `ID: ${transacao.id}`,
+                 `Data: ${dataTransacao.toISOString()}`,
+                 `Total parcelas: ${transacao.parcelas}`);
       
       // Gera as parcelas para todos os meses além do primeiro (que já está na lista de transações)
       for (let i = 2; i <= transacao.parcelas; i++) {
@@ -78,13 +78,13 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
         const parcela: Transacao = {
           ...transacao,
           id: `projecao-${transacao.id}-parcela-${i}`,
-          data: new Date(dataParcela),
+          data: dataParcela,
           descricao: `${transacao.descricao || transacao.categoria} (Parcela ${i}/${transacao.parcelas})`,
           isParcela: true, // Marca como uma parcela projetada
           parcelaAtual: i
         };
         
-        console.log(`[useParcelasFuturas] Gerada parcela ${i}/${transacao.parcelas} para data: ${parcela.data.toISOString()}`);
+        console.log(`[useParcelasFuturas] Gerada parcela ${i}/${transacao.parcelas} para data: ${parcela.data instanceof Date ? parcela.data.toISOString() : parcela.data}`);
         todasParcelas.push(parcela);
       }
     });
