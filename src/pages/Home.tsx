@@ -9,6 +9,11 @@ import { categorias, calcularCicloAtual } from "@/utils/financas";
 const Home = () => {
   // Get the current financial cycle for the demo display
   const cicloAtual = calcularCicloAtual();
+  
+  // Calculate a sample total of expenses for the home page demo
+  const totalDespesas = categorias
+    .filter(cat => cat.tipo === "despesa")
+    .reduce((acc, cat) => acc + cat.gastosAtuais, 0);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -51,6 +56,7 @@ const Home = () => {
                   <ResumoOrcamento 
                     categorias={categorias} 
                     cicloAtual={cicloAtual}
+                    totalDespesas={totalDespesas}
                   />
                 </CardContent>
               </Card>
