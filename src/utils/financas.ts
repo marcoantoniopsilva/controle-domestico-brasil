@@ -120,7 +120,7 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
   console.log("[financas.ts] Data início do ciclo:", inicio.toISOString());
   console.log("[financas.ts] Data fim do ciclo:", fim.toISOString());
   
-  return transacoes.filter(transacao => {
+  const transacoesFiltradas = transacoes.filter(transacao => {
     // Certifique-se de que estamos trabalhando com objetos Date válidos
     const dataTransacao = new Date(transacao.data);
     
@@ -136,12 +136,14 @@ export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloF
     const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
     
     if (estaNoCiclo) {
-      console.log(`[financas.ts] Transação ${transacao.id} está no ciclo ${ciclo.nome}`);
-      console.log(`[financas.ts] Data da transação: ${dataTransacao.toISOString()}`);
+      console.log(`[financas.ts] Transação ${transacao.id} está no ciclo ${ciclo.nome} - ${dataTransacao.toISOString()}`);
     }
     
     return estaNoCiclo;
   });
+  
+  console.log(`[financas.ts] Total de transações filtradas: ${transacoesFiltradas.length}`);
+  return transacoesFiltradas;
 }
 
 // Função para verificar se uma data está dentro do ciclo - melhorada para garantir comparação correta e estrita

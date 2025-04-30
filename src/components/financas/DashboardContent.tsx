@@ -36,6 +36,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onCicloChange
 }) => {
   const [activeTab, setActiveTab] = useState("resumo");
+  
+  console.log("[DashboardContent] Total de despesas recebidas:", totalDespesas);
 
   return (
     <div className="space-y-8">

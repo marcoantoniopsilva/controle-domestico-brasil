@@ -29,7 +29,7 @@ export function useDashboardData(
     inicio.setHours(0, 0, 0, 0);
     fim.setHours(23, 59, 59, 999);
     
-    // Filtrar transações do ciclo atual - estritamente no período
+    // Filtrar transações reais do ciclo atual
     const transacoesCicloAtual = transacoes.filter(t => {
       // Certifique-se de que a data da transação é um objeto Date válido
       const dataTransacao = new Date(t.data);
@@ -88,20 +88,33 @@ export function useDashboardData(
     return todasTransacoes;
   }, [transacoes, parcelasFuturas, cicloAtual]);
 
-  // Cálculo dos totais por categoria e totais gerais - melhorado para incluir apenas transações do ciclo atual
+  // Cálculo dos totais por categoria e totais gerais - foco em separar receitas e despesas corretamente
   const totais = useMemo(() => {
     console.log(`[Dashboard] Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
+    
+    // Identificar explicitamente as categorias de receita para garantir a separação correta
+    const categoriasReceita = [
+      "Salário", 
+      "13º", 
+      "⅓ de férias", 
+      "Restituição", 
+      "Pagamento mamãe", 
+      "Receita Essence", 
+      "Outras receitas"
+    ];
     
     // Calcular totais para cada categoria usando APENAS transações do ciclo atual
     const categoriasAtuais = categorias.map(cat => {
       // Filtrar transações desta categoria que pertencem ao ciclo atual
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
-      // Log para depuração
-      console.log(`[Dashboard] Categoria ${cat.nome}: ${transacoesDaCategoria.length} transações no ciclo atual`);
+      console.log(`[Dashboard] Categoria ${cat.nome} (tipo: ${cat.tipo}): ${transacoesDaCategoria.length} transações no ciclo atual`);
       
-      if (cat.tipo === "despesa") {
-        // Para despesas, considerar apenas valores negativos que pertencem a este ciclo
+      // Verificar explicitamente se é uma categoria de despesa ou receita
+      const ehCategoriaReceita = categoriasReceita.includes(cat.nome);
+      
+      if (!ehCategoriaReceita) { // É uma categoria de despesa
+        // Para despesas, o valor é negativo
         const gastosNaCategoria = transacoesDaCategoria
           .filter(t => t.valor < 0)
           .reduce((acc, t) => acc + Math.abs(t.valor), 0);
@@ -112,8 +125,8 @@ export function useDashboardData(
           ...cat,
           gastosAtuais: gastosNaCategoria
         };
-      } else {
-        // Para categorias de receita, considerar apenas valores positivos que pertencem a este ciclo
+      } else { // É uma categoria de receita
+        // Para receitas, o valor é positivo
         const receitasNaCategoria = transacoesDaCategoria
           .filter(t => t.valor > 0)
           .reduce((acc, t) => acc + t.valor, 0);
@@ -128,28 +141,45 @@ export function useDashboardData(
     });
     
     // Calcular totais gerais para receitas e despesas APENAS com transações do ciclo atual
-    const receitas = transacoesFiltradas
-      .filter(t => t.valor > 0)
-      .reduce((acc, t) => acc + t.valor, 0);
-      
-    const despesas = transacoesFiltradas
-      .filter(t => t.valor < 0)
-      .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    // Adicionando mais logs para depuração
+    console.log("[Dashboard] Calculando totais de receitas e despesas:");
     
-    console.log(`[Dashboard] Receitas: ${receitas}, Despesas: ${despesas}, Saldo: ${receitas - despesas}`);
+    let totalReceitasCalculado = 0;
+    let totalDespesasCalculado = 0;
     
-    // Listar todas as transações para depuração
-    console.log("[Dashboard] Listagem de todas as transações consideradas:");
+    // Listamos todas as transações para depuração detalhada
     transacoesFiltradas.forEach(t => {
-      const tipo = t.valor > 0 ? "RECEITA" : "DESPESA";
-      console.log(`[Dashboard] ${tipo} - ${t.id} - ${t.descricao || t.categoria} - ${Math.abs(t.valor)} - Data: ${new Date(t.data).toISOString()}`);
+      const dataFormatada = t.data instanceof Date ? t.data.toISOString() : new Date(t.data).toISOString();
+      const valorAbs = Math.abs(t.valor);
+      const ehReceita = categoriasReceita.includes(t.categoria);
+      
+      // Verificamos explicitamente o tipo da transação baseado na categoria
+      if (ehReceita) {
+        if (t.valor > 0) {
+          totalReceitasCalculado += t.valor;
+          console.log(`[Dashboard] RECEITA: ${t.id} - ${t.categoria} - ${t.valor} - ${dataFormatada}`);
+        } else {
+          console.warn(`[Dashboard] ALERTA: Transação em categoria de receita com valor negativo: ${t.id} - ${t.categoria} - ${t.valor}`);
+        }
+      } else {
+        if (t.valor < 0) {
+          totalDespesasCalculado += valorAbs;
+          console.log(`[Dashboard] DESPESA: ${t.id} - ${t.categoria} - ${valorAbs} - ${dataFormatada}`);
+        } else {
+          console.warn(`[Dashboard] ALERTA: Transação em categoria de despesa com valor positivo: ${t.id} - ${t.categoria} - ${t.valor}`);
+        }
+      }
     });
+    
+    console.log(`[Dashboard] Total de receitas calculado: ${totalReceitasCalculado}`);
+    console.log(`[Dashboard] Total de despesas calculado: ${totalDespesasCalculado}`);
+    console.log(`[Dashboard] Saldo calculado: ${totalReceitasCalculado - totalDespesasCalculado}`);
     
     return {
       categoriasAtualizadas: categoriasAtuais,
-      totalReceitas: receitas,
-      totalDespesas: despesas,
-      saldo: receitas - despesas
+      totalReceitas: totalReceitasCalculado,
+      totalDespesas: totalDespesasCalculado,
+      saldo: totalReceitasCalculado - totalDespesasCalculado
     };
   }, [transacoesFiltradas, cicloAtual]);
 

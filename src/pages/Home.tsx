@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +9,9 @@ const Home = () => {
   // Get the current financial cycle for the demo display
   const cicloAtual = calcularCicloAtual();
   
-  // Calculate a sample total of expenses for the home page demo
-  // Note: For the home page demo, we're using gastosAtuais which will be 0 by default
-  // This is intentional since the home page is just showing a demo/sample
-  const totalDespesas = categorias
-    .filter(cat => cat.tipo === "despesa")
-    .reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  // Calculamos o valor base para totalDespesas como 0 para a página inicial
+  // Esta é apenas uma demonstração, os valores reais serão calculados no Dashboard
+  const totalDespesas = 0;
 
   return (
     <div className="min-h-screen flex flex-col">

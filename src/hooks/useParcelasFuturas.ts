@@ -22,6 +22,9 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       return [];
     }
     
+    ciclo.inicio.setHours(0, 0, 0, 0);
+    ciclo.fim.setHours(23, 59, 59, 999);
+    
     // Filtra apenas transações parceladas (parcelas > 1)
     const transacoesParceladas = transacoes.filter(t => t.parcelas > 1);
     
@@ -89,9 +92,21 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       }
     });
     
-    console.log("[useParcelasFuturas] Total de parcelas futuras geradas:", todasParcelas.length);
+    // Filtra apenas as parcelas que caem dentro do ciclo atual
+    const parcelasNoCiclo = todasParcelas.filter(parcela => {
+      const dataParcela = new Date(parcela.data);
+      dataParcela.setHours(0, 0, 0, 0);
+      
+      const estaNoCiclo = dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim;
+      if (estaNoCiclo) {
+        console.log(`[useParcelasFuturas] Parcela ${parcela.id} está no ciclo ${ciclo.nome}`);
+      }
+      return estaNoCiclo;
+    });
     
-    return todasParcelas;
+    console.log(`[useParcelasFuturas] Total de parcelas futuras geradas: ${todasParcelas.length}, das quais ${parcelasNoCiclo.length} estão no ciclo atual`);
+    
+    return parcelasNoCiclo;
   }, [transacoes, cicloAtual]);
   
   return parcelasFuturas;

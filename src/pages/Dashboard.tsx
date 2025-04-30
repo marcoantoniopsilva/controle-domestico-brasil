@@ -55,6 +55,9 @@ const Dashboard = () => {
     return <DashboardLoading />;
   }
 
+  // Log para depuração
+  console.log("[Dashboard] Renderizando Dashboard com totalDespesas:", totalDespesas);
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
@@ -74,7 +77,7 @@ const Dashboard = () => {
               totalReceitas={totalReceitas}
               totalDespesas={totalDespesas}
               saldo={saldo}
-              orcamentoTotal={categorias.reduce((acc, cat) => acc + cat.orcamento, 0)}
+              orcamentoTotal={categorias.reduce((acc, cat) => cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0)}
               isLoading={isLoading}
               onCicloChange={handleCicloChange}
             />
