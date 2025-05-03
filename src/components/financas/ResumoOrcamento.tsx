@@ -23,13 +23,16 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   // Calculamos o total do orçamento planejado
   const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
   
+  // Calculamos o total de despesas com base nas categorias
+  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  
   // Calculamos o percentual gasto em relação ao orçamento total (limitado a 100%)
   const percentualGasto = totalOrcamento > 0 
-    ? Math.min(Math.round((totalDespesas / totalOrcamento) * 100), 100) 
+    ? Math.min(Math.round((totalDespesasCategoria / totalOrcamento) * 100), 100) 
     : 0;
     
   // Calculamos o valor restante (ou excedido)
-  const restante = totalOrcamento - totalDespesas;
+  const restante = totalOrcamento - totalDespesasCategoria;
 
   // Identificar categorias com maior percentual do orçamento gasto
   const categoriasComMaiorGasto = categoriasDespesa
@@ -54,10 +57,10 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   const statusClass = percentualGasto < 80 
     ? "bg-green-500"
     : percentualGasto < 100 
-      ? "bg-blue-500" 
+      ? "bg-amber-500" 
       : "bg-red-500";
 
-  console.log("[ResumoOrcamento] Total de despesas:", totalDespesas);
+  console.log("[ResumoOrcamento] Total de despesas (categorias):", totalDespesasCategoria);
   console.log("[ResumoOrcamento] Total de orçamento:", totalOrcamento);
 
   return (
@@ -85,7 +88,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
-              <span>Gastos: {formatarMoeda(totalDespesas)}</span>
+              <span>Gastos: {formatarMoeda(totalDespesasCategoria)}</span>
               <span className="text-muted-foreground">
                 Orçamento: {formatarMoeda(totalOrcamento)}
               </span>
