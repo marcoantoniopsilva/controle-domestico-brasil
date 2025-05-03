@@ -11,6 +11,7 @@ import SeletorCiclo from "./SeletorCiclo";
 import { CicloFinanceiro } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
+import { formatarMoeda } from "@/utils/financas";
 
 interface DashboardContentProps {
   transacoes: Transacao[];
@@ -43,9 +44,13 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
   
+  // Calcular o total real de despesas (soma dos gastos atuais em todas as categorias de despesa)
+  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  
   console.log("[DashboardContent] Renderizando dashboard com dados atualizados");
   console.log("[DashboardContent] Total de receitas:", totalReceitas);
-  console.log("[DashboardContent] Total de despesas:", totalDespesas);
+  console.log("[DashboardContent] Total de despesas (de transações):", totalDespesas);
+  console.log("[DashboardContent] Total de despesas (soma categorias):", totalDespesasCategoria);
   console.log("[DashboardContent] Saldo:", saldo);
 
   return (
@@ -65,7 +70,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-primary">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalReceitas)}
+              {formatarMoeda(totalReceitas)}
             </p>
           </CardContent>
         </Card>
@@ -79,7 +84,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-destructive">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalDespesas)}
+              {formatarMoeda(totalDespesasCategoria)}
             </p>
           </CardContent>
         </Card>
@@ -93,7 +98,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           </CardHeader>
           <CardContent>
             <p className={`text-3xl font-bold ${saldo >= 0 ? "text-primary" : "text-destructive"}`}>
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(saldo)}
+              {formatarMoeda(totalReceitas - totalDespesasCategoria)}
             </p>
           </CardContent>
         </Card>

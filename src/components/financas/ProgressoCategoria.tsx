@@ -1,5 +1,4 @@
 
-import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
@@ -19,7 +18,7 @@ const ProgressoCategoria: React.FC<ProgressoCategoriaProps> = ({ categoria }) =>
   
   // Cores diferentes para diferentes níveis de gasto
   let barColor = "bg-green-500";
-  if (percentual >= 80 && percentual < 100) barColor = "bg-blue-500";
+  if (percentual >= 80 && percentual < 100) barColor = "bg-amber-500";
   if (percentual >= 100) barColor = "bg-red-500";
   
   // Para despesas, calculamos o restante do orçamento
