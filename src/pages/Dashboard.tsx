@@ -10,12 +10,14 @@ import DashboardLoading from "@/components/financas/DashboardLoading";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import NavBar from "@/components/layout/NavBar";
 import { categorias } from "@/utils/financas";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
   const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
 
+  // Usar o hook atualizado para processar os dados do dashboard
   const {
     transacoesFiltradas,
     categoriasAtualizadas,
@@ -35,10 +37,6 @@ const Dashboard = () => {
   // Handler para mudar o ciclo selecionado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     console.log("[Dashboard] Mudando para ciclo:", novoCiclo.nome);
-    console.log("[Dashboard] Nova data início:", novoCiclo.inicio instanceof Date ? 
-      novoCiclo.inicio.toISOString() : novoCiclo.inicio);
-    console.log("[Dashboard] Nova data fim:", novoCiclo.fim instanceof Date ? 
-      novoCiclo.fim.toISOString() : novoCiclo.fim);
     
     // Garantir que as datas são objetos Date
     const cicloParaDefinir = {
@@ -48,15 +46,17 @@ const Dashboard = () => {
     };
     
     setCicloAtual(cicloParaDefinir);
-    console.log("[Dashboard] Ciclo atualizado para:", cicloParaDefinir.nome);
+    toast.info(`Ciclo atualizado para: ${cicloParaDefinir.nome}`);
   };
 
   if (isLoading && !usuario) {
     return <DashboardLoading />;
   }
 
-  // Log para depuração
-  console.log("[Dashboard] Renderizando Dashboard com totalDespesas:", totalDespesas);
+  // Calcular o valor total do orçamento (soma dos orçamentos das categorias de despesa)
+  const orcamentoTotal = categorias
+    .filter(cat => cat.tipo === "despesa")
+    .reduce((acc, cat) => acc + cat.orcamento, 0);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -77,7 +77,7 @@ const Dashboard = () => {
               totalReceitas={totalReceitas}
               totalDespesas={totalDespesas}
               saldo={saldo}
-              orcamentoTotal={categorias.reduce((acc, cat) => cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0)}
+              orcamentoTotal={orcamentoTotal}
               isLoading={isLoading}
               onCicloChange={handleCicloChange}
             />

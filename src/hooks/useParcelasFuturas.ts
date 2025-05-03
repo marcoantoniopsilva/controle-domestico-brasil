@@ -13,8 +13,6 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
     };
     
     console.log(`[useParcelasFuturas] Gerando parcelas futuras para ciclo: ${ciclo.nome}`);
-    console.log(`[useParcelasFuturas] Data início do ciclo: ${ciclo.inicio.toISOString()}`);
-    console.log(`[useParcelasFuturas] Data fim do ciclo: ${ciclo.fim.toISOString()}`);
     
     // Verificar se as datas são válidas
     if (isNaN(ciclo.inicio.getTime()) || isNaN(ciclo.fim.getTime())) {
@@ -34,12 +32,17 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
       return [];
     }
 
-    console.log(`[useParcelasFuturas] Gerando parcelas futuras para ${transacoesParceladas.length} transações parceladas`);
+    console.log(`[useParcelasFuturas] Processando ${transacoesParceladas.length} transações parceladas`);
     
     const todasParcelas: Transacao[] = [];
     
     // Para cada transação parcelada, projeta as parcelas futuras
     transacoesParceladas.forEach(transacao => {
+      if (transacao.isParcela) {
+        console.log(`[useParcelasFuturas] Ignorando transação que já é uma parcela projetada: ${transacao.id}`);
+        return; // Ignorar transações que já são parcelas projetadas
+      }
+      
       // Garantir que estamos trabalhando com um objeto Date
       const dataTransacao = new Date(transacao.data);
       
@@ -49,10 +52,7 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
         return;
       }
       
-      console.log(`[useParcelasFuturas] Gerando parcelas para transação: ${transacao.descricao || transacao.categoria}`, 
-                 `ID: ${transacao.id}`,
-                 `Data: ${dataTransacao.toISOString()}`,
-                 `Total parcelas: ${transacao.parcelas}`);
+      console.log(`[useParcelasFuturas] Gerando parcelas para: ${transacao.descricao || transacao.categoria}`);
       
       // Gera as parcelas para todos os meses além do primeiro (que já está na lista de transações)
       for (let i = 2; i <= transacao.parcelas; i++) {
@@ -77,6 +77,16 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
           continue;
         }
         
+        // Verificar se esta parcela está dentro do ciclo atual
+        dataParcela.setHours(0, 0, 0, 0);
+        const parcelaEstaNoCiclo = dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim;
+        
+        if (!parcelaEstaNoCiclo) {
+          // Se a parcela não está neste ciclo, não adiciona
+          console.log(`[useParcelasFuturas] Parcela ${i}/${transacao.parcelas} não está no ciclo atual`);
+          continue;
+        }
+        
         // Criamos um novo objeto para a parcela futura
         const parcela: Transacao = {
           ...transacao,
@@ -87,26 +97,14 @@ export function useParcelasFuturas(transacoes: Transacao[], cicloAtual: CicloFin
           parcelaAtual: i
         };
         
-        console.log(`[useParcelasFuturas] Gerada parcela ${i}/${transacao.parcelas} para data: ${parcela.data instanceof Date ? parcela.data.toISOString() : parcela.data}`);
+        console.log(`[useParcelasFuturas] Adicionada parcela ${i}/${transacao.parcelas} ao ciclo ${ciclo.nome}`);
         todasParcelas.push(parcela);
       }
     });
     
-    // Filtra apenas as parcelas que caem dentro do ciclo atual
-    const parcelasNoCiclo = todasParcelas.filter(parcela => {
-      const dataParcela = new Date(parcela.data);
-      dataParcela.setHours(0, 0, 0, 0);
-      
-      const estaNoCiclo = dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim;
-      if (estaNoCiclo) {
-        console.log(`[useParcelasFuturas] Parcela ${parcela.id} está no ciclo ${ciclo.nome}`);
-      }
-      return estaNoCiclo;
-    });
+    console.log(`[useParcelasFuturas] Total de parcelas futuras para o ciclo: ${todasParcelas.length}`);
     
-    console.log(`[useParcelasFuturas] Total de parcelas futuras geradas: ${todasParcelas.length}, das quais ${parcelasNoCiclo.length} estão no ciclo atual`);
-    
-    return parcelasNoCiclo;
+    return todasParcelas;
   }, [transacoes, cicloAtual]);
   
   return parcelasFuturas;

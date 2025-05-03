@@ -9,6 +9,8 @@ import GraficoGastosDiarios from "./GraficoGastosDiarios";
 import ProgressoCategoria from "./ProgressoCategoria";
 import SeletorCiclo from "./SeletorCiclo";
 import { CicloFinanceiro } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
 
 interface DashboardContentProps {
   transacoes: Transacao[];
@@ -37,7 +39,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("resumo");
   
-  console.log("[DashboardContent] Total de despesas recebidas:", totalDespesas);
+  // Separamos categorias por tipo
+  const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
+  const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
+  
+  console.log("[DashboardContent] Renderizando dashboard com dados atualizados");
+  console.log("[DashboardContent] Total de receitas:", totalReceitas);
+  console.log("[DashboardContent] Total de despesas:", totalDespesas);
+  console.log("[DashboardContent] Saldo:", saldo);
 
   return (
     <div className="space-y-8">
@@ -46,16 +55,55 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         <SeletorCiclo onCicloChange={onCicloChange} />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <CardResumo titulo="Receitas" valor={totalReceitas} tipo="primary" />
-        <CardResumo titulo="Despesas" valor={totalDespesas} tipo="destructive" />
-        <CardResumo titulo="Saldo" valor={saldo} tipo="default" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Receitas do Ciclo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-primary">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalReceitas)}
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-destructive" />
+              Despesas do Ciclo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-destructive">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalDespesas)}
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <PieChart className="h-5 w-5 text-slate-700" />
+              Saldo do Ciclo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-3xl font-bold ${saldo >= 0 ? "text-primary" : "text-destructive"}`}>
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(saldo)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full flex flex-wrap justify-start">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="categorias">Categorias</TabsTrigger>
+          <TabsTrigger value="despesas">Despesas</TabsTrigger>
+          <TabsTrigger value="receitas">Receitas</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
         </TabsList>
@@ -72,9 +120,20 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           />
         </TabsContent>
         
-        <TabsContent value="categorias">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {categorias.map((categoria) => (
+        <TabsContent value="despesas">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {categoriasDespesa.map((categoria) => (
+              <ProgressoCategoria 
+                key={categoria.nome} 
+                categoria={categoria} 
+              />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="receitas">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {categoriasReceita.map((categoria) => (
               <ProgressoCategoria 
                 key={categoria.nome} 
                 categoria={categoria} 

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +10,8 @@ const Home = () => {
   // Get the current financial cycle for the demo display
   const cicloAtual = calcularCicloAtual();
   
-  // Calculamos o valor base para totalDespesas como 0 para a página inicial
-  // Esta é apenas uma demonstração, os valores reais serão calculados no Dashboard
-  const totalDespesas = 0;
+  // Para a página inicial, definimos um valor demo para totalDespesas
+  const totalDespesas = 0; // Valor demonstrativo
 
   return (
     <div className="min-h-screen flex flex-col">

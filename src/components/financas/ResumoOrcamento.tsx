@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import GraficoCategorias from "./GraficoCategorias";
+import { Button } from "@/components/ui/button";
+import { Wallet, TrendingDown } from "lucide-react";
 
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
@@ -29,12 +31,23 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   // Calculamos o valor restante (ou excedido)
   const restante = totalOrcamento - totalDespesas;
 
+  // Identificar categorias com maior percentual do orçamento gasto
+  const categoriasComMaiorGasto = categoriasDespesa
+    .filter(cat => cat.orcamento > 0 && cat.gastosAtuais > 0)
+    .sort((a, b) => (b.gastosAtuais / b.orcamento) - (a.gastosAtuais / a.orcamento))
+    .slice(0, 3);
+
+  // Sugestões de economia
+  const sugestoesEconomia = restante < 0 
+    ? categoriasComMaiorGasto
+    : [];
+
   // Filtramos para o gráfico apenas categorias que têm gastos reais
   const dados = categoriasDespesa
     .filter(cat => cat.gastosAtuais > 0)
     .map(cat => ({
       name: cat.nome,
-      value: Math.abs(cat.gastosAtuais)
+      value: cat.gastosAtuais
     }));
 
   // Definimos a classe de estilo baseada no percentual gasto
@@ -44,22 +57,22 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
       ? "bg-blue-500" 
       : "bg-red-500";
 
-  // Debug
   console.log("[ResumoOrcamento] Total de despesas:", totalDespesas);
   console.log("[ResumoOrcamento] Total de orçamento:", totalOrcamento);
-  console.log("[ResumoOrcamento] Percentual gasto:", percentualGasto);
-  console.log("[ResumoOrcamento] Valor restante:", restante);
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Resumo do Orçamento</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Wallet className="h-5 w-5" />
+          Resumo do Orçamento
+        </CardTitle>
         <div className="text-sm text-muted-foreground mt-1">
           Ciclo: {cicloAtual.nome}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">Progresso Geral do Orçamento</span>
@@ -72,7 +85,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
-              <span>Gasto: {formatarMoeda(totalDespesas)}</span>
+              <span>Gastos: {formatarMoeda(totalDespesas)}</span>
               <span className="text-muted-foreground">
                 Orçamento: {formatarMoeda(totalOrcamento)}
               </span>
@@ -86,6 +99,32 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               </span>
             </div>
           </div>
+          
+          {sugestoesEconomia.length > 0 && (
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div className="flex items-center gap-2 text-sm font-medium mb-2 text-amber-600">
+                <TrendingDown className="h-4 w-4" />
+                Sugestões de Economia
+              </div>
+              <ul className="space-y-2">
+                {sugestoesEconomia.map(cat => {
+                  const percentGasto = Math.round((cat.gastosAtuais / cat.orcamento) * 100);
+                  const excedido = cat.gastosAtuais - cat.orcamento;
+                  
+                  return (
+                    <li key={cat.nome} className="text-sm flex justify-between">
+                      <span>{cat.nome}</span>
+                      <span className="text-destructive">
+                        {excedido > 0 
+                          ? `+${formatarMoeda(excedido)}` 
+                          : `${percentGasto}%`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           
           <GraficoCategorias dados={dados} />
         </div>
