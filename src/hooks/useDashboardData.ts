@@ -64,10 +64,9 @@ export function useDashboardData(
     console.log(`[useDashboardData] Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
     
     // Lista definitiva de categorias de receita
-    const categoriasReceita = [
-      "Salário", "13º", "⅓ de férias", "Restituição", 
-      "Pagamento mamãe", "Receita Essence", "Outras receitas"
-    ];
+    const categoriasReceita = categorias
+      .filter(cat => cat.tipo === "receita")
+      .map(cat => cat.nome);
     
     // Calcular totais para cada categoria usando APENAS transações do ciclo atual
     const categoriasAtuais = categorias.map(cat => {
@@ -75,25 +74,15 @@ export function useDashboardData(
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
       // Verificar explicitamente se é uma categoria de despesa ou receita
-      const ehCategoriaReceita = categoriasReceita.includes(cat.nome);
+      const ehCategoriaReceita = cat.tipo === "receita";
       
-      if (!ehCategoriaReceita) { // É uma categoria de despesa
-        // Para despesas, somamos os valores absolutos (os valores são negativos)
-        const gastosNaCategoria = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-        
-        return {
-          ...cat,
-          gastosAtuais: gastosNaCategoria
-        };
-      } else { // É uma categoria de receita
-        // Para receitas, somamos os valores positivos
-        const receitasNaCategoria = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-        
-        return {
-          ...cat,
-          gastosAtuais: receitasNaCategoria
-        };
-      }
+      // Para todas as categorias, somamos os valores absolutos
+      const valorTotal = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      
+      return {
+        ...cat,
+        gastosAtuais: valorTotal
+      };
     });
     
     // Log detalhado de cada transação para depuração
@@ -104,7 +93,8 @@ export function useDashboardData(
     
     // Analisamos cada transação para classificá-la corretamente
     transacoesFiltradas.forEach(t => {
-      const ehReceita = categoriasReceita.includes(t.categoria);
+      const categoriaCorrespondente = categorias.find(cat => cat.nome === t.categoria);
+      const ehReceita = categoriaCorrespondente?.tipo === "receita";
       const valorAbs = Math.abs(t.valor);
       
       if (ehReceita) {

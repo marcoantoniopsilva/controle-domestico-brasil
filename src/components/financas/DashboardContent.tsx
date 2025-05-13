@@ -46,12 +46,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   
   // Calcular o total real de despesas (soma dos gastos atuais em todas as categorias de despesa)
   const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  // Calcular o saldo real com base nos totais das categorias
+  const saldoReal = totalReceitas - totalDespesasCategoria;
   
   console.log("[DashboardContent] Renderizando dashboard com dados atualizados");
   console.log("[DashboardContent] Total de receitas:", totalReceitas);
   console.log("[DashboardContent] Total de despesas (de transações):", totalDespesas);
   console.log("[DashboardContent] Total de despesas (soma categorias):", totalDespesasCategoria);
-  console.log("[DashboardContent] Saldo:", saldo);
+  console.log("[DashboardContent] Saldo:", saldoReal);
 
   return (
     <div className="space-y-8">
@@ -97,8 +99,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-3xl font-bold ${saldo >= 0 ? "text-primary" : "text-destructive"}`}>
-              {formatarMoeda(totalReceitas - totalDespesasCategoria)}
+            <p className={`text-3xl font-bold ${saldoReal >= 0 ? "text-primary" : "text-destructive"}`}>
+              {formatarMoeda(saldoReal)}
             </p>
           </CardContent>
         </Card>
@@ -117,7 +119,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <ResumoOrcamento 
             categorias={categorias} 
             cicloAtual={cicloAtual}
-            totalDespesas={totalDespesas}
+            totalDespesas={totalDespesasCategoria}
           />
           <ListaTransacoes 
             transacoes={transacoes.slice(0, 5)} 
