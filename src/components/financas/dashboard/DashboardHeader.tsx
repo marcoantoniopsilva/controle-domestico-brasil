@@ -1,21 +1,29 @@
 
 import SeletorCiclo from "../SeletorCiclo";
+import { useRef } from "react";
 
 interface DashboardHeaderProps {
   onCicloChange: (ciclo: any) => void;
 }
 
 const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
-  // Adicionar debounce para o manipulador de mudança de ciclo
+  // Usar useRef para manter a referência do timeout entre renders
+  const cicloTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Implementar debounce robusto para o manipulador de mudança de ciclo
   const handleCicloChange = (ciclo: any) => {
-    // Prevenimos múltiplas atualizações em sequência
-    if (window._cicloChangeTimeout) {
-      clearTimeout(window._cicloChangeTimeout);
+    // Limpar qualquer timeout pendente
+    if (cicloTimeoutRef.current) {
+      clearTimeout(cicloTimeoutRef.current);
+      cicloTimeoutRef.current = null;
     }
     
-    window._cicloChangeTimeout = setTimeout(() => {
+    // Definir um novo timeout com um delay significativo
+    cicloTimeoutRef.current = setTimeout(() => {
+      console.log("[DashboardHeader] Aplicando mudança de ciclo após debounce");
       onCicloChange(ciclo);
-    }, 1000); // Aumentado para 1 segundo
+      cicloTimeoutRef.current = null;
+    }, 2000); // Aumentado para 2 segundos
   };
   
   return (
@@ -27,12 +35,5 @@ const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
     </div>
   );
 };
-
-// Adicionamos a tipagem para as propriedades globais do window
-declare global {
-  interface Window {
-    _cicloChangeTimeout?: ReturnType<typeof setTimeout>;
-  }
-}
 
 export default DashboardHeader;
