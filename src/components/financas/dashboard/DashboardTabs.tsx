@@ -24,9 +24,7 @@ const DashboardTabs = ({
   cicloAtual,
   onExcluirTransacao,
   totalDespesasCategoria,
-  orcamentoTotal,
-  cacheKey,
-  updateKey
+  orcamentoTotal
 }: DashboardTabsProps) => {
   const [activeTab, setActiveTab] = useState("resumo");
   
@@ -34,10 +32,7 @@ const DashboardTabs = ({
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
   
-  // Gerar chaves únicas para componentes baseadas no cacheKey para forçar re-renderização
-  const generateKey = (prefix: string) => {
-    return `${prefix}-${cacheKey || updateKey || Date.now()}`;
-  };
+  // Remover geração de chaves dinâmicas baseadas em cacheKey
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -54,12 +49,10 @@ const DashboardTabs = ({
           categorias={categorias} 
           cicloAtual={cicloAtual}
           totalDespesas={totalDespesasCategoria}
-          key={generateKey('resumo')}
         />
         <ListaTransacoes 
           transacoes={transacoes.slice(0, 5)} 
           onExcluir={onExcluirTransacao}
-          key={generateKey('lista-resumo')}
         />
       </TabsContent>
       
@@ -67,7 +60,7 @@ const DashboardTabs = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {categoriasDespesa.map((categoria) => (
             <ProgressoCategoria 
-              key={`${categoria.nome}-${generateKey('cat-desp')}`}
+              key={categoria.nome}
               categoria={categoria} 
             />
           ))}
@@ -78,7 +71,7 @@ const DashboardTabs = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {categoriasReceita.map((categoria) => (
             <ProgressoCategoria 
-              key={`${categoria.nome}-${generateKey('cat-rec')}`}
+              key={categoria.nome}
               categoria={categoria} 
             />
           ))}
@@ -89,7 +82,6 @@ const DashboardTabs = ({
         <ListaTransacoes 
           transacoes={transacoes} 
           onExcluir={onExcluirTransacao}
-          key={generateKey('lista-all')}
         />
       </TabsContent>
       
@@ -99,7 +91,6 @@ const DashboardTabs = ({
             transacoes={transacoes} 
             ciclo={cicloAtual} 
             orcamentoTotal={orcamentoTotal}
-            key={generateKey('grafico')}
           />
         </div>
       </TabsContent>

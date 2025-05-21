@@ -22,7 +22,8 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   forceUpdate,
   cacheKey
 }) => {
-  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes, lastUpdate } = useTransacoes();
+  // Usar versão simplificada do hook de transações sem atualizações automáticas
+  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
 
   // Usar o hook atualizado para processar os dados do dashboard
   const {
@@ -33,13 +34,13 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     saldo
   } = useDashboardData(transacoes, cicloAtual);
 
-  // Recarregar transações quando o componente é montado ou quando o usuário muda
+  // Carregar transações apenas uma vez quando o componente é montado
   useEffect(() => {
     if (usuario) {
-      console.log("[DashboardMain] Recarregando transações para o usuário:", usuario.id);
+      console.log("[DashboardMain] Carregando transações para o usuário:", usuario.id);
       fetchTransacoes();
     }
-  }, [usuario, fetchTransacoes, forceUpdate]);
+  }, [usuario, fetchTransacoes]);
 
   // Calcular o valor total do orçamento (soma dos orçamentos das categorias de despesa)
   const orcamentoTotal = categorias
@@ -52,7 +53,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
         usuario={usuario}
         onAddTransacao={async (transacao) => {
           const result = await handleAddTransacao(transacao, usuario.id);
-          // Força uma atualização após adicionar uma transação
+          // Forçar uma atualização após adicionar uma transação
           if (result) {
             setTimeout(() => fetchTransacoes(), 1000);
           }

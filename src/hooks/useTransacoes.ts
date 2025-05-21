@@ -1,12 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Transacao } from "@/types";
 import { useTransacaoFetch } from "./useTransacaoFetch";
 import { useTransacaoCRUD } from "./useTransacaoCRUD";
-import { useTransacaoRealTime } from "./useTransacaoRealTime";
-import { useVisibilityTracking } from "./useVisibilityTracking";
-import { usePeriodicUpdates } from "./usePeriodicUpdates";
-import { checkAppVersion } from "@/utils/versionUtils";
 
 export function useTransacoes() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -17,7 +13,7 @@ export function useTransacoes() {
   const { fetchTransacoes: fetchApi } = useTransacaoFetch();
   const { handleAddTransacao, handleExcluirTransacao } = useTransacaoCRUD();
 
-  // Função para buscar e atualizar transações
+  // Função para buscar e atualizar transações - apenas sob demanda
   const fetchTransacoes = useCallback(async (showToast: boolean = false) => {
     setIsLoading(true);
     const { data } = await fetchApi(showToast);
@@ -26,28 +22,9 @@ export function useTransacoes() {
     setIsLoading(false);
   }, [fetchApi]);
 
-  // Verificar versão e buscar dados na montagem do componente
-  useEffect(() => {
-    const needsReload = checkAppVersion();
-    
-    // Forçar recarregamento completo da página apenas uma vez após atualização
-    if (needsReload) {
-      console.log("[useTransacoes] Recarregando página para atualizar bundle...");
-      window.location.reload();
-      return;
-    }
-    
-    fetchTransacoes();
-  }, [fetchTransacoes]);
-
-  // Monitorar alterações em tempo real
-  useTransacaoRealTime(fetchTransacoes);
-  
-  // Monitorar visibilidade do documento
-  useVisibilityTracking(fetchTransacoes);
-  
-  // Configurar atualizações periódicas
-  usePeriodicUpdates(fetchTransacoes);
+  // Não usar useEffect para carregar dados automaticamente
+  // Não configurar listeners para atualizações automáticas
+  // Não verificar versão da aplicação
 
   return {
     transacoes,

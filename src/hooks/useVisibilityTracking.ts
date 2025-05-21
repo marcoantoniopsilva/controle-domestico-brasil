@@ -2,26 +2,19 @@
 import { useEffect } from "react";
 
 /**
- * Hook to track document visibility changes and perform actions when the document
- * becomes visible again
+ * Hook to track document visibility changes - DISABLED
  */
 export function useVisibilityTracking(
   onBecomeVisible: () => void
 ) {
+  // Completamente desativado para evitar atualizações automáticas
+  
   useEffect(() => {
-    // Verificar atualizações quando o documento fica visível novamente
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        console.log("[useVisibilityTracking] Documento visível novamente, verificando atualizações...");
-        onBecomeVisible();
-      }
-    };
+    console.log("[useVisibilityTracking] Tracking de visibilidade desativado para estabilizar o dashboard");
     
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    
-    // Limpar listener ao desmontar
+    // Não configurar nenhum event listener
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      // Nada para limpar
     };
-  }, [onBecomeVisible]);
+  }, []);
 }

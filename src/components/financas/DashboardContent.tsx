@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 import DashboardHeader from "./dashboard/DashboardHeader";
 import SummaryCards from "./dashboard/SummaryCards";
@@ -34,13 +33,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   updateKey,
   cacheKey
 }) => {
-  // Forçar re-renderização quando updateKey ou cacheKey mudar
-  useEffect(() => {
-    if (cacheKey) {
-      console.log("[DashboardContent] Nova versão de cache detectada:", cacheKey);
-    }
-    console.log("[DashboardContent] Forçando re-renderização com updateKey:", updateKey);
-  }, [updateKey, cacheKey]);
+  // Removido o useEffect que causava re-renderização quando updateKey ou cacheKey mudavam
   
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
@@ -49,12 +42,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
   // Calcular o saldo real com base nos totais das categorias
   const saldoReal = totalReceitas - totalDespesasCategoria;
-  
-  console.log("[DashboardContent] Renderizando dashboard com dados atualizados");
-  console.log("[DashboardContent] Total de receitas:", totalReceitas);
-  console.log("[DashboardContent] Total de despesas (de transações):", totalDespesas);
-  console.log("[DashboardContent] Total de despesas (soma categorias):", totalDespesasCategoria);
-  console.log("[DashboardContent] Saldo:", saldoReal);
 
   return (
     <div className="space-y-8">

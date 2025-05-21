@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { calcularCicloAtual } from "@/utils/financas";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +6,7 @@ import DashboardLoading from "@/components/financas/DashboardLoading";
 import NavBar from "@/components/layout/NavBar";
 import DashboardMain from "@/components/financas/DashboardMain";
 import DashboardFooter from "@/components/financas/DashboardFooter";
-import { useVersionCheck, APP_VERSION } from "@/hooks/useVersionCheck";
+import { APP_VERSION } from "@/hooks/useVersionCheck";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 
