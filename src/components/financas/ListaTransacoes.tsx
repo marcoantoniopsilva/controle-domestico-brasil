@@ -61,7 +61,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onExcluir(transacao.id)}
+                    onClick={async () => await onExcluir(transacao.id)}
                     title="Excluir transação"
                   >
                     <Trash2 className="h-4 w-4" />

@@ -112,8 +112,8 @@ const Dashboard = () => {
               transacoes={transacoesFiltradas}
               categorias={categoriasAtualizadas}
               cicloAtual={cicloAtual}
-              onExcluirTransacao={(id) => {
-                handleExcluirTransacao(id);
+              onExcluirTransacao={async (id) => {
+                await handleExcluirTransacao(id);
                 // Força uma atualização após excluir uma transação
                 setTimeout(() => fetchTransacoes(), 1000);
               }}
