@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -8,6 +8,11 @@ export function useRealTimeUpdates(
   fetchDataFn: () => Promise<void>,
   setLastRefreshed: (time: number) => void
 ) {
+  // Referências para controlar debounce
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const storageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastUpdateRef = useRef<number>(Date.now());
+  
   // Configurar canais de tempo real para atualizações do banco de dados
   useEffect(() => {
     if (!userId) return;
@@ -22,16 +27,26 @@ export function useRealTimeUpdates(
         { event: '*', schema: 'public', table: 'lancamentos' }, 
         (payload) => {
           console.log("[useRealTimeUpdates] Alteração detectada via tempo real:", payload);
-          // Usar um debounce para evitar múltiplas atualizações em sequência
-          if (window._updateTimeout) {
-            clearTimeout(window._updateTimeout);
+          
+          // Verificar tempo desde a última atualização - mínimo 10 segundos entre atualizações
+          const now = Date.now();
+          if (now - lastUpdateRef.current < 10000) {
+            console.log("[useRealTimeUpdates] Ignorando atualização, muito recente desde a última");
+            return;
           }
           
-          window._updateTimeout = setTimeout(() => {
+          // Usar um debounce para evitar múltiplas atualizações em sequência
+          if (updateTimeoutRef.current) {
+            clearTimeout(updateTimeoutRef.current);
+          }
+          
+          updateTimeoutRef.current = setTimeout(() => {
+            console.log("[useRealTimeUpdates] Atualizando dados após debounce");
             fetchDataFn();
             setLastRefreshed(Date.now());
+            lastUpdateRef.current = Date.now();
             toast.info("Novos dados disponíveis!");
-          }, 2000); // Aguarda 2 segundos antes de atualizar
+          }, 5000); // Aguarda 5 segundos antes de atualizar
           
           // Avisar outras abas que houve atualização
           localStorage.setItem('data_updated_timestamp', Date.now().toString());
@@ -42,8 +57,8 @@ export function useRealTimeUpdates(
 
     return () => {
       supabase.removeChannel(channel);
-      if (window._updateTimeout) {
-        clearTimeout(window._updateTimeout);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
     };
   }, [userId, fetchDataFn, setLastRefreshed]);
@@ -57,6 +72,7 @@ export function useRealTimeUpdates(
       console.log("[useRealTimeUpdates] Atualizando dados...");
       await fetchDataFn();
       setLastRefreshed(Date.now());
+      lastUpdateRef.current = Date.now();
     };
     
     // Ouvir por atualizações vindas de outras abas/dispositivos com debounce
@@ -69,39 +85,52 @@ export function useRealTimeUpdates(
         if (updatedBy !== currentSessionId) {
           console.log("[useRealTimeUpdates] Dados atualizados em outra aba/dispositivo");
           
-          // Usar debounce para evitar múltiplas atualizações
-          if (window._storageTimeout) {
-            clearTimeout(window._storageTimeout);
+          // Verificar tempo desde a última atualização
+          const now = Date.now();
+          if (now - lastUpdateRef.current < 10000) {
+            console.log("[useRealTimeUpdates] Ignorando atualização de outra aba, muito recente");
+            return;
           }
           
-          window._storageTimeout = setTimeout(() => {
+          // Usar debounce para evitar múltiplas atualizações
+          if (storageTimeoutRef.current) {
+            clearTimeout(storageTimeoutRef.current);
+          }
+          
+          storageTimeoutRef.current = setTimeout(() => {
             refreshData();
-          }, 2000);
+          }, 5000);
         }
       }
       
-      // Verificar se há uma nova versão disponível
+      // Verificar se há uma nova versão disponível apenas a cada 30 segundos
       if (e.key === 'app_version' && e.newValue) {
-        const currentVersion = localStorage.getItem('app_version');
-        if (e.newValue !== currentVersion) {
-          console.log("[useRealTimeUpdates] Nova versão detectada via localStorage");
-          toast.info("Nova versão disponível, atualizando...");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+        const lastVersionCheck = parseInt(localStorage.getItem('last_version_check') || '0');
+        const now = Date.now();
+        
+        if (now - lastVersionCheck > 30000) {
+          const currentVersion = localStorage.getItem('app_version');
+          if (e.newValue !== currentVersion) {
+            console.log("[useRealTimeUpdates] Nova versão detectada via localStorage");
+            localStorage.setItem('last_version_check', now.toString());
+            toast.info("Nova versão disponível, atualizando...");
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000);
+          }
         }
       }
     };
     
-    // Verificar visibilidade com menos frequência
+    // Verificar visibilidade com muito menos frequência
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         // Verificar quando foi a última atualização
         const lastUpdate = parseInt(localStorage.getItem('last_data_refresh') || '0');
         const now = Date.now();
         
-        // Só atualiza se passou mais de 5 minutos desde a última atualização
-        if (now - lastUpdate > 300000) {
+        // Só atualiza se passou mais de 15 minutos desde a última atualização
+        if (now - lastUpdate > 900000) {
           console.log("[useRealTimeUpdates] Usuário retornou à página após longo período, atualizando dados...");
           refreshData();
           localStorage.setItem('last_data_refresh', now.toString());
@@ -138,8 +167,8 @@ export function useRealTimeUpdates(
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      if (window._storageTimeout) {
-        clearTimeout(window._storageTimeout);
+      if (storageTimeoutRef.current) {
+        clearTimeout(storageTimeoutRef.current);
       }
     };
   }, [userId, fetchDataFn, setLastRefreshed]);

@@ -6,7 +6,7 @@ import { useEffect } from "react";
  */
 export function usePeriodicUpdates(
   onUpdate: () => void,
-  intervalMs: number = 300000 // Aumentado para 5 minutos (300000ms)
+  intervalMs: number = 1800000 // Aumentado para 30 minutos (1800000ms)
 ) {
   useEffect(() => {
     console.log(`[usePeriodicUpdates] Configurando atualização periódica a cada ${intervalMs}ms`);

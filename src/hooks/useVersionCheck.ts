@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,20 +11,20 @@ export function useVersionCheck(userId?: string) {
   const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   // Estado para controlar a última verificação
-  const [lastCheck, setLastCheck] = useState<number>(Date.now());
+  const lastCheckRef = useRef<number>(Date.now());
 
   // Função para forçar atualização completa
   const forceFullRefresh = useCallback(async (fetchDataFn?: () => Promise<void>) => {
     // Evitar múltiplas atualizações em sequência
     const now = Date.now();
-    if (now - lastCheck < 10000) { // 10 segundos entre atualizações
+    if (now - lastCheckRef.current < 30000) { // 30 segundos entre atualizações
       console.log("[useVersionCheck] Ignorando atualização, muito recente desde a última");
       return;
     }
     
     console.log("[useVersionCheck] Forçando atualização completa da aplicação...");
     setIsRefreshing(true);
-    setLastCheck(now);
+    lastCheckRef.current = now;
     
     try {
       // Atualizar versão no localStorage para forçar atualização em outros dispositivos
@@ -33,12 +33,14 @@ export function useVersionCheck(userId?: string) {
       // Também salvar timestamp da última atualização
       localStorage.setItem('last_refresh_time', Date.now().toString());
       
-      // Broadcast para outros tabs/janelas abertas
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'app_version',
-        newValue: APP_VERSION,
-        storageArea: localStorage
-      }));
+      // Broadcast para outros tabs/janelas abertas com atraso para evitar loops
+      setTimeout(() => {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'app_version',
+          newValue: APP_VERSION,
+          storageArea: localStorage
+        }));
+      }, 1000);
       
       // Fazer uma série de atualizações para garantir dados frescos
       if (fetchDataFn) {
@@ -56,9 +58,9 @@ export function useVersionCheck(userId?: string) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [lastCheck]);
+  }, []);
 
-  // Verificar cache local e versão da aplicação - com menos frequência
+  // Verificar cache local e versão da aplicação - com muito menos frequência
   useEffect(() => {
     const checkVersion = () => {
       const localVersion = localStorage.getItem('dashboard_version');
@@ -85,10 +87,19 @@ export function useVersionCheck(userId?: string) {
     // Adicionar listener para mensagens de atualização de outros tabs/janelas
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'app_version' && e.newValue !== APP_VERSION) {
-        console.log("[useVersionCheck] Versão mudou em outra janela, atualizando...");
-        toast.info("Nova versão disponível, atualizando...");
-        // Forçar hard refresh para garantir que o novo código seja carregado
-        window.location.reload();
+        // Verificamos o último refresh para evitar loops
+        const lastRefresh = parseInt(localStorage.getItem('last_storage_refresh') || '0');
+        const now = Date.now();
+        
+        if (now - lastRefresh > 60000) { // 1 minuto entre refreshes
+          console.log("[useVersionCheck] Versão mudou em outra janela, atualizando...");
+          localStorage.setItem('last_storage_refresh', now.toString());
+          toast.info("Nova versão disponível, atualizando...");
+          // Forçar hard refresh para garantir que o novo código seja carregado
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        }
       }
       
       // Também reagir a mudanças de última atualização - com debounce
@@ -96,31 +107,28 @@ export function useVersionCheck(userId?: string) {
         const now = Date.now();
         const lastStorageCheck = parseInt(localStorage.getItem('last_storage_check') || '0');
         
-        // Só processa se passou mais de 10 segundos da última verificação
-        if (now - lastStorageCheck > 10000) {
+        // Só processa se passou mais de 30 segundos da última verificação
+        if (now - lastStorageCheck > 30000) {
           console.log("[useVersionCheck] Dados atualizados em outra janela");
           localStorage.setItem('last_storage_check', now.toString());
-          // Apenas atualizar os dados
-          forceFullRefresh();
         }
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Verificar periodicamente por atualizações (a cada 10 minutos)
+    // Verificar periodicamente por atualizações (a cada 30 minutos)
     const intervalCheck = setInterval(() => {
       const cacheTime = parseInt(localStorage.getItem('last_app_check') || '0');
       const now = Date.now();
       
-      // Só verifica a cada 10 minutos para não sobrecarregar
-      if (now - cacheTime > 600000) {
+      // Só verifica a cada 30 minutos para não sobrecarregar
+      if (now - cacheTime > 1800000) {
         localStorage.setItem('last_app_check', now.toString());
         
-        // Não precisamos verificar service worker constantemente
-        console.log("[useVersionCheck] Verificação periódica de versão (a cada 10 minutos)");
+        console.log("[useVersionCheck] Verificação periódica de versão (a cada 30 minutos)");
       }
-    }, 600000); // 10 minutos
+    }, 1800000); // 30 minutos
     
     return () => {
       clearInterval(intervalCheck);

@@ -15,7 +15,7 @@ const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
     
     window._cicloChangeTimeout = setTimeout(() => {
       onCicloChange(ciclo);
-    }, 300);
+    }, 1000); // Aumentado para 1 segundo
   };
   
   return (
