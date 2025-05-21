@@ -12,6 +12,10 @@ export function useRealTimeUpdates(
   useEffect(() => {
     if (!userId) return;
     
+    // Criar um ID único para esta sessão/instância do app
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('current_session_id', sessionId);
+    
     const channel = supabase
       .channel('public:lancamentos')
       .on('postgres_changes', 
@@ -21,6 +25,10 @@ export function useRealTimeUpdates(
           fetchDataFn();
           setLastRefreshed(Date.now());
           toast.info("Novos dados disponíveis!");
+          
+          // Avisar outras abas que houve atualização
+          localStorage.setItem('data_updated_timestamp', Date.now().toString());
+          localStorage.setItem('data_updated_by', sessionId);
         }
       )
       .subscribe();
@@ -52,12 +60,57 @@ export function useRealTimeUpdates(
       }
     };
     
+    // Ouvir por atualizações vindas de outras abas/dispositivos
+    const handleStorageChange = (e: StorageEvent) => {
+      const currentSessionId = localStorage.getItem('current_session_id');
+      
+      // Se a atualização veio de outra aba/dispositivo
+      if (e.key === 'data_updated_timestamp' && e.newValue) {
+        const updatedBy = localStorage.getItem('data_updated_by');
+        if (updatedBy !== currentSessionId) {
+          console.log("[useRealTimeUpdates] Dados atualizados em outra aba/dispositivo");
+          refreshData();
+        }
+      }
+      
+      // Verificar se há uma nova versão disponível
+      if (e.key === 'app_version' && e.newValue) {
+        const currentVersion = localStorage.getItem('app_version');
+        if (e.newValue !== currentVersion) {
+          console.log("[useRealTimeUpdates] Nova versão detectada via localStorage");
+          toast.info("Nova versão disponível, atualizando...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      }
+    };
+    
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Verificar conexão de rede
+    const handleOnline = () => {
+      console.log("[useRealTimeUpdates] Conexão de rede restaurada, atualizando dados...");
+      refreshData();
+      toast.success("Conexão com internet restaurada!");
+    };
+    
+    const handleOffline = () => {
+      console.log("[useRealTimeUpdates] Conexão de rede perdida");
+      toast.error("Conexão com internet perdida. Alguns recursos podem não funcionar.");
+    };
+    
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     
     // Limpar intervalos e listeners
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [userId, fetchDataFn, setLastRefreshed]);
 }

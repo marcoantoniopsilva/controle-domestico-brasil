@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { calcularCicloAtual } from "@/utils/financas";
 import { useAuth } from "@/hooks/useAuth";
 import { CicloFinanceiro } from "@/types";
@@ -35,6 +35,26 @@ const Dashboard = () => {
 
   // Criar uma chave de cache única que muda sempre que forceUpdate muda
   const cacheKey = `${appVersion}-${forceUpdate}-${lastUpdate}`;
+  
+  // Verificar atualizações quando o componente é montado
+  useEffect(() => {
+    if (usuario?.id) {
+      // Verificar se há uma nova versão disponível ao montar o componente
+      const currentVersion = localStorage.getItem('app_version');
+      const deployVersion = APP_VERSION;
+      
+      if (currentVersion !== deployVersion) {
+        console.log('[Dashboard] Nova versão detectada:', deployVersion);
+        localStorage.setItem('app_version', deployVersion);
+        
+        // Forçar recarregamento da página após pequeno delay para garantir que o usuário veja a mensagem
+        setTimeout(() => {
+          console.log('[Dashboard] Recarregando página para atualizar versão');
+          window.location.reload();
+        }, 1500);
+      }
+    }
+  }, [usuario?.id]);
 
   // Handler para mudar o ciclo selecionado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
