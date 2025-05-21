@@ -9,6 +9,7 @@ const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
   // Simplificado sem debounce ou lógica adicional que poderia causar loops
   const handleCicloChange = (ciclo: any) => {
     console.log("[DashboardHeader] Mudança de ciclo solicitada pelo usuário");
+    // Não precisamos fazer nada complexo aqui, apenas passar o ciclo para o componente pai
     onCicloChange(ciclo);
   };
   

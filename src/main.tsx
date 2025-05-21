@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Removido o checkForNewVersion para evitar verificações e recarregamentos
+// Garantindo que não temos nenhuma verificação de serviço worker ou versão
+console.log("[main] Inicializando aplicação com versão estável v2025-05-21-stable");
 
 // Render the app
 createRoot(document.getElementById("root")!).render(<App />);

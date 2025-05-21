@@ -10,7 +10,7 @@ export function useVersionCheck(userId?: string) {
   const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Função simplificada para atualização APENAS manual
+  // Função simplificada para atualização APENAS manual - otimizada para evitar loops
   const forceFullRefresh = useCallback(async (fetchDataFn?: () => Promise<void>) => {
     console.log("[useVersionCheck] Executando atualização manual iniciada pelo usuário");
     
@@ -27,6 +27,8 @@ export function useVersionCheck(userId?: string) {
         await fetchDataFn();
       }
       
+      // Não incrementar forceUpdate para evitar loops de renderização
+      // Apenas atualizar lastRefreshed para mostrar ao usuário
       setLastRefreshed(Date.now());
       toast.success("Dados atualizados com sucesso!");
     } catch (error) {
