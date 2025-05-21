@@ -33,7 +33,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   updateKey,
   cacheKey
 }) => {
-  // Removido o useEffect que causava re-renderização quando updateKey ou cacheKey mudavam
+  // Completamente removido qualquer efeito ou lógica que cause re-renderização
   
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");

@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
-// Versão fixa da aplicação para evitar mudanças constantes
+// Versão fixa da aplicação - nunca muda automaticamente
 export const APP_VERSION = `v2025-05-21-stable`;
 
 export function useVersionCheck(userId?: string) {
@@ -10,9 +10,16 @@ export function useVersionCheck(userId?: string) {
   const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  // Função simplificada para atualização manual apenas
+  // Função simplificada para atualização APENAS manual
   const forceFullRefresh = useCallback(async (fetchDataFn?: () => Promise<void>) => {
-    console.log("[useVersionCheck] Executando atualização manual");
+    console.log("[useVersionCheck] Executando atualização manual iniciada pelo usuário");
+    
+    // Prevenir múltiplos cliques
+    if (isRefreshing) {
+      console.log("[useVersionCheck] Atualização já em andamento, ignorando clique");
+      return;
+    }
+    
     setIsRefreshing(true);
     
     try {
@@ -26,9 +33,10 @@ export function useVersionCheck(userId?: string) {
       console.error("[useVersionCheck] Erro ao atualizar dados:", error);
       toast.error("Erro ao atualizar dados. Tente novamente.");
     } finally {
+      // Garantir que o estado de atualização é resetado
       setIsRefreshing(false);
     }
-  }, []);
+  }, [isRefreshing]);
 
   return {
     forceUpdate,

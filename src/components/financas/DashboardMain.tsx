@@ -34,13 +34,14 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     saldo
   } = useDashboardData(transacoes, cicloAtual);
 
-  // Carregar transações apenas uma vez quando o componente é montado
+  // Carregar transações apenas UMA vez quando o componente é montado
+  // Otimizado para evitar múltiplos fetchs - array de deps vazio
   useEffect(() => {
     if (usuario) {
-      console.log("[DashboardMain] Carregando transações para o usuário:", usuario.id);
+      console.log("[DashboardMain] Carregando transações iniciais para o usuário:", usuario.id);
       fetchTransacoes();
     }
-  }, [usuario, fetchTransacoes]);
+  }, []); // Apenas no mount inicial para evitar loops
 
   // Calcular o valor total do orçamento (soma dos orçamentos das categorias de despesa)
   const orcamentoTotal = categorias

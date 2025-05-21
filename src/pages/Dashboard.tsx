@@ -16,45 +16,28 @@ const Dashboard = () => {
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   const { transacoes, fetchTransacoes, lastUpdate } = useTransacoes();
   
-  // Usar o hook de verificação de versão
+  // Usar o hook de verificação de versão - sem atualizações automáticas
   const { 
     forceUpdate, 
     lastRefreshed, 
-    setLastRefreshed, // Get the setter function from the hook
+    setLastRefreshed,
     isRefreshing, 
     forceFullRefresh, 
     appVersion 
   } = useVersionCheck(usuario?.id);
 
-  // Usar o hook de atualizações em tempo real
+  // Usar o hook de atualizações em tempo real - completamente desativado
   useRealTimeUpdates(
     usuario?.id,
     fetchTransacoes,
-    setLastRefreshed // Now we pass the setter function that we got from useVersionCheck
+    setLastRefreshed
   );
 
-  // Criar uma chave de cache única que muda sempre que forceUpdate muda
-  const cacheKey = `${appVersion}-${forceUpdate}-${lastUpdate}`;
+  // Criar uma chave de cache única que muda apenas quando forçada manualmente
+  const cacheKey = `${appVersion}-${lastUpdate}`;
   
-  // Verificar atualizações quando o componente é montado
-  useEffect(() => {
-    if (usuario?.id) {
-      // Verificar se há uma nova versão disponível ao montar o componente
-      const currentVersion = localStorage.getItem('app_version');
-      const deployVersion = APP_VERSION;
-      
-      if (currentVersion !== deployVersion) {
-        console.log('[Dashboard] Nova versão detectada:', deployVersion);
-        localStorage.setItem('app_version', deployVersion);
-        
-        // Forçar recarregamento da página após pequeno delay para garantir que o usuário veja a mensagem
-        setTimeout(() => {
-          console.log('[Dashboard] Recarregando página para atualizar versão');
-          window.location.reload();
-        }, 1500);
-      }
-    }
-  }, [usuario?.id]);
+  // Desativando completamente a verificação automática de versão
+  // Removido o useEffect que verificava novas versões
 
   // Handler para mudar o ciclo selecionado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
