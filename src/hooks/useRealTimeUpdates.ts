@@ -22,9 +22,16 @@ export function useRealTimeUpdates(
         { event: '*', schema: 'public', table: 'lancamentos' }, 
         (payload) => {
           console.log("[useRealTimeUpdates] Alteração detectada via tempo real:", payload);
-          fetchDataFn();
-          setLastRefreshed(Date.now());
-          toast.info("Novos dados disponíveis!");
+          // Usar um debounce para evitar múltiplas atualizações em sequência
+          if (window._updateTimeout) {
+            clearTimeout(window._updateTimeout);
+          }
+          
+          window._updateTimeout = setTimeout(() => {
+            fetchDataFn();
+            setLastRefreshed(Date.now());
+            toast.info("Novos dados disponíveis!");
+          }, 2000); // Aguarda 2 segundos antes de atualizar
           
           // Avisar outras abas que houve atualização
           localStorage.setItem('data_updated_timestamp', Date.now().toString());
@@ -35,32 +42,24 @@ export function useRealTimeUpdates(
 
     return () => {
       supabase.removeChannel(channel);
+      if (window._updateTimeout) {
+        clearTimeout(window._updateTimeout);
+      }
     };
   }, [userId, fetchDataFn, setLastRefreshed]);
 
-  // Implementar verificação periódica para garantir dados atualizados
+  // Implementar verificação quando o usuário volta ao site/app com menos frequência
   useEffect(() => {
+    if (!userId) return;
+    
     // Função para atualizar dados
     const refreshData = async () => {
-      if (userId) {
-        console.log("[useRealTimeUpdates] Atualizando dados periodicamente...");
-        await fetchDataFn();
-        setLastRefreshed(Date.now());
-      }
-    };
-
-    // Verificar atualizações a cada 30 segundos
-    const interval = setInterval(refreshData, 30000);
-    
-    // Também atualizar quando o usuário volta ao site/app
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        console.log("[useRealTimeUpdates] Usuário retornou à página, atualizando dados...");
-        refreshData();
-      }
+      console.log("[useRealTimeUpdates] Atualizando dados...");
+      await fetchDataFn();
+      setLastRefreshed(Date.now());
     };
     
-    // Ouvir por atualizações vindas de outras abas/dispositivos
+    // Ouvir por atualizações vindas de outras abas/dispositivos com debounce
     const handleStorageChange = (e: StorageEvent) => {
       const currentSessionId = localStorage.getItem('current_session_id');
       
@@ -69,7 +68,15 @@ export function useRealTimeUpdates(
         const updatedBy = localStorage.getItem('data_updated_by');
         if (updatedBy !== currentSessionId) {
           console.log("[useRealTimeUpdates] Dados atualizados em outra aba/dispositivo");
-          refreshData();
+          
+          // Usar debounce para evitar múltiplas atualizações
+          if (window._storageTimeout) {
+            clearTimeout(window._storageTimeout);
+          }
+          
+          window._storageTimeout = setTimeout(() => {
+            refreshData();
+          }, 2000);
         }
       }
       
@@ -82,6 +89,24 @@ export function useRealTimeUpdates(
           setTimeout(() => {
             window.location.reload();
           }, 1000);
+        }
+      }
+    };
+    
+    // Verificar visibilidade com menos frequência
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Verificar quando foi a última atualização
+        const lastUpdate = parseInt(localStorage.getItem('last_data_refresh') || '0');
+        const now = Date.now();
+        
+        // Só atualiza se passou mais de 5 minutos desde a última atualização
+        if (now - lastUpdate > 300000) {
+          console.log("[useRealTimeUpdates] Usuário retornou à página após longo período, atualizando dados...");
+          refreshData();
+          localStorage.setItem('last_data_refresh', now.toString());
+        } else {
+          console.log("[useRealTimeUpdates] Usuário retornou à página, mas dados foram atualizados recentemente");
         }
       }
     };
@@ -104,13 +129,26 @@ export function useRealTimeUpdates(
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     
+    // Registrar a primeira atualização
+    localStorage.setItem('last_data_refresh', Date.now().toString());
+    
     // Limpar intervalos e listeners
     return () => {
-      clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (window._storageTimeout) {
+        clearTimeout(window._storageTimeout);
+      }
     };
   }, [userId, fetchDataFn, setLastRefreshed]);
+}
+
+// Declarar a tipagem para as propriedades globais do window
+declare global {
+  interface Window {
+    _updateTimeout?: ReturnType<typeof setTimeout>;
+    _storageTimeout?: ReturnType<typeof setTimeout>;
+  }
 }

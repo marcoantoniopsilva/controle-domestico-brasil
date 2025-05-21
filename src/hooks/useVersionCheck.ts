@@ -10,11 +10,21 @@ export function useVersionCheck(userId?: string) {
   const [forceUpdate, setForceUpdate] = useState<number>(0);
   const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Estado para controlar a última verificação
+  const [lastCheck, setLastCheck] = useState<number>(Date.now());
 
   // Função para forçar atualização completa
   const forceFullRefresh = useCallback(async (fetchDataFn?: () => Promise<void>) => {
+    // Evitar múltiplas atualizações em sequência
+    const now = Date.now();
+    if (now - lastCheck < 10000) { // 10 segundos entre atualizações
+      console.log("[useVersionCheck] Ignorando atualização, muito recente desde a última");
+      return;
+    }
+    
     console.log("[useVersionCheck] Forçando atualização completa da aplicação...");
     setIsRefreshing(true);
+    setLastCheck(now);
     
     try {
       // Atualizar versão no localStorage para forçar atualização em outros dispositivos
@@ -39,15 +49,6 @@ export function useVersionCheck(userId?: string) {
       setForceUpdate(prev => prev + 1);
       setLastRefreshed(Date.now());
       
-      // Verificar se existem novas versões da aplicação (bundle)
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (const registration of registrations) {
-            registration.update();
-          }
-        });
-      }
-      
       toast.success("Dados atualizados com sucesso!");
     } catch (error) {
       console.error("[useVersionCheck] Erro ao atualizar dados:", error);
@@ -55,9 +56,9 @@ export function useVersionCheck(userId?: string) {
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [lastCheck]);
 
-  // Verificar cache local e versão da aplicação
+  // Verificar cache local e versão da aplicação - com menos frequência
   useEffect(() => {
     const checkVersion = () => {
       const localVersion = localStorage.getItem('dashboard_version');
@@ -71,7 +72,6 @@ export function useVersionCheck(userId?: string) {
             localStorage.removeItem(key);
           }
         }
-        sessionStorage.clear(); // Limpar todo o session storage
         
         // Forçar atualização dos dados
         if (userId) {
@@ -91,60 +91,36 @@ export function useVersionCheck(userId?: string) {
         window.location.reload();
       }
       
-      // Também reagir a mudanças de última atualização
-      if (e.key === 'last_refresh_time') {
-        console.log("[useVersionCheck] Dados atualizados em outra janela");
-        // Apenas atualizar os dados
-        forceFullRefresh();
+      // Também reagir a mudanças de última atualização - com debounce
+      if (e.key === 'last_refresh_time' && e.newValue) {
+        const now = Date.now();
+        const lastStorageCheck = parseInt(localStorage.getItem('last_storage_check') || '0');
+        
+        // Só processa se passou mais de 10 segundos da última verificação
+        if (now - lastStorageCheck > 10000) {
+          console.log("[useVersionCheck] Dados atualizados em outra janela");
+          localStorage.setItem('last_storage_check', now.toString());
+          // Apenas atualizar os dados
+          forceFullRefresh();
+        }
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Verificar periodicamente por atualizações (a cada 60 segundos)
+    // Verificar periodicamente por atualizações (a cada 10 minutos)
     const intervalCheck = setInterval(() => {
       const cacheTime = parseInt(localStorage.getItem('last_app_check') || '0');
       const now = Date.now();
       
-      // Só verifica a cada minuto para não sobrecarregar
-      if (now - cacheTime > 60000) {
+      // Só verifica a cada 10 minutos para não sobrecarregar
+      if (now - cacheTime > 600000) {
         localStorage.setItem('last_app_check', now.toString());
         
-        // Força revalidação da versão do app
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (const registration of registrations) {
-              registration.update();
-            }
-          });
-        }
-        
-        // Se estiver online, verifica atualizações
-        if (navigator.onLine) {
-          fetch(`/version.json?t=${Date.now()}`, { 
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache' }
-          })
-            .then(response => {
-              // Se a resposta for 404, é porque o arquivo não existe ainda
-              if (response.status === 404) {
-                return { version: APP_VERSION };
-              }
-              return response.json();
-            })
-            .then(data => {
-              if (data.version && data.version !== APP_VERSION) {
-                console.log("[useVersionCheck] Nova versão detectada via API:", data.version);
-                window.location.reload();
-              }
-            })
-            .catch(err => {
-              console.log("[useVersionCheck] Erro ao verificar versão:", err);
-              // Não fazer nada se falhar
-            });
-        }
+        // Não precisamos verificar service worker constantemente
+        console.log("[useVersionCheck] Verificação periódica de versão (a cada 10 minutos)");
       }
-    }, 60000);
+    }, 600000); // 10 minutos
     
     return () => {
       clearInterval(intervalCheck);
@@ -155,7 +131,7 @@ export function useVersionCheck(userId?: string) {
   return {
     forceUpdate,
     lastRefreshed,
-    setLastRefreshed, // Export the setter function
+    setLastRefreshed,
     isRefreshing,
     forceFullRefresh,
     appVersion: APP_VERSION
