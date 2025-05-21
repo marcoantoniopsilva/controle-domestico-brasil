@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   const { transacoes, fetchTransacoes, lastUpdate } = useTransacoes();
   
-  // Usar o hook de verificação de versão - sem atualizações automáticas
+  // VERSÃO ESTÁVEL - Sem atualizações automáticas
   const { 
     forceUpdate, 
     lastRefreshed, 
@@ -27,7 +27,6 @@ const Dashboard = () => {
   } = useVersionCheck(usuario?.id);
 
   // Hooks de atualização automática estão completamente desativados
-  // mas mantemos a chamada para compatibilidade com a estrutura do código
   useRealTimeUpdates(
     usuario?.id,
     fetchTransacoes,
@@ -35,13 +34,13 @@ const Dashboard = () => {
   );
 
   // Criar uma chave de cache única que muda apenas quando forçada manualmente
-  const cacheKey = `${appVersion}-${lastUpdate}`;
+  const cacheKey = `${APP_VERSION}-${lastUpdate}-nocache`;
   
   // Carregamento inicial de dados - apenas UMA vez
-  // Usamos useEffect vazio para garantir que isso aconteça só no mount inicial
   useEffect(() => {
     if (usuario && usuario.id) {
       console.log("[Dashboard] Carregamento inicial de dados para o usuário:", usuario.id);
+      console.log("[STABLE BUILD] Carregando dados apenas UMA vez na montagem inicial");
       fetchTransacoes();
     }
   }, []); // Array de deps vazio para garantir que só executa no mount inicial
@@ -49,6 +48,7 @@ const Dashboard = () => {
   // Handler para mudar o ciclo selecionado - simplificado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     console.log("[Dashboard] Mudando para ciclo:", novoCiclo.nome);
+    console.log("[STABLE BUILD] Atualização manual solicitada pelo usuário");
     
     // Garantir que as datas são objetos Date
     const cicloParaDefinir = {
@@ -77,10 +77,13 @@ const Dashboard = () => {
       />
       
       <DashboardFooter
-        appVersion={APP_VERSION}
+        appVersion={`${APP_VERSION}-NOCACHE`}
         lastRefreshed={lastRefreshed}
         isRefreshing={isRefreshing}
-        onRefresh={() => forceFullRefresh(fetchTransacoes)}
+        onRefresh={() => {
+          console.log("[STABLE BUILD] Atualização manual solicitada pelo usuário");
+          forceFullRefresh(fetchTransacoes);
+        }}
       />
     </div>
   );
