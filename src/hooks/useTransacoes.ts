@@ -14,18 +14,12 @@ export function useTransacoes() {
     
     try {
       console.log("Buscando transações...");
-      // Adicionar um parâmetro de cache busting na consulta
-      const cacheBuster = new Date().getTime();
       
+      // Removendo o parâmetro fictício cache_buster que estava causando erro
       const { data, error } = await supabase
         .from("lancamentos")
         .select("*")
-        .order('data', { ascending: false })
-        .eq('cache_buster', cacheBuster)
-        .then(result => {
-          // Remover o parâmetro cache_buster fictício
-          return result;
-        });
+        .order('data', { ascending: false });
         
       if (error) {
         console.error("Erro ao carregar lançamentos:", error);
