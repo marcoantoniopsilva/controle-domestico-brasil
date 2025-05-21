@@ -1,8 +1,10 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Transacao } from "@/types";
 import { toast } from "sonner";
+
+// Gerar uma versão única para esta instância do app
+const APP_VERSION = Date.now().toString();
 
 export function useTransacoes() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -15,7 +17,7 @@ export function useTransacoes() {
     try {
       console.log("Buscando transações...");
       
-      // Removendo o parâmetro fictício cache_buster que estava causando erro
+      // Consulta básica sem parâmetros de cache busting
       const { data, error } = await supabase
         .from("lancamentos")
         .select("*")
@@ -138,8 +140,28 @@ export function useTransacoes() {
     }
   };
 
-  // Inicialização - carrega transações na montagem do componente
+  // Inicialização - carrega transações na montagem do componente e configura canal em tempo real
   useEffect(() => {
+    // Verifica versão local e recarrega se necessário
+    const checkVersion = () => {
+      const localVersion = localStorage.getItem('app_version');
+      if (!localVersion || localVersion !== APP_VERSION) {
+        localStorage.setItem('app_version', APP_VERSION);
+        console.log("[useTransacoes] Nova versão detectada, recarregando dados...");
+        
+        // Limpar caches locais relevantes
+        localStorage.removeItem('last_transaction_update');
+        
+        // Forçar recarregamento completo da página apenas uma vez após atualização
+        if (localVersion && localVersion !== APP_VERSION) {
+          console.log("[useTransacoes] Recarregando página para atualizar bundle...");
+          window.location.reload();
+          return;
+        }
+      }
+    };
+    
+    checkVersion();
     fetchTransacoes();
     
     // Configurar canal de tempo real para atualizações de transações
@@ -153,9 +175,27 @@ export function useTransacoes() {
         }
       )
       .subscribe();
+    
+    // Verificar atualizações quando o documento fica visível novamente
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log("[useTransacoes] Documento visível novamente, verificando atualizações...");
+        fetchTransacoes();
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    // Atualizar periodicamente para garantir sincronização
+    const interval = setInterval(() => {
+      console.log("[useTransacoes] Verificação periódica de atualizações...");
+      fetchTransacoes();
+    }, 60000); // A cada minuto
       
     // Limpar inscrição ao desmontar
     return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       supabase.removeChannel(channel);
     };
   }, [fetchTransacoes]);

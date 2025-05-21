@@ -25,7 +25,8 @@ interface DashboardContentProps {
   orcamentoTotal: number;
   isLoading?: boolean;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
-  updateKey?: number; // Nova propriedade para forçar re-renderização
+  updateKey?: number; // Propriedade para forçar re-renderização
+  cacheKey?: string; // Nova propriedade para controle de cache
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -39,14 +40,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   orcamentoTotal,
   isLoading,
   onCicloChange,
-  updateKey
+  updateKey,
+  cacheKey
 }) => {
   const [activeTab, setActiveTab] = useState("resumo");
   
-  // Forçar re-renderização quando updateKey mudar
+  // Forçar re-renderização quando updateKey ou cacheKey mudar
   useEffect(() => {
+    if (cacheKey) {
+      console.log("[DashboardContent] Nova versão de cache detectada:", cacheKey);
+    }
     console.log("[DashboardContent] Forçando re-renderização com updateKey:", updateKey);
-  }, [updateKey]);
+  }, [updateKey, cacheKey]);
   
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
@@ -62,6 +67,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   console.log("[DashboardContent] Total de despesas (de transações):", totalDespesas);
   console.log("[DashboardContent] Total de despesas (soma categorias):", totalDespesasCategoria);
   console.log("[DashboardContent] Saldo:", saldoReal);
+
+  // Gerar chaves únicas para componentes baseadas no cacheKey para forçar re-renderização
+  const generateKey = (prefix: string) => {
+    return `${prefix}-${cacheKey || updateKey || Date.now()}`;
+  };
 
   return (
     <div className="space-y-8">
@@ -130,12 +140,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             categorias={categorias} 
             cicloAtual={cicloAtual}
             totalDespesas={totalDespesasCategoria}
-            key={`resumo-${updateKey}`}
+            key={generateKey('resumo')}
           />
           <ListaTransacoes 
             transacoes={transacoes.slice(0, 5)} 
             onExcluir={onExcluirTransacao}
-            key={`lista-resumo-${updateKey}`}
+            key={generateKey('lista-resumo')}
           />
         </TabsContent>
         
@@ -143,7 +153,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {categoriasDespesa.map((categoria) => (
               <ProgressoCategoria 
-                key={`${categoria.nome}-${updateKey}`}
+                key={`${categoria.nome}-${generateKey('cat-desp')}`}
                 categoria={categoria} 
               />
             ))}
@@ -154,7 +164,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {categoriasReceita.map((categoria) => (
               <ProgressoCategoria 
-                key={`${categoria.nome}-${updateKey}`}
+                key={`${categoria.nome}-${generateKey('cat-rec')}`}
                 categoria={categoria} 
               />
             ))}
@@ -165,7 +175,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <ListaTransacoes 
             transacoes={transacoes} 
             onExcluir={onExcluirTransacao}
-            key={`lista-all-${updateKey}`}
+            key={generateKey('lista-all')}
           />
         </TabsContent>
         
@@ -175,7 +185,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               transacoes={transacoes} 
               ciclo={cicloAtual} 
               orcamentoTotal={orcamentoTotal}
-              key={`grafico-${updateKey}`}
+              key={generateKey('grafico')}
             />
           </div>
         </TabsContent>

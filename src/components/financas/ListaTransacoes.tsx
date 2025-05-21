@@ -1,9 +1,9 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+import { Trash2, RefreshCcw } from "lucide-react";
 import { Transacao } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { format } from "date-fns";
@@ -15,17 +15,29 @@ interface ListaTransacoesProps {
 }
 
 const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir }) => {
-  // Monitorar mudanças nas transações para debugging
+  const [renderKey, setRenderKey] = useState<string>(Date.now().toString());
+  
+  // Monitorar mudanças nas transações para debugging e forçar re-renderização
   useEffect(() => {
     console.log("[ListaTransacoes] Transações atualizadas:", transacoes.length);
+    setRenderKey(Date.now().toString());
   }, [transacoes]);
 
   if (transacoes.length === 0) {
-    return <p className="text-center py-6 text-muted-foreground">Nenhuma transação encontrada.</p>;
+    return (
+      <div className="border rounded-lg p-8 text-center">
+        <p className="text-muted-foreground mb-4">Nenhuma transação encontrada.</p>
+        <p className="text-xs text-gray-400">ID de renderização: {renderKey.substring(0, 8)}</p>
+      </div>
+    );
   }
   
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-gray-50 p-2 flex justify-between items-center">
+        <span className="text-sm font-medium">{transacoes.length} transações</span>
+        <span className="text-xs text-gray-400">ID: {renderKey.substring(0, 8)}</span>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -40,7 +52,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
         </TableHeader>
         <TableBody>
           {transacoes.map((transacao) => (
-            <TableRow key={transacao.id}>
+            <TableRow key={`${transacao.id}-${renderKey}`}>
               <TableCell>
                 {format(new Date(transacao.data), 'dd/MM/yyyy', { locale: ptBR })}
               </TableCell>

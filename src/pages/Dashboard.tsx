@@ -12,16 +12,22 @@ import NavBar from "@/components/layout/NavBar";
 import { categorias } from "@/utils/financas";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Versão da aplicação para controle de cache
-const APP_VERSION = Date.now().toString();
+// Versão da aplicação para controle de cache - usar um valor único para cada deploy
+const APP_VERSION = `v${Date.now()}`;
 
 const Dashboard = () => {
   const { usuario } = useAuth();
-  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
+  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes, lastUpdate } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
-  const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [forceUpdate, setForceUpdate] = useState<number>(0);
+  const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Criar uma chave de cache única que muda sempre que forceUpdate muda
+  const cacheKey = `${APP_VERSION}-${forceUpdate}-${lastUpdate}`;
 
   // Usar o hook atualizado para processar os dados do dashboard
   const {
@@ -33,35 +39,73 @@ const Dashboard = () => {
   } = useDashboardData(transacoes, cicloAtual);
 
   // Função para forçar atualização completa
-  const forceFullRefresh = useCallback(() => {
+  const forceFullRefresh = useCallback(async () => {
     console.log("[Dashboard] Forçando atualização completa da aplicação...");
-    setForceUpdate(prev => prev + 1);
-    fetchTransacoes();
-    setLastRefreshed(Date.now());
-    toast.success("Dados atualizados com sucesso!");
+    setIsRefreshing(true);
+    
+    try {
+      // Atualizar versão no localStorage para forçar atualização em outros dispositivos
+      localStorage.setItem('app_version', APP_VERSION);
+      
+      // Fazer uma série de atualizações para garantir dados frescos
+      await fetchTransacoes(true);
+      
+      // Incrementar forceUpdate para forçar re-renderização de componentes
+      setForceUpdate(prev => prev + 1);
+      setLastRefreshed(Date.now());
+      
+      // Verificar se existem novas versões da aplicação (bundle)
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (const registration of registrations) {
+            registration.update();
+          }
+        });
+      }
+      
+      toast.success("Dados atualizados com sucesso!");
+    } catch (error) {
+      console.error("[Dashboard] Erro ao atualizar dados:", error);
+      toast.error("Erro ao atualizar dados. Tente novamente.");
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [fetchTransacoes]);
 
   // Verificar cache local e versão da aplicação
   useEffect(() => {
     const checkVersion = () => {
-      const localVersion = localStorage.getItem('app_version');
+      const localVersion = localStorage.getItem('dashboard_version');
       if (!localVersion || localVersion !== APP_VERSION) {
-        localStorage.setItem('app_version', APP_VERSION);
-        console.log("[Dashboard] Nova versão detectada, limpando cache local...");
+        localStorage.setItem('dashboard_version', APP_VERSION);
+        console.log("[Dashboard] Nova versão detectada:", APP_VERSION);
         
-        // Limpar caches locais se necessário
+        // Limpar caches locais
         localStorage.removeItem('dashboard_data');
+        sessionStorage.removeItem('dashboard_state');
         
         // Forçar atualização dos dados
         if (usuario) {
-          setTimeout(() => {
-            forceFullRefresh();
-          }, 1000);
+          forceFullRefresh();
         }
       }
     };
     
     checkVersion();
+    
+    // Adicionar listener para mensagens de atualização de outros tabs/janelas
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dashboard_version' && e.newValue !== APP_VERSION) {
+        console.log("[Dashboard] Versão mudou em outra janela, atualizando...");
+        window.location.reload();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [usuario, forceFullRefresh]);
 
   // Recarregar transações quando o componente é montado ou quando o usuário muda
@@ -105,7 +149,7 @@ const Dashboard = () => {
       }
     };
 
-    // Verificar atualizações a cada 30 segundos (mais frequente)
+    // Verificar atualizações a cada 30 segundos
     const interval = setInterval(refreshData, 30000);
     
     // Também atualizar quando o usuário volta ao site/app
@@ -123,7 +167,7 @@ const Dashboard = () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [usuario, fetchTransacoes, lastRefreshed]);
+  }, [usuario, fetchTransacoes]);
 
   // Handler para mudar o ciclo selecionado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
@@ -183,18 +227,23 @@ const Dashboard = () => {
               isLoading={isLoading}
               onCicloChange={handleCicloChange}
               updateKey={forceUpdate} // Chave para forçar re-renderização
+              cacheKey={cacheKey} // Nova propriedade para controle de cache
             />
           </>
         )}
       </main>
-      <div className="text-xs text-center p-2 text-gray-500">
-        Última atualização: {new Date(lastRefreshed).toLocaleTimeString()}
-        <button 
+      <div className="text-xs text-center p-2 text-gray-500 flex items-center justify-center gap-2">
+        <span>Versão: {APP_VERSION.substring(0, 10)} | Última atualização: {new Date(lastRefreshed).toLocaleTimeString()}</span>
+        <Button 
           onClick={forceFullRefresh} 
-          className="ml-2 text-blue-500 hover:underline"
+          variant="ghost" 
+          size="sm"
+          disabled={isRefreshing}
+          className="h-6 px-2 text-xs flex items-center gap-1"
         >
+          <RefreshCcw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
           Atualizar agora
-        </button>
+        </Button>
       </div>
     </div>
   );
