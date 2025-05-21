@@ -6,10 +6,10 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
-  // Simplificado sem debounce ou lógica adicional que poderia causar loops
+  // Versão ultra-simplificada sem nenhuma lógica que possa causar loops
   const handleCicloChange = (ciclo: any) => {
     console.log("[DashboardHeader] Mudança de ciclo solicitada pelo usuário");
-    // Não precisamos fazer nada complexo aqui, apenas passar o ciclo para o componente pai
+    // Apenas passamos o ciclo para o componente pai, sem processamento adicional
     onCicloChange(ciclo);
   };
   

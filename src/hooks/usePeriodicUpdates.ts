@@ -2,17 +2,17 @@
 import { useEffect } from "react";
 
 /**
- * Hook para realizar atualizações periódicas - DESATIVADO
+ * Hook para realizar atualizações periódicas - COMPLETAMENTE DESABILITADO
  */
 export function usePeriodicUpdates(
   onUpdate: () => void,
   intervalMs: number = 3600000 
 ) {
-  // Completamente desativado para evitar atualizações automáticas
+  // Hook completamente desativado - nunca chama a função onUpdate
+  console.log("[usePeriodicUpdates] DESABILITADO - Atualizações periódicas completamente desativadas");
   
+  // Nenhum interval é configurado
   useEffect(() => {
-    console.log("[usePeriodicUpdates] Atualizações periódicas desativadas para estabilizar o dashboard");
-    
     // Não configurar nenhum interval
     return () => {
       // Nada para limpar
