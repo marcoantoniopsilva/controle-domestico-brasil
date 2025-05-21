@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Categoria, Transacao } from "@/types";
 import CardResumo from "./CardResumo";
@@ -10,8 +10,9 @@ import ProgressoCategoria from "./ProgressoCategoria";
 import SeletorCiclo from "./SeletorCiclo";
 import { CicloFinanceiro } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
+import { PieChart, TrendingUp, TrendingDown, RefreshCcw } from "lucide-react";
 import { formatarMoeda } from "@/utils/financas";
+import { Button } from "@/components/ui/button";
 
 interface DashboardContentProps {
   transacoes: Transacao[];
@@ -24,6 +25,7 @@ interface DashboardContentProps {
   orcamentoTotal: number;
   isLoading?: boolean;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
+  updateKey?: number; // Nova propriedade para forçar re-renderização
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -36,9 +38,15 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   saldo,
   orcamentoTotal,
   isLoading,
-  onCicloChange
+  onCicloChange,
+  updateKey
 }) => {
   const [activeTab, setActiveTab] = useState("resumo");
+  
+  // Forçar re-renderização quando updateKey mudar
+  useEffect(() => {
+    console.log("[DashboardContent] Forçando re-renderização com updateKey:", updateKey);
+  }, [updateKey]);
   
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
@@ -59,7 +67,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     <div className="space-y-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Dashboard Financeiro</h2>
-        <SeletorCiclo onCicloChange={onCicloChange} />
+        <div className="flex items-center gap-2">
+          <SeletorCiclo onCicloChange={onCicloChange} />
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -120,10 +130,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             categorias={categorias} 
             cicloAtual={cicloAtual}
             totalDespesas={totalDespesasCategoria}
+            key={`resumo-${updateKey}`}
           />
           <ListaTransacoes 
             transacoes={transacoes.slice(0, 5)} 
             onExcluir={onExcluirTransacao}
+            key={`lista-resumo-${updateKey}`}
           />
         </TabsContent>
         
@@ -131,7 +143,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {categoriasDespesa.map((categoria) => (
               <ProgressoCategoria 
-                key={categoria.nome} 
+                key={`${categoria.nome}-${updateKey}`}
                 categoria={categoria} 
               />
             ))}
@@ -142,7 +154,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {categoriasReceita.map((categoria) => (
               <ProgressoCategoria 
-                key={categoria.nome} 
+                key={`${categoria.nome}-${updateKey}`}
                 categoria={categoria} 
               />
             ))}
@@ -153,6 +165,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <ListaTransacoes 
             transacoes={transacoes} 
             onExcluir={onExcluirTransacao}
+            key={`lista-all-${updateKey}`}
           />
         </TabsContent>
         
@@ -162,6 +175,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               transacoes={transacoes} 
               ciclo={cicloAtual} 
               orcamentoTotal={orcamentoTotal}
+              key={`grafico-${updateKey}`}
             />
           </div>
         </TabsContent>

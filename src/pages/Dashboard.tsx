@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { calcularCicloAtual } from "@/utils/financas";
 import DashboardContent from "@/components/financas/DashboardContent";
 import { useTransacoes } from "@/hooks/useTransacoes";
@@ -11,12 +11,17 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import NavBar from "@/components/layout/NavBar";
 import { categorias } from "@/utils/financas";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+// Versão da aplicação para controle de cache
+const APP_VERSION = Date.now().toString();
 
 const Dashboard = () => {
   const { usuario } = useAuth();
   const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
   const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
+  const [forceUpdate, setForceUpdate] = useState<number>(0);
 
   // Usar o hook atualizado para processar os dados do dashboard
   const {
@@ -27,12 +32,66 @@ const Dashboard = () => {
     saldo
   } = useDashboardData(transacoes, cicloAtual);
 
+  // Função para forçar atualização completa
+  const forceFullRefresh = useCallback(() => {
+    console.log("[Dashboard] Forçando atualização completa da aplicação...");
+    setForceUpdate(prev => prev + 1);
+    fetchTransacoes();
+    setLastRefreshed(Date.now());
+    toast.success("Dados atualizados com sucesso!");
+  }, [fetchTransacoes]);
+
+  // Verificar cache local e versão da aplicação
+  useEffect(() => {
+    const checkVersion = () => {
+      const localVersion = localStorage.getItem('app_version');
+      if (!localVersion || localVersion !== APP_VERSION) {
+        localStorage.setItem('app_version', APP_VERSION);
+        console.log("[Dashboard] Nova versão detectada, limpando cache local...");
+        
+        // Limpar caches locais se necessário
+        localStorage.removeItem('dashboard_data');
+        
+        // Forçar atualização dos dados
+        if (usuario) {
+          setTimeout(() => {
+            forceFullRefresh();
+          }, 1000);
+        }
+      }
+    };
+    
+    checkVersion();
+  }, [usuario, forceFullRefresh]);
+
   // Recarregar transações quando o componente é montado ou quando o usuário muda
   useEffect(() => {
     if (usuario) {
       console.log("[Dashboard] Recarregando transações para o usuário:", usuario.id);
       fetchTransacoes();
     }
+  }, [usuario, fetchTransacoes, forceUpdate]);
+
+  // Configurar canais de tempo real para atualizações do banco de dados
+  useEffect(() => {
+    if (!usuario) return;
+    
+    const channel = supabase
+      .channel('public:lancamentos')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'lancamentos' }, 
+        (payload) => {
+          console.log("[Dashboard] Alteração detectada via tempo real:", payload);
+          fetchTransacoes();
+          setLastRefreshed(Date.now());
+          toast.info("Novos dados disponíveis!");
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [usuario, fetchTransacoes]);
 
   // Implementar verificação periódica para garantir dados atualizados
@@ -46,12 +105,12 @@ const Dashboard = () => {
       }
     };
 
-    // Verificar atualizações a cada 60 segundos
-    const interval = setInterval(refreshData, 60000);
+    // Verificar atualizações a cada 30 segundos (mais frequente)
+    const interval = setInterval(refreshData, 30000);
     
     // Também atualizar quando o usuário volta ao site/app
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && Date.now() - lastRefreshed > 30000) {
+      if (document.visibilityState === "visible") {
         console.log("[Dashboard] Usuário retornou à página, atualizando dados...");
         refreshData();
       }
@@ -98,8 +157,8 @@ const Dashboard = () => {
           <>
             <DashboardHeader 
               usuario={usuario}
-              onAddTransacao={(transacao) => {
-                const result = handleAddTransacao(transacao, usuario.id);
+              onAddTransacao={async (transacao) => {
+                const result = await handleAddTransacao(transacao, usuario.id);
                 // Força uma atualização após adicionar uma transação
                 if (result) {
                   setTimeout(() => fetchTransacoes(), 1000);
@@ -123,6 +182,7 @@ const Dashboard = () => {
               orcamentoTotal={orcamentoTotal}
               isLoading={isLoading}
               onCicloChange={handleCicloChange}
+              updateKey={forceUpdate} // Chave para forçar re-renderização
             />
           </>
         )}
@@ -130,11 +190,7 @@ const Dashboard = () => {
       <div className="text-xs text-center p-2 text-gray-500">
         Última atualização: {new Date(lastRefreshed).toLocaleTimeString()}
         <button 
-          onClick={() => {
-            fetchTransacoes();
-            setLastRefreshed(Date.now());
-            toast.success("Dados atualizados com sucesso!");
-          }} 
+          onClick={forceFullRefresh} 
           className="ml-2 text-blue-500 hover:underline"
         >
           Atualizar agora

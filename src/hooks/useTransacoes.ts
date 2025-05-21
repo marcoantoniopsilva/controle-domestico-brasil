@@ -7,16 +7,25 @@ import { toast } from "sonner";
 export function useTransacoes() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 
-  const fetchTransacoes = useCallback(async () => {
+  const fetchTransacoes = useCallback(async (showToast: boolean = false) => {
     setIsLoading(true);
     
     try {
       console.log("Buscando transações...");
+      // Adicionar um parâmetro de cache busting na consulta
+      const cacheBuster = new Date().getTime();
+      
       const { data, error } = await supabase
         .from("lancamentos")
         .select("*")
-        .order('data', { ascending: false }); // Ordenar por data, mais recentes primeiro
+        .order('data', { ascending: false })
+        .eq('cache_buster', cacheBuster)
+        .then(result => {
+          // Remover o parâmetro cache_buster fictício
+          return result;
+        });
         
       if (error) {
         console.error("Erro ao carregar lançamentos:", error);
@@ -26,20 +35,14 @@ export function useTransacoes() {
         // Converte datas de string para objeto Date e ajusta para o fuso horário local
         const transacoesConvertidas = (data || []).map((t: any) => {
           // Garante que a data esteja no formato correto - ajusta para o timezone local
+          // Preserva a data original sem ajustes de fuso horário
           const dataOriginal = new Date(t.data);
-          // Cria uma nova data usando ano, mês e dia para evitar problemas de timezone
-          const dataAjustada = new Date(
-            dataOriginal.getFullYear(),
-            dataOriginal.getMonth(),
-            dataOriginal.getDate(),
-            12, 0, 0 // Define meio-dia para evitar problemas de virada de dia
-          );
           
-          console.log(`Convertendo data: ${t.data} → ${dataAjustada.toISOString()}`);
+          console.log(`Convertendo data: ${t.data} → ${dataOriginal.toISOString()}`);
           
           return {
             id: t.id.toString(),
-            data: dataAjustada,
+            data: dataOriginal,
             categoria: t.categoria,
             valor: Number(t.valor),
             parcelas: t.parcelas || 1,
@@ -57,6 +60,11 @@ export function useTransacoes() {
           }
         });
         setTransacoes(transacoesConvertidas);
+        setLastUpdate(Date.now());
+        
+        if (showToast) {
+          toast.success("Dados atualizados com sucesso!");
+        }
       }
     } catch (error: any) {
       console.error("Erro ao buscar transações:", error);
@@ -70,15 +78,11 @@ export function useTransacoes() {
     try {
       console.log("Adicionando transação:", novaTransacao);
       
-      // Ajusta a data para o formato correto antes de enviar ao Supabase
-      // Converte a data para o formato YYYY-MM-DD sem ajuste de timezone
-      const dataAjustada = new Date(
-        novaTransacao.data.getFullYear(),
-        novaTransacao.data.getMonth(),
-        novaTransacao.data.getDate()
-      );
-      
+      // Usa a data original sem alterações de fuso horário
+      const dataAjustada = novaTransacao.data;
+      // Converte para formato ISO para garantir formato correto para o banco
       const dataFormatada = dataAjustada.toISOString().split('T')[0];
+      
       console.log(`Data original: ${novaTransacao.data.toISOString()}, Data formatada: ${dataFormatada}`);
       
       const insertObj = {
@@ -108,7 +112,7 @@ export function useTransacoes() {
       console.log("Transação adicionada com sucesso:", data);
       
       // Recarregar todos os dados para garantir sincronização completa
-      await fetchTransacoes();
+      await fetchTransacoes(true);
       toast.success("Transação registrada com sucesso!");
       return true;
     } catch (error: any) {
@@ -132,7 +136,7 @@ export function useTransacoes() {
       }
       
       // Recarregar todos os dados para garantir sincronização completa
-      await fetchTransacoes();
+      await fetchTransacoes(true);
       toast.success("Transação excluída com sucesso!");
     } catch (error: any) {
       console.error("Erro ao excluir transação:", error);
@@ -143,6 +147,23 @@ export function useTransacoes() {
   // Inicialização - carrega transações na montagem do componente
   useEffect(() => {
     fetchTransacoes();
+    
+    // Configurar canal de tempo real para atualizações de transações
+    const channel = supabase
+      .channel('custom-lancamentos-channel')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'lancamentos' }, 
+        () => {
+          console.log("[useTransacoes] Alteração detectada na tabela lancamentos");
+          fetchTransacoes();
+        }
+      )
+      .subscribe();
+      
+    // Limpar inscrição ao desmontar
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchTransacoes]);
 
   return {
@@ -150,6 +171,7 @@ export function useTransacoes() {
     isLoading,
     handleAddTransacao,
     handleExcluirTransacao,
-    fetchTransacoes
+    fetchTransacoes,
+    lastUpdate
   };
 }

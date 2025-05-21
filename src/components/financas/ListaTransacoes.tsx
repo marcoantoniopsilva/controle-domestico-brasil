@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -15,6 +15,11 @@ interface ListaTransacoesProps {
 }
 
 const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir }) => {
+  // Monitorar mudanças nas transações para debugging
+  useEffect(() => {
+    console.log("[ListaTransacoes] Transações atualizadas:", transacoes.length);
+  }, [transacoes]);
+
   if (transacoes.length === 0) {
     return <p className="text-center py-6 text-muted-foreground">Nenhuma transação encontrada.</p>;
   }
