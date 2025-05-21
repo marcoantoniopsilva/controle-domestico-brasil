@@ -9,8 +9,16 @@ interface UseTransacaoFormProps {
 }
 
 export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
+  // Inicializar com a data atual ajustada para meio-dia para evitar problemas de timezone
   const hoje = new Date();
-  const [data, setData] = useState<Date>(hoje);
+  const dataInicial = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate(),
+    12, 0, 0
+  );
+  
+  const [data, setData] = useState<Date>(dataInicial);
   const [categoria, setCategoria] = useState("");
   const [valor, setValor] = useState("");
   const [parcelas, setParcelas] = useState("1");
@@ -66,8 +74,18 @@ export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
     const valorNumerico = parseFloat(valor.replace(",", "."));
     const parcelasNum = parseInt(parcelas);
     
+    // Garantir que a data esteja no formato correto (ajustada para meio-dia)
+    const dataAjustada = new Date(
+      data.getFullYear(),
+      data.getMonth(),
+      data.getDate(),
+      12, 0, 0
+    );
+    
+    console.log(`[useTransacaoForm] Data selecionada: ${data.toISOString()}, Data ajustada: ${dataAjustada.toISOString()}`);
+    
     const novaTransacao: Omit<Transacao, "id"> = {
-      data,
+      data: dataAjustada,
       categoria,
       valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,
@@ -81,7 +99,7 @@ export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
       onAddTransacao(novaTransacao);
       
       // Resetar o formulário
-      setData(hoje);
+      setData(dataInicial);
       setCategoria("");
       setValor("");
       setParcelas("1");

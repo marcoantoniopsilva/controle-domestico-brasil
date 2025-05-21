@@ -16,6 +16,7 @@ const Dashboard = () => {
   const { usuario } = useAuth();
   const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
+  const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
 
   // Usar o hook atualizado para processar os dados do dashboard
   const {
@@ -33,6 +34,37 @@ const Dashboard = () => {
       fetchTransacoes();
     }
   }, [usuario, fetchTransacoes]);
+
+  // Implementar verificação periódica para garantir dados atualizados
+  useEffect(() => {
+    // Função para atualizar dados
+    const refreshData = async () => {
+      if (usuario) {
+        console.log("[Dashboard] Atualizando dados periodicamente...");
+        await fetchTransacoes();
+        setLastRefreshed(Date.now());
+      }
+    };
+
+    // Verificar atualizações a cada 60 segundos
+    const interval = setInterval(refreshData, 60000);
+    
+    // Também atualizar quando o usuário volta ao site/app
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastRefreshed > 30000) {
+        console.log("[Dashboard] Usuário retornou à página, atualizando dados...");
+        refreshData();
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    // Limpar intervalos e listeners
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [usuario, fetchTransacoes, lastRefreshed]);
 
   // Handler para mudar o ciclo selecionado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
@@ -66,14 +98,25 @@ const Dashboard = () => {
           <>
             <DashboardHeader 
               usuario={usuario}
-              onAddTransacao={(transacao) => handleAddTransacao(transacao, usuario.id)}
+              onAddTransacao={(transacao) => {
+                const result = handleAddTransacao(transacao, usuario.id);
+                // Força uma atualização após adicionar uma transação
+                if (result) {
+                  setTimeout(() => fetchTransacoes(), 1000);
+                }
+                return result;
+              }}
             />
             
             <DashboardContent 
               transacoes={transacoesFiltradas}
               categorias={categoriasAtualizadas}
               cicloAtual={cicloAtual}
-              onExcluirTransacao={handleExcluirTransacao}
+              onExcluirTransacao={(id) => {
+                handleExcluirTransacao(id);
+                // Força uma atualização após excluir uma transação
+                setTimeout(() => fetchTransacoes(), 1000);
+              }}
               totalReceitas={totalReceitas}
               totalDespesas={totalDespesas}
               saldo={saldo}
@@ -84,6 +127,19 @@ const Dashboard = () => {
           </>
         )}
       </main>
+      <div className="text-xs text-center p-2 text-gray-500">
+        Última atualização: {new Date(lastRefreshed).toLocaleTimeString()}
+        <button 
+          onClick={() => {
+            fetchTransacoes();
+            setLastRefreshed(Date.now());
+            toast.success("Dados atualizados com sucesso!");
+          }} 
+          className="ml-2 text-blue-500 hover:underline"
+        >
+          Atualizar agora
+        </button>
+      </div>
     </div>
   );
 };

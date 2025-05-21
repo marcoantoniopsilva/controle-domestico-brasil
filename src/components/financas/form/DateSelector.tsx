@@ -20,6 +20,22 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   onDateChange,
   label = "Data" 
 }) => {
+  // Função para garantir que a data selecionada esteja sempre no fuso horário local
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    if (!selectedDate) return;
+    
+    // Cria uma nova data com o mesmo dia/mês/ano, mas ao meio-dia para evitar problemas de timezone
+    const localDate = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      12, 0, 0
+    );
+    
+    console.log(`Data selecionada: ${selectedDate.toISOString()}, Data ajustada: ${localDate.toISOString()}`);
+    onDateChange(localDate);
+  };
+
   return (
     <div className="w-full space-y-2">
       <Label htmlFor="data">{label}</Label>
@@ -42,7 +58,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(selectedDate) => selectedDate && onDateChange(selectedDate)}
+            onSelect={handleDateChange}
             initialFocus
             locale={ptBR}
             className={cn("p-3 pointer-events-auto")}

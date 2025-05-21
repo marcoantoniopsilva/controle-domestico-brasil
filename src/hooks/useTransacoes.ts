@@ -23,17 +23,31 @@ export function useTransacoes() {
         toast.error("Erro ao carregar lançamentos: " + error.message);
       } else {
         console.log("Dados recebidos do Supabase:", data);
-        // Converte datas de string para objeto Date
-        const transacoesConvertidas = (data || []).map((t: any) => ({
-          id: t.id.toString(),
-          data: new Date(t.data),
-          categoria: t.categoria,
-          valor: Number(t.valor),
-          parcelas: t.parcelas || 1,
-          quemGastou: t.quem_gastou as "Marco" | "Bruna",
-          descricao: t.descricao,
-          tipo: t.tipo as "despesa" | "receita",
-        }));
+        // Converte datas de string para objeto Date e ajusta para o fuso horário local
+        const transacoesConvertidas = (data || []).map((t: any) => {
+          // Garante que a data esteja no formato correto - ajusta para o timezone local
+          const dataOriginal = new Date(t.data);
+          // Cria uma nova data usando ano, mês e dia para evitar problemas de timezone
+          const dataAjustada = new Date(
+            dataOriginal.getFullYear(),
+            dataOriginal.getMonth(),
+            dataOriginal.getDate(),
+            12, 0, 0 // Define meio-dia para evitar problemas de virada de dia
+          );
+          
+          console.log(`Convertendo data: ${t.data} → ${dataAjustada.toISOString()}`);
+          
+          return {
+            id: t.id.toString(),
+            data: dataAjustada,
+            categoria: t.categoria,
+            valor: Number(t.valor),
+            parcelas: t.parcelas || 1,
+            quemGastou: t.quem_gastou as "Marco" | "Bruna",
+            descricao: t.descricao,
+            tipo: t.tipo as "despesa" | "receita",
+          };
+        });
         
         console.log("Transações convertidas:", transacoesConvertidas.length);
         // Log para depuração: listar as datas das transações
@@ -56,8 +70,19 @@ export function useTransacoes() {
     try {
       console.log("Adicionando transação:", novaTransacao);
       
+      // Ajusta a data para o formato correto antes de enviar ao Supabase
+      // Converte a data para o formato YYYY-MM-DD sem ajuste de timezone
+      const dataAjustada = new Date(
+        novaTransacao.data.getFullYear(),
+        novaTransacao.data.getMonth(),
+        novaTransacao.data.getDate()
+      );
+      
+      const dataFormatada = dataAjustada.toISOString().split('T')[0];
+      console.log(`Data original: ${novaTransacao.data.toISOString()}, Data formatada: ${dataFormatada}`);
+      
       const insertObj = {
-        data: novaTransacao.data.toISOString().split('T')[0],
+        data: dataFormatada,
         categoria: novaTransacao.categoria,
         valor: novaTransacao.valor,
         parcelas: novaTransacao.parcelas,
@@ -81,22 +106,8 @@ export function useTransacoes() {
       }
       
       console.log("Transação adicionada com sucesso:", data);
-      // Atualizamos os dados imediatamente para não depender somente do fetchTransacoes
-      if (data && data.length > 0) {
-        const novaTransacaoComId: Transacao = {
-          id: data[0].id.toString(),
-          data: new Date(data[0].data),
-          categoria: data[0].categoria,
-          valor: Number(data[0].valor),
-          parcelas: data[0].parcelas,
-          quemGastou: data[0].quem_gastou as "Marco" | "Bruna",
-          descricao: data[0].descricao,
-          tipo: data[0].tipo as "despesa" | "receita",
-        };
-        setTransacoes(prev => [novaTransacaoComId, ...prev]);
-      }
       
-      // Ainda assim buscamos todos os lançamentos para garantir a sincronização
+      // Recarregar todos os dados para garantir sincronização completa
       await fetchTransacoes();
       toast.success("Transação registrada com sucesso!");
       return true;
@@ -120,10 +131,7 @@ export function useTransacoes() {
         return;
       }
       
-      // Atualizamos localmente para uma resposta mais rápida
-      setTransacoes(prev => prev.filter(t => t.id !== id));
-      
-      // E também buscamos os dados atualizados do servidor
+      // Recarregar todos os dados para garantir sincronização completa
       await fetchTransacoes();
       toast.success("Transação excluída com sucesso!");
     } catch (error: any) {
