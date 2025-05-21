@@ -86,6 +86,7 @@ export function useVersionCheck(userId?: string) {
   return {
     forceUpdate,
     lastRefreshed,
+    setLastRefreshed, // Export the setter function
     isRefreshing,
     forceFullRefresh,
     appVersion: APP_VERSION

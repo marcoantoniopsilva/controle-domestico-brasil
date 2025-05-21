@@ -20,6 +20,7 @@ const Dashboard = () => {
   const { 
     forceUpdate, 
     lastRefreshed, 
+    setLastRefreshed, // Get the setter function from the hook
     isRefreshing, 
     forceFullRefresh, 
     appVersion 
@@ -29,7 +30,7 @@ const Dashboard = () => {
   useRealTimeUpdates(
     usuario?.id,
     fetchTransacoes,
-    (time: number) => setLastRefreshed(time)
+    setLastRefreshed // Now we pass the setter function that we got from useVersionCheck
   );
 
   // Criar uma chave de cache única que muda sempre que forceUpdate muda
