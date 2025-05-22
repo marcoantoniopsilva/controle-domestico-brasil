@@ -21,38 +21,60 @@ export function useDashboardData(
     console.log("[useDashboardData] Filtrando transações para ciclo:", cicloAtual.nome);
     console.log("[useDashboardData] Total de transações disponíveis:", transacoes.length);
     
+    // Do not filter if there are no transactions
+    if (!Array.isArray(transacoes) || transacoes.length === 0) {
+      console.log("[useDashboardData] Não há transações para filtrar");
+      return [];
+    }
+    
     // Garantir que estamos trabalhando com objetos Date válidos
     const inicio = new Date(cicloAtual.inicio);
     const fim = new Date(cicloAtual.fim);
     
     if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
       console.error("[useDashboardData] Datas de ciclo inválidas!");
-      return [];
+      return transacoes; // Return all transactions if dates are invalid
     }
     
     inicio.setHours(0, 0, 0, 0);
     fim.setHours(23, 59, 59, 999);
     
+    console.log(`[useDashboardData] Período do ciclo: ${inicio.toISOString()} até ${fim.toISOString()}`);
+    
     // Filtrar transações reais do ciclo atual (não parcelas projetadas)
     const transacoesCicloAtual = transacoes.filter(t => {
+      if (!t || !t.data) {
+        console.error("[useDashboardData] Encontrada transação sem data ou inválida");
+        return false;
+      }
+      
       if (t.isParcela) return false; // Ignorar parcelas projetadas nas transações originais
       
       // Certifique-se de que a data da transação é um objeto Date válido
-      const dataTransacao = new Date(t.data);
+      const dataTransacao = t.data instanceof Date ? t.data : new Date(t.data);
       
       if (isNaN(dataTransacao.getTime())) {
         console.error(`[useDashboardData] Data inválida para transação ${t.id}`);
-        return false;
+        return true; // Include transactions with invalid dates rather than filtering them out
       }
       
       dataTransacao.setHours(0, 0, 0, 0);
       
       // A transação deve estar estritamente entre o início e fim do ciclo
       const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
+      
+      // For debugging
+      if (!estaNoCiclo) {
+        console.log(`[useDashboardData] Transação ${t.id} (${dataTransacao.toISOString()}) está FORA do ciclo`);
+      }
+      
       return estaNoCiclo;
     });
     
     console.log(`[useDashboardData] Encontradas ${transacoesCicloAtual.length} transações reais no ciclo ${cicloAtual.nome}`);
+    
+    // TEMPORARILY FOR DEBUGGING: Return all transactions to verify they exist
+    // return transacoes;
     
     // Combinar transações reais com parcelas futuras projetadas para este ciclo
     const todasTransacoes = [
@@ -129,7 +151,7 @@ export function useDashboardData(
   }, [transacoesFiltradas, cicloAtual]);
 
   return {
-    transacoesFiltradas,
+    transacoesFiltradas: transacoesFiltradas || [], // Ensure we always return an array
     temTransacoes,
     ...totais
   };

@@ -15,6 +15,7 @@ interface DashboardMainProps {
   onExcluirTransacao: (id: string) => Promise<void>;
   onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   onAddTransacao?: (transacao: Omit<Transacao, "id">) => Promise<boolean>;
+  transacoes: Transacao[]; // Make sure we're receiving transactions properly
 }
 
 const DashboardMain: React.FC<DashboardMainProps> = ({
@@ -25,14 +26,14 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   cacheKey = "",
   onExcluirTransacao,
   onEditarTransacao,
-  onAddTransacao
+  onAddTransacao,
+  transacoes = [] // Default to empty array if not provided
 }) => {
   // Hooks
   const { ciclosDisponiveis } = useCiclos();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Garantir que temos as transações do Dashboard.tsx
-  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  // No need to maintain local state for transactions, use the props directly
   
   // Obter dados do dashboard
   const { 
@@ -47,10 +48,12 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   const orcamentoTotal = categorias?.reduce((acc, cat) => 
     cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0) || 0;
 
-  // Obter as transações do Dashboard.tsx via useEffect
+  // Log for debugging
   useEffect(() => {
     console.log('[DashboardMain] Ciclo atual modificado:', cicloAtual?.nome);
-  }, [cicloAtual]);
+    console.log('[DashboardMain] Número total de transações recebidas:', transacoes.length);
+    console.log('[DashboardMain] Número de transações filtradas para o ciclo atual:', transacoesFiltradas.length);
+  }, [cicloAtual, transacoes, transacoesFiltradas]);
 
   return (
     <main className="flex-1 py-8">

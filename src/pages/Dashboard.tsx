@@ -39,7 +39,10 @@ const Dashboard = () => {
   // Hooks de atualização automática estão completamente desativados
   useRealTimeUpdates(
     usuario?.id,
-    fetchTransacoes,
+    // Provide a void function to satisfy TypeScript, but it won't do anything
+    async () => {
+      await fetchTransacoes(false);
+    },
     setLastRefreshed
   );
 
@@ -63,6 +66,11 @@ const Dashboard = () => {
       });
     }
   }, [usuario, fetchTransacoes]); // Dependências necessárias
+
+  // Log total transactions for debugging
+  useEffect(() => {
+    console.log("[Dashboard] Total de transações disponíveis:", transacoes.length);
+  }, [transacoes]);
 
   // Handler para mudar o ciclo selecionado - simplificado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
@@ -144,6 +152,7 @@ const Dashboard = () => {
         onExcluirTransacao={handleExcluirTransacao}
         onEditarTransacao={handleEditarTransacao}
         onAddTransacao={handleAdicionarTransacao}
+        transacoes={transacoes} // Pass all transactions to DashboardMain
       />
       
       <DashboardFooter
