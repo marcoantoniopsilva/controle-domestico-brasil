@@ -1,6 +1,5 @@
 
-import React, { useEffect, useState } from "react";
-import { Container } from "@/components/ui/container";
+import React, { useState, useEffect } from "react";
 import { CicloFinanceiro, Usuario, Transacao } from "@/types";
 import { useCiclos } from "@/hooks/useCiclos";
 import DashboardContent from "./DashboardContent";
@@ -30,24 +29,31 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   // Hooks
   const { ciclosDisponiveis } = useCiclos();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Garantir que temos as transações do Dashboard.tsx
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   
-  // Get transaction data
+  // Obter dados do dashboard
   const { 
     transacoesFiltradas,
     categoriasAtualizadas: categorias,
     totalReceitas,
     totalDespesas,
     saldo
-  } = useDashboardData(transacoes || [], cicloAtual);
+  } = useDashboardData(transacoes, cicloAtual);
   
-  // Calculate budget total
+  // Calcular orçamento total
   const orcamentoTotal = categorias?.reduce((acc, cat) => 
     cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0) || 0;
 
+  // Obter as transações do Dashboard.tsx via useEffect
+  useEffect(() => {
+    console.log('[DashboardMain] Ciclo atual modificado:', cicloAtual?.nome);
+  }, [cicloAtual]);
+
   return (
     <main className="flex-1 py-8">
-      <Container>
+      <div className="container mx-auto px-4">
         <DashboardContent
           transacoes={transacoesFiltradas || []}
           categorias={categorias || []}
@@ -63,7 +69,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
           updateKey={forceUpdate}
           cacheKey={cacheKey}
         />
-      </Container>
+      </div>
     </main>
   );
 };

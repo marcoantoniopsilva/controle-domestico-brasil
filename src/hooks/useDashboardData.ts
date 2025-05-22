@@ -8,12 +8,18 @@ export function useDashboardData(
   transacoes: Transacao[],
   cicloAtual: CicloFinanceiro
 ) {
+  // Verificar se há alguma transação
+  const temTransacoes = useMemo(() => {
+    return Array.isArray(transacoes) && transacoes.length > 0;
+  }, [transacoes]);
+
   // Obter as parcelas futuras projetadas que caem dentro do ciclo atual
   const parcelasFuturas = useParcelasFuturas(transacoes, cicloAtual);
 
   // Filtragem de transações e parcelas futuras combinadas para o ciclo atual
   const transacoesFiltradas = useMemo(() => {
     console.log("[useDashboardData] Filtrando transações para ciclo:", cicloAtual.nome);
+    console.log("[useDashboardData] Total de transações disponíveis:", transacoes.length);
     
     // Garantir que estamos trabalhando com objetos Date válidos
     const inicio = new Date(cicloAtual.inicio);
@@ -86,7 +92,9 @@ export function useDashboardData(
     });
     
     // Log detalhado de cada transação para depuração
-    console.log("[useDashboardData] Detalhamento das transações do ciclo:");
+    if (transacoesFiltradas.length > 0) {
+      console.log("[useDashboardData] Detalhamento das transações do ciclo:");
+    }
     
     let totalReceitasCalculado = 0;
     let totalDespesasCalculado = 0;
@@ -122,6 +130,7 @@ export function useDashboardData(
 
   return {
     transacoesFiltradas,
+    temTransacoes,
     ...totais
   };
 }
