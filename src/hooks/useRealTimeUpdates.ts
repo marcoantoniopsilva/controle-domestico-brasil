@@ -4,7 +4,7 @@ import { useEffect } from "react";
 // Hook completamente desativado - não faz nada
 export function useRealTimeUpdates(
   userId: string | undefined, 
-  fetchDataFn: () => Promise<void>,
+  fetchDataFn: (showToast?: boolean) => Promise<any>,
   setLastRefreshed: (time: number) => void
 ) {
   // Garantir que este hook não faz absolutamente nada

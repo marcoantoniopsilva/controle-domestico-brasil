@@ -4,6 +4,7 @@ import { CicloFinanceiro, Usuario, Transacao } from "@/types";
 import { useCiclos } from "@/hooks/useCiclos";
 import DashboardContent from "./DashboardContent";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { Container } from "@/components/ui/container";
 
 interface DashboardMainProps {
   usuario: Usuario;
@@ -53,7 +54,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
 
   return (
     <main className="flex-1 py-8">
-      <div className="container mx-auto px-4">
+      <Container>
         <DashboardContent
           transacoes={transacoesFiltradas || []}
           categorias={categorias || []}
@@ -69,7 +70,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
           updateKey={forceUpdate}
           cacheKey={cacheKey}
         />
-      </div>
+      </Container>
     </main>
   );
 };

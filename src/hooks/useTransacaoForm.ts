@@ -20,8 +20,8 @@ export function useTransacaoForm({
     initialValues?.data ? new Date(initialValues.data) : new Date()
   );
   const [categoria, setCategoria] = useState(initialValues?.categoria || "");
-  const [valor, setValor] = useState<number>(initialValues?.valor ? Math.abs(initialValues.valor) : 0);
-  const [parcelas, setParcelas] = useState<number>(initialValues?.parcelas || 1);
+  const [valor, setValor] = useState<string>(initialValues?.valor ? Math.abs(initialValues.valor).toString() : "");
+  const [parcelas, setParcelas] = useState<string>(initialValues?.parcelas?.toString() || "1");
   const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">(
     initialValues?.quemGastou || "Marco"
   );
@@ -56,7 +56,7 @@ export function useTransacaoForm({
         return;
       }
 
-      if (valor <= 0) {
+      if (!valor || parseFloat(valor) <= 0) {
         toast.error("Informe um valor válido");
         return;
       }
@@ -77,8 +77,8 @@ export function useTransacaoForm({
           data,
           categoria,
           // Valor é negativo para despesas, positivo para receitas
-          valor: tipo === "despesa" ? -Math.abs(valor) : Math.abs(valor),
-          parcelas,
+          valor: tipo === "despesa" ? -Math.abs(parseFloat(valor)) : Math.abs(parseFloat(valor)),
+          parcelas: parseInt(parcelas, 10),
           quemGastou,
           descricao,
           tipo,
@@ -90,8 +90,8 @@ export function useTransacaoForm({
         // Se não estiver editando, limpar o formulário
         if (!isEditing) {
           setCategoria("");
-          setValor(0);
-          setParcelas(1);
+          setValor("");
+          setParcelas("1");
           setDescricao("");
         }
       } catch (error) {
