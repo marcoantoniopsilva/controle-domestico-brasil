@@ -20,20 +20,13 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   onDateChange,
   label = "Data" 
 }) => {
-  // Função para garantir que a data selecionada esteja sempre no fuso horário local
+  // Função para garantir que a data selecionada seja corretamente preservada
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (!selectedDate) return;
     
-    // Cria uma nova data com o mesmo dia/mês/ano, mas ao meio-dia para evitar problemas de timezone
-    const localDate = new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate(),
-      12, 0, 0
-    );
-    
-    console.log(`Data selecionada: ${selectedDate.toISOString()}, Data ajustada: ${localDate.toISOString()}`);
-    onDateChange(localDate);
+    // Preservar a data exata selecionada sem ajustes 
+    console.log(`Data selecionada no calendário: ${selectedDate.toISOString()}`);
+    onDateChange(selectedDate);
   };
 
   return (

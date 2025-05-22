@@ -1,85 +1,72 @@
 
-import React, { useEffect } from "react";
-import { Usuario, CicloFinanceiro } from "@/types";
-import { DashboardHeader } from "@/components/financas/DashboardHeader";
-import DashboardContent from "@/components/financas/DashboardContent";
-import { useTransacoes } from "@/hooks/useTransacoes";
+import React, { useEffect, useState } from "react";
+import { Container } from "@/components/ui/container";
+import { CicloFinanceiro, Usuario, Transacao } from "@/types";
+import { useCiclos } from "@/hooks/useCiclos";
+import DashboardContent from "./DashboardContent";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { categorias } from "@/utils/financas";
 
 interface DashboardMainProps {
   usuario: Usuario;
   cicloAtual: CicloFinanceiro;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
-  forceUpdate: number;
-  cacheKey: string;
+  forceUpdate?: number;
+  cacheKey?: string;
+  onExcluirTransacao: (id: string) => Promise<void>;
+  onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
+  onAddTransacao?: (transacao: Omit<Transacao, "id">) => Promise<boolean>;
 }
 
 const DashboardMain: React.FC<DashboardMainProps> = ({
   usuario,
   cicloAtual,
   onCicloChange,
-  forceUpdate,
-  cacheKey
+  forceUpdate = 0,
+  cacheKey = "",
+  onExcluirTransacao,
+  onEditarTransacao,
+  onAddTransacao
 }) => {
-  // Usar versão simplificada do hook de transações sem atualizações automáticas
-  const { transacoes, isLoading, handleAddTransacao, handleExcluirTransacao, fetchTransacoes } = useTransacoes();
-
-  // Usar o hook atualizado para processar os dados do dashboard
-  const {
-    transacoesFiltradas,
-    categoriasAtualizadas,
+  // Hooks
+  const { ciclos } = useCiclos();
+  const { 
+    transacoes,
+    categorias,
     totalReceitas,
     totalDespesas,
-    saldo
-  } = useDashboardData(transacoes, cicloAtual);
+    saldo,
+    orcamentoTotal,
+    isLoading,
+    setFiltro,
+  } = useDashboardData(usuario, cicloAtual, forceUpdate, cacheKey);
 
-  // Carregar transações apenas UMA vez quando o componente é montado
-  // Otimizado para evitar múltiplos fetchs - array de deps vazio
+  // Atualizar filtro quando o ciclo muda
   useEffect(() => {
-    if (usuario) {
-      console.log("[DashboardMain] Carregando transações iniciais para o usuário:", usuario.id);
-      fetchTransacoes();
-    }
-  }, []); // Apenas no mount inicial para evitar loops
-
-  // Calcular o valor total do orçamento (soma dos orçamentos das categorias de despesa)
-  const orcamentoTotal = categorias
-    .filter(cat => cat.tipo === "despesa")
-    .reduce((acc, cat) => acc + cat.orcamento, 0);
+    setFiltro({
+      dataInicio: cicloAtual.inicio,
+      dataFim: cicloAtual.fim
+    });
+  }, [cicloAtual, setFiltro]);
 
   return (
-    <main className="flex-1 container mx-auto px-4 py-8">
-      <DashboardHeader 
-        usuario={usuario}
-        onAddTransacao={async (transacao) => {
-          const result = await handleAddTransacao(transacao, usuario.id);
-          // Forçar uma atualização após adicionar uma transação
-          if (result) {
-            setTimeout(() => fetchTransacoes(), 1000);
-          }
-          return result;
-        }}
-      />
-      
-      <DashboardContent 
-        transacoes={transacoesFiltradas}
-        categorias={categoriasAtualizadas}
-        cicloAtual={cicloAtual}
-        onExcluirTransacao={async (id) => {
-          await handleExcluirTransacao(id);
-          // Força uma atualização após excluir uma transação
-          setTimeout(() => fetchTransacoes(), 1000);
-        }}
-        totalReceitas={totalReceitas}
-        totalDespesas={totalDespesas}
-        saldo={saldo}
-        orcamentoTotal={orcamentoTotal}
-        isLoading={isLoading}
-        onCicloChange={onCicloChange}
-        updateKey={forceUpdate}
-        cacheKey={cacheKey}
-      />
+    <main className="flex-1 py-8">
+      <Container>
+        <DashboardContent
+          transacoes={transacoes}
+          categorias={categorias}
+          cicloAtual={cicloAtual}
+          onExcluirTransacao={onExcluirTransacao}
+          onEditarTransacao={onEditarTransacao}
+          totalReceitas={totalReceitas}
+          totalDespesas={totalDespesas}
+          saldo={saldo}
+          orcamentoTotal={orcamentoTotal}
+          isLoading={isLoading}
+          onCicloChange={onCicloChange}
+          updateKey={forceUpdate}
+          cacheKey={cacheKey}
+        />
+      </Container>
     </main>
   );
 };

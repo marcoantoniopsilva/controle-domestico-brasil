@@ -9,6 +9,7 @@ interface DashboardContentProps {
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   onExcluirTransacao: (id: string) => Promise<void>;
+  onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   totalReceitas: number;
   totalDespesas: number;
   saldo: number;
@@ -24,6 +25,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   categorias,
   cicloAtual,
   onExcluirTransacao,
+  onEditarTransacao,
   totalReceitas,
   totalDespesas,
   saldo,
@@ -58,6 +60,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         categorias={categorias}
         cicloAtual={cicloAtual}
         onExcluirTransacao={onExcluirTransacao}
+        onEditarTransacao={onEditarTransacao}
         totalDespesasCategoria={totalDespesasCategoria}
         orcamentoTotal={orcamentoTotal}
         cacheKey={cacheKey}

@@ -14,7 +14,14 @@ import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 const Dashboard = () => {
   const { usuario } = useAuth();
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
-  const { transacoes, fetchTransacoes, lastUpdate } = useTransacoes();
+  const { 
+    transacoes, 
+    fetchTransacoes, 
+    lastUpdate,
+    adicionarTransacao,
+    excluirTransacao,
+    editarTransacao
+  } = useTransacoes();
   
   // VERSÃO ESTÁVEL - Sem atualizações automáticas
   const { 
@@ -60,6 +67,16 @@ const Dashboard = () => {
     setCicloAtual(cicloParaDefinir);
   };
 
+  // Handler para excluir transação
+  const handleExcluirTransacao = async (id: string) => {
+    await excluirTransacao(id);
+  };
+  
+  // Handler para editar transação
+  const handleEditarTransacao = async (id: string, transacao: any) => {
+    await editarTransacao(id, transacao);
+  };
+
   if (!usuario) {
     return <DashboardLoading />;
   }
@@ -74,6 +91,9 @@ const Dashboard = () => {
         onCicloChange={handleCicloChange}
         forceUpdate={forceUpdate}
         cacheKey={cacheKey}
+        onExcluirTransacao={handleExcluirTransacao}
+        onEditarTransacao={handleEditarTransacao}
+        onAddTransacao={adicionarTransacao}
       />
       
       <DashboardFooter

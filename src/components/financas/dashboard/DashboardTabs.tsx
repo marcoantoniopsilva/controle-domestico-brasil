@@ -12,6 +12,7 @@ interface DashboardTabsProps {
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   onExcluirTransacao: (id: string) => Promise<void>;
+  onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   totalDespesasCategoria: number;
   orcamentoTotal: number;
   cacheKey?: string;
@@ -23,6 +24,7 @@ const DashboardTabs = ({
   categorias,
   cicloAtual,
   onExcluirTransacao,
+  onEditarTransacao,
   totalDespesasCategoria,
   orcamentoTotal
 }: DashboardTabsProps) => {
@@ -31,8 +33,6 @@ const DashboardTabs = ({
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
-  
-  // Remover geração de chaves dinâmicas baseadas em cacheKey
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -53,6 +53,7 @@ const DashboardTabs = ({
         <ListaTransacoes 
           transacoes={transacoes.slice(0, 5)} 
           onExcluir={onExcluirTransacao}
+          onEditar={onEditarTransacao}
         />
       </TabsContent>
       
@@ -82,6 +83,7 @@ const DashboardTabs = ({
         <ListaTransacoes 
           transacoes={transacoes} 
           onExcluir={onExcluirTransacao}
+          onEditar={onEditarTransacao}
         />
       </TabsContent>
       

@@ -16,9 +16,9 @@ export function useTransacaoCRUD() {
       console.log("Adicionando transação:", novaTransacao);
       
       // Usa a data original sem alterações de fuso horário
-      const dataAjustada = novaTransacao.data;
       // Converte para formato ISO para garantir formato correto para o banco
-      const dataFormatada = dataAjustada.toISOString().split('T')[0];
+      // Pegando apenas a parte da data (YYYY-MM-DD)
+      const dataFormatada = novaTransacao.data.toISOString().split('T')[0];
       
       console.log(`Data original: ${novaTransacao.data.toISOString()}, Data formatada: ${dataFormatada}`);
       
@@ -81,8 +81,51 @@ export function useTransacaoCRUD() {
     }
   }, []);
 
+  /**
+   * Atualiza uma transação existente
+   */
+  const handleEditarTransacao = useCallback(async (id: string, transacaoAtualizada: Omit<Transacao, "id">) => {
+    try {
+      console.log("Atualizando transação:", id, transacaoAtualizada);
+      
+      // Formatando a data para o padrão do banco
+      const dataFormatada = transacaoAtualizada.data.toISOString().split('T')[0];
+      
+      const updateObj = {
+        data: dataFormatada,
+        categoria: transacaoAtualizada.categoria,
+        valor: transacaoAtualizada.valor,
+        parcelas: transacaoAtualizada.parcelas,
+        quem_gastou: transacaoAtualizada.quemGastou,
+        descricao: transacaoAtualizada.descricao || null,
+        tipo: transacaoAtualizada.tipo
+      };
+      
+      console.log("Objeto para atualização:", updateObj);
+      
+      const { error } = await supabase
+        .from("lancamentos")
+        .update(updateObj)
+        .eq("id", Number(id));
+        
+      if (error) {
+        console.error("Erro ao atualizar transação:", error);
+        toast.error("Erro ao atualizar transação: " + error.message);
+        return false;
+      }
+      
+      toast.success("Transação atualizada com sucesso!");
+      return true;
+    } catch (error: any) {
+      console.error("Erro ao atualizar transação:", error);
+      toast.error("Erro ao atualizar transação: " + error.message);
+      return false;
+    }
+  }, []);
+
   return {
     handleAddTransacao,
-    handleExcluirTransacao
+    handleExcluirTransacao,
+    handleEditarTransacao
   };
 }
