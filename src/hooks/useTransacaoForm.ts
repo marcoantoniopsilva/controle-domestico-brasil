@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
-import { Transacao } from "@/types";
+import { Transacao, Categoria } from "@/types";
 import { categorias as categoriasIniciais } from "@/utils/financas";
 
 export interface UseTransacaoFormProps {
@@ -31,9 +31,7 @@ export function useTransacaoForm({
 
   // Lista de categorias filtradas com base no tipo selecionado
   const categoriasFiltradas = useMemo(() => {
-    return categoriasIniciais
-      .filter((cat) => cat.tipo === tipo)
-      .map((cat) => cat.nome);
+    return categoriasIniciais.filter((cat) => cat.tipo === tipo);
   }, [tipo]);
 
   // Limpar o campo categoria quando mudar o tipo
