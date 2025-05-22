@@ -28,32 +28,28 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   onAddTransacao
 }) => {
   // Hooks
-  const { ciclos } = useCiclos();
+  const { ciclosDisponiveis } = useCiclos();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Get transaction data
   const { 
-    transacoes,
-    categorias,
+    transacoesFiltradas: transacoes,
+    categoriasAtualizadas: categorias,
     totalReceitas,
     totalDespesas,
-    saldo,
-    orcamentoTotal,
-    isLoading,
-    setFiltro,
-  } = useDashboardData(usuario, cicloAtual, forceUpdate, cacheKey);
-
-  // Atualizar filtro quando o ciclo muda
-  useEffect(() => {
-    setFiltro({
-      dataInicio: cicloAtual.inicio,
-      dataFim: cicloAtual.fim
-    });
-  }, [cicloAtual, setFiltro]);
+    saldo
+  } = useDashboardData(transacoes || [], cicloAtual);
+  
+  // Calculate budget total
+  const orcamentoTotal = categorias?.reduce((acc, cat) => 
+    cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0) || 0;
 
   return (
     <main className="flex-1 py-8">
       <Container>
         <DashboardContent
-          transacoes={transacoes}
-          categorias={categorias}
+          transacoes={transacoes || []}
+          categorias={categorias || []}
           cicloAtual={cicloAtual}
           onExcluirTransacao={onExcluirTransacao}
           onEditarTransacao={onEditarTransacao}

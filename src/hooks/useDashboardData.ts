@@ -1,7 +1,7 @@
 
 import { useMemo } from "react";
 import { CicloFinanceiro, Transacao } from "@/types";
-import { categorias } from "@/utils/financas";
+import { categorias as categoriasIniciais } from "@/utils/financas";
 import { useParcelasFuturas } from "./useParcelasFuturas";
 
 export function useDashboardData(
@@ -64,12 +64,12 @@ export function useDashboardData(
     console.log(`[useDashboardData] Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
     
     // Lista definitiva de categorias de receita
-    const categoriasReceita = categorias
+    const categoriasReceita = categoriasIniciais
       .filter(cat => cat.tipo === "receita")
       .map(cat => cat.nome);
     
     // Calcular totais para cada categoria usando APENAS transações do ciclo atual
-    const categoriasAtuais = categorias.map(cat => {
+    const categoriasAtualizadas = categoriasIniciais.map(cat => {
       // Filtrar transações desta categoria que pertencem ao ciclo atual
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
       
@@ -93,7 +93,7 @@ export function useDashboardData(
     
     // Analisamos cada transação para classificá-la corretamente
     transacoesFiltradas.forEach(t => {
-      const categoriaCorrespondente = categorias.find(cat => cat.nome === t.categoria);
+      const categoriaCorrespondente = categoriasIniciais.find(cat => cat.nome === t.categoria);
       const ehReceita = categoriaCorrespondente?.tipo === "receita";
       const valorAbs = Math.abs(t.valor);
       
@@ -113,10 +113,10 @@ export function useDashboardData(
     console.log(`[useDashboardData] Saldo: ${saldo}`);
     
     return {
-      categoriasAtualizadas: categoriasAtuais,
+      categoriasAtualizadas,
       totalReceitas: totalReceitasCalculado,
       totalDespesas: totalDespesasCalculado,
-      saldo: saldo
+      saldo
     };
   }, [transacoesFiltradas, cicloAtual]);
 

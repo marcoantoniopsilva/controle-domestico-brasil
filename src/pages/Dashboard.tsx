@@ -10,6 +10,7 @@ import DashboardFooter from "@/components/financas/DashboardFooter";
 import { APP_VERSION, useVersionCheck } from "@/hooks/useVersionCheck";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
+import { DashboardHeader } from "@/components/financas/DashboardHeader";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
@@ -50,7 +51,7 @@ const Dashboard = () => {
       console.log("[STABLE BUILD] Carregando dados apenas UMA vez na montagem inicial");
       fetchTransacoes();
     }
-  }, []); // Array de deps vazio para garantir que só executa no mount inicial
+  }, [usuario, fetchTransacoes]); // Dependências necessárias
 
   // Handler para mudar o ciclo selecionado - simplificado
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
@@ -84,6 +85,13 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
+      
+      <div className="container mx-auto px-4 py-6">
+        <DashboardHeader 
+          usuario={usuario} 
+          onAddTransacao={adicionarTransacao}
+        />
+      </div>
       
       <DashboardMain
         usuario={usuario}
