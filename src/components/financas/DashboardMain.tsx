@@ -30,10 +30,11 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   // Hooks
   const { ciclosDisponiveis } = useCiclos();
   const [isLoading, setIsLoading] = useState(false);
+  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   
   // Get transaction data
   const { 
-    transacoesFiltradas: transacoes,
+    transacoesFiltradas,
     categoriasAtualizadas: categorias,
     totalReceitas,
     totalDespesas,
@@ -48,7 +49,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     <main className="flex-1 py-8">
       <Container>
         <DashboardContent
-          transacoes={transacoes || []}
+          transacoes={transacoesFiltradas || []}
           categorias={categorias || []}
           cicloAtual={cicloAtual}
           onExcluirTransacao={onExcluirTransacao}

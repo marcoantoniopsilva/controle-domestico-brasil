@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Transacao } from "@/types";
-import { useTransacaoForm } from "./form/useTransacaoForm";
+import { useTransacaoForm } from "@/hooks/useTransacaoForm";
 import DateSelector from "./form/DateSelector";
 import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";

@@ -6,25 +6,31 @@ import { Transacao } from "@/types";
 
 interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => void;
+  initialValues?: Partial<Transacao>;
+  isEditing?: boolean;
 }
 
-export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
+export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = false }: UseTransacaoFormProps) {
   // Inicializar com a data atual ajustada para meio-dia para evitar problemas de timezone
   const hoje = new Date();
-  const dataInicial = new Date(
-    hoje.getFullYear(),
-    hoje.getMonth(),
-    hoje.getDate(),
-    12, 0, 0
-  );
+  const dataInicial = initialValues?.data 
+    ? new Date(initialValues.data) 
+    : new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        hoje.getDate(),
+        12, 0, 0
+      );
   
   const [data, setData] = useState<Date>(dataInicial);
-  const [categoria, setCategoria] = useState("");
-  const [valor, setValor] = useState("");
-  const [parcelas, setParcelas] = useState("1");
-  const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">("Marco");
-  const [descricao, setDescricao] = useState("");
-  const [tipo, setTipo] = useState<"despesa" | "receita">("despesa");
+  const [categoria, setCategoria] = useState(initialValues?.categoria || "");
+  const [valor, setValor] = useState(initialValues?.valor 
+    ? Math.abs(initialValues.valor).toString() 
+    : "");
+  const [parcelas, setParcelas] = useState(initialValues?.parcelas?.toString() || "1");
+  const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">(initialValues?.quemGastou || "Marco");
+  const [descricao, setDescricao] = useState(initialValues?.descricao || "");
+  const [tipo, setTipo] = useState<"despesa" | "receita">(initialValues?.tipo || "despesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtramos as categorias com base no tipo selecionado
@@ -35,7 +41,10 @@ export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
   // Resetamos a categoria selecionada quando o tipo muda
   const handleTipoChange = (novoTipo: "despesa" | "receita") => {
     setTipo(novoTipo);
-    setCategoria("");  // Resetar categoria quando o tipo muda
+    // Apenas resetar categoria se não estiver editando ou se o tipo for diferente
+    if (!isEditing || initialValues?.tipo !== novoTipo) {
+      setCategoria("");  // Resetar categoria quando o tipo muda
+    }
   };
 
   const validateForm = (): boolean => {
@@ -74,18 +83,11 @@ export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
     const valorNumerico = parseFloat(valor.replace(",", "."));
     const parcelasNum = parseInt(parcelas);
     
-    // Garantir que a data esteja no formato correto (ajustada para meio-dia)
-    const dataAjustada = new Date(
-      data.getFullYear(),
-      data.getMonth(),
-      data.getDate(),
-      12, 0, 0
-    );
-    
-    console.log(`[useTransacaoForm] Data selecionada: ${data.toISOString()}, Data ajustada: ${dataAjustada.toISOString()}`);
+    // Preservar a data exatamente como foi selecionada
+    console.log(`[useTransacaoForm] Data selecionada: ${data.toISOString()}`);
     
     const novaTransacao: Omit<Transacao, "id"> = {
-      data: dataAjustada,
+      data: data,
       categoria,
       valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,
@@ -98,14 +100,14 @@ export function useTransacaoForm({ onAddTransacao }: UseTransacaoFormProps) {
       console.log("Enviando transação:", novaTransacao);
       onAddTransacao(novaTransacao);
       
-      // Resetar o formulário
-      setData(dataInicial);
-      setCategoria("");
-      setValor("");
-      setParcelas("1");
-      setQuemGastou("Marco");
-      setDescricao("");
-      setTipo("despesa");
+      // Resetar o formulário se não estiver editando
+      if (!isEditing) {
+        setCategoria("");
+        setValor("");
+        setParcelas("1");
+        setDescricao("");
+        // Mantenha a data e o tipo selecionado para facilitar múltiplos lançamentos
+      }
     } catch (error) {
       console.error("Erro ao adicionar transação:", error);
       toast.error("Erro ao adicionar transação");
