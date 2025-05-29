@@ -5,13 +5,13 @@ import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 export const categorias: Categoria[] = [
   // Categorias de despesas
   { nome: "Supermercado", orcamento: 2000, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Aplicativos e restaurantes", orcamento: 1000, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Aplicativos e restaurantes", orcamento: 800, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Farmácia", orcamento: 600, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Compras parceladas Marco", orcamento: 900, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Compras parceladas Bruna", orcamento: 900, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Compras do Marco", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Compras da Bruna", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Compras parceladas Marco", orcamento: 1100, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Compras parceladas Bruna", orcamento: 1200, gastosAtuais: 0, tipo: "despesa" }, 
+  { nome: "Compras do Marco", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Compras da Bruna", orcamento: 400, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Academia", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Poupança/investimento", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
