@@ -24,9 +24,18 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   
   const [data, setData] = useState<Date>(dataInicial);
   const [categoria, setCategoria] = useState(initialValues?.categoria || "");
-  const [valor, setValor] = useState(initialValues?.valor 
-    ? Math.abs(initialValues.valor).toString() 
-    : "");
+  
+  // Para valores iniciais, se for string (já formatado), usar direto, senão formatar
+  const valorInicial = initialValues?.valor 
+    ? (typeof initialValues.valor === 'string' 
+        ? initialValues.valor 
+        : Math.abs(initialValues.valor).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }))
+    : "";
+    
+  const [valor, setValor] = useState(valorInicial);
   const [parcelas, setParcelas] = useState(initialValues?.parcelas?.toString() || "1");
   const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">(initialValues?.quemGastou || "Marco");
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
@@ -80,10 +89,12 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     
     setIsSubmitting(true);
     
-    const valorNumerico = parseFloat(valor.replace(",", "."));
+    // Converter valor formatado brasileiro de volta para número
+    const valorNumerico = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
     const parcelasNum = parseInt(parcelas);
     
-    // Preservar a data exatamente como foi selecionada
+    console.log(`[useTransacaoForm] Valor original: ${valor}`);
+    console.log(`[useTransacaoForm] Valor convertido: ${valorNumerico}`);
     console.log(`[useTransacaoForm] Data selecionada: ${data.toISOString()}`);
     
     const novaTransacao: Omit<Transacao, "id"> = {

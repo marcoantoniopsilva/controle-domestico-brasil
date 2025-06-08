@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Transacao } from "@/types";
-import { useTransacaoForm } from "@/hooks/useTransacaoForm";
+import { useTransacaoForm } from "./form/useTransacaoForm";
 import DateSelector from "./form/DateSelector";
 import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";
@@ -22,6 +22,12 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
   onSalvar,
   onCancelar 
 }) => {
+  // Formatar o valor inicial corretamente para exibição
+  const valorFormatado = Math.abs(transacao.valor).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
   const {
     data,
     setData,
@@ -42,7 +48,10 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     handleSubmit
   } = useTransacaoForm({ 
     onAddTransacao: onSalvar,
-    initialValues: transacao,
+    initialValues: {
+      ...transacao,
+      valor: valorFormatado // Usar o valor formatado
+    },
     isEditing: true
   });
 
