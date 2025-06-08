@@ -25,11 +25,11 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   const [data, setData] = useState<Date>(dataInicial);
   const [categoria, setCategoria] = useState(initialValues?.categoria || "");
   
-  // Para valores iniciais, se for string (já formatado), usar direto, senão formatar
+  // Para valores iniciais, sempre tratar como string formatada para o input
   const valorInicial = initialValues?.valor 
     ? (typeof initialValues.valor === 'string' 
         ? initialValues.valor 
-        : Math.abs(initialValues.valor).toLocaleString('pt-BR', {
+        : Math.abs(Number(initialValues.valor)).toLocaleString('pt-BR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
           }))
