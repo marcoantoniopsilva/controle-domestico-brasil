@@ -11,17 +11,36 @@ interface ValueInputProps {
 const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
   // Função para formatar o valor como moeda brasileira
   const formatarValorMoeda = (valor: string) => {
-    // Remove todos os caracteres não numéricos
-    const apenasNumeros = valor.replace(/[^\d]/g, '');
+    // Remove todos os caracteres não numéricos exceto vírgula e ponto
+    let valorLimpo = valor.replace(/[^\d,\.]/g, '');
     
-    // Converte para número e divide por 100 para ter os centavos
-    const valorNumerico = parseInt(apenasNumeros || '0', 10) / 100;
-    
-    // Formata o número como moeda brasileira
-    return valorNumerico.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    // Se o valor já contém vírgula ou ponto, trata como valor já formatado
+    if (valorLimpo.includes(',') || valorLimpo.includes('.')) {
+      // Substitui vírgula por ponto para processamento
+      valorLimpo = valorLimpo.replace(',', '.');
+      
+      // Converte para número
+      const valorNumerico = parseFloat(valorLimpo);
+      
+      if (isNaN(valorNumerico)) {
+        return '0,00';
+      }
+      
+      // Formata o número como moeda brasileira
+      return valorNumerico.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    } else {
+      // Se não contém vírgula/ponto, trata como centavos (comportamento original)
+      const apenasNumeros = valorLimpo;
+      const valorNumerico = parseInt(apenasNumeros || '0', 10) / 100;
+      
+      return valorNumerico.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
   };
 
   // Manipula a mudança no input
