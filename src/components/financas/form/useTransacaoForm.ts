@@ -6,7 +6,7 @@ import { Transacao } from "@/types";
 
 interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => void;
-  initialValues?: Partial<Transacao>;
+  initialValues?: Partial<Transacao & { valor: string | number }>;
   isEditing?: boolean;
 }
 
