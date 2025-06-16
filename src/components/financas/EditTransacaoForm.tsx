@@ -22,12 +22,6 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
   onSalvar,
   onCancelar 
 }) => {
-  // Formatar o valor inicial corretamente para exibição
-  const valorFormatado = Math.abs(transacao.valor).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
   const {
     data,
     setData,
@@ -50,7 +44,7 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     onAddTransacao: onSalvar,
     initialValues: {
       ...transacao,
-      valor: valorFormatado // Usar o valor formatado como string
+      valor: Math.abs(transacao.valor) // Pass the numeric value, not formatted string
     },
     isEditing: true
   });
