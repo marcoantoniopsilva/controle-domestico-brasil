@@ -9,26 +9,26 @@ import { toast } from "sonner";
  */
 export function useTransacaoCRUD() {
   /**
+   * Formata uma data para YYYY-MM-DD sem problemas de timezone
+   */
+  const formatarDataParaBanco = (data: Date): string => {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  };
+
+  /**
    * Adiciona uma nova transação
    */
   const handleAddTransacao = useCallback(async (novaTransacao: Omit<Transacao, "id">, usuarioId: string) => {
     try {
       console.log("Adicionando transação:", novaTransacao);
       
-      // Ajustar a data para evitar problemas de fuso horário
-      // Criar uma nova data no meio-dia do dia selecionado para evitar mudanças de fuso
-      const dataAjustada = new Date(
-        novaTransacao.data.getFullYear(),
-        novaTransacao.data.getMonth(),
-        novaTransacao.data.getDate(),
-        12, 0, 0, 0  // Meio-dia
-      );
+      // Formatar data diretamente sem conversão UTC
+      const dataFormatada = formatarDataParaBanco(novaTransacao.data);
       
-      // Formatar para YYYY-MM-DD preservando o dia correto
-      const dataFormatada = dataAjustada.toISOString().split('T')[0];
-      
-      console.log(`Data original: ${novaTransacao.data.toISOString()}`);
-      console.log(`Data ajustada: ${dataAjustada.toISOString()}`);
+      console.log(`Data original: ${novaTransacao.data.toDateString()}`);
       console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const insertObj = {
@@ -97,19 +97,10 @@ export function useTransacaoCRUD() {
     try {
       console.log("Atualizando transação:", id, transacaoAtualizada);
       
-      // Ajustar a data para evitar problemas de fuso horário
-      const dataAjustada = new Date(
-        transacaoAtualizada.data.getFullYear(),
-        transacaoAtualizada.data.getMonth(),
-        transacaoAtualizada.data.getDate(),
-        12, 0, 0, 0  // Meio-dia
-      );
+      // Formatar data diretamente sem conversão UTC
+      const dataFormatada = formatarDataParaBanco(transacaoAtualizada.data);
       
-      // Formatar para YYYY-MM-DD preservando o dia correto
-      const dataFormatada = dataAjustada.toISOString().split('T')[0];
-      
-      console.log(`Data original: ${transacaoAtualizada.data.toISOString()}`);
-      console.log(`Data ajustada: ${dataAjustada.toISOString()}`);
+      console.log(`Data original: ${transacaoAtualizada.data.toDateString()}`);
       console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const updateObj = {
