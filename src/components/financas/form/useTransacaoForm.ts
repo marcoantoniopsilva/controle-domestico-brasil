@@ -14,12 +14,17 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   // Inicializar com a data atual ajustada para meio-dia para evitar problemas de timezone
   const hoje = new Date();
   const dataInicial = initialValues?.data 
-    ? new Date(initialValues.data) 
+    ? new Date(
+        initialValues.data.getFullYear(),
+        initialValues.data.getMonth(),
+        initialValues.data.getDate(),
+        12, 0, 0, 0
+      )
     : new Date(
         hoje.getFullYear(),
         hoje.getMonth(),
         hoje.getDate(),
-        12, 0, 0
+        12, 0, 0, 0
       );
   
   const [data, setData] = useState<Date>(dataInicial);
@@ -95,7 +100,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     
     console.log(`[useTransacaoForm] Valor original: ${valor}`);
     console.log(`[useTransacaoForm] Valor convertido: ${valorNumerico}`);
-    console.log(`[useTransacaoForm] Data selecionada: ${data.toISOString()}`);
+    console.log(`[useTransacaoForm] Data selecionada: ${data.toDateString()}`);
     
     const novaTransacao: Omit<Transacao, "id"> = {
       data: data,

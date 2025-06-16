@@ -50,7 +50,7 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     onAddTransacao: onSalvar,
     initialValues: {
       ...transacao,
-      valor: valorFormatado // Usar o valor formatado
+      valor: valorFormatado // Usar o valor formatado como string
     },
     isEditing: true
   });

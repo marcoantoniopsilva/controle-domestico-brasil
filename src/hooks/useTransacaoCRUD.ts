@@ -15,12 +15,21 @@ export function useTransacaoCRUD() {
     try {
       console.log("Adicionando transação:", novaTransacao);
       
-      // Usa a data original sem alterações de fuso horário
-      // Converte para formato ISO para garantir formato correto para o banco
-      // Pegando apenas a parte da data (YYYY-MM-DD)
-      const dataFormatada = novaTransacao.data.toISOString().split('T')[0];
+      // Ajustar a data para evitar problemas de fuso horário
+      // Criar uma nova data no meio-dia do dia selecionado para evitar mudanças de fuso
+      const dataAjustada = new Date(
+        novaTransacao.data.getFullYear(),
+        novaTransacao.data.getMonth(),
+        novaTransacao.data.getDate(),
+        12, 0, 0, 0  // Meio-dia
+      );
       
-      console.log(`Data original: ${novaTransacao.data.toISOString()}, Data formatada: ${dataFormatada}`);
+      // Formatar para YYYY-MM-DD preservando o dia correto
+      const dataFormatada = dataAjustada.toISOString().split('T')[0];
+      
+      console.log(`Data original: ${novaTransacao.data.toISOString()}`);
+      console.log(`Data ajustada: ${dataAjustada.toISOString()}`);
+      console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const insertObj = {
         data: dataFormatada,
@@ -88,8 +97,20 @@ export function useTransacaoCRUD() {
     try {
       console.log("Atualizando transação:", id, transacaoAtualizada);
       
-      // Formatando a data para o padrão do banco
-      const dataFormatada = transacaoAtualizada.data.toISOString().split('T')[0];
+      // Ajustar a data para evitar problemas de fuso horário
+      const dataAjustada = new Date(
+        transacaoAtualizada.data.getFullYear(),
+        transacaoAtualizada.data.getMonth(),
+        transacaoAtualizada.data.getDate(),
+        12, 0, 0, 0  // Meio-dia
+      );
+      
+      // Formatar para YYYY-MM-DD preservando o dia correto
+      const dataFormatada = dataAjustada.toISOString().split('T')[0];
+      
+      console.log(`Data original: ${transacaoAtualizada.data.toISOString()}`);
+      console.log(`Data ajustada: ${dataAjustada.toISOString()}`);
+      console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const updateObj = {
         data: dataFormatada,

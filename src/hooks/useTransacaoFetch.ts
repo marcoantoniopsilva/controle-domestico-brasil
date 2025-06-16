@@ -27,17 +27,19 @@ export function useTransacaoFetch() {
         return { data: [], error };
       } else {
         console.log("Dados recebidos do Supabase:", data);
-        // Converte datas de string para objeto Date e ajusta para o fuso horário local
+        
+        // Converte datas de string para objeto Date preservando o dia correto
         const transacoesConvertidas = (data || []).map((t: any) => {
-          // Garante que a data esteja no formato correto - ajusta para o timezone local
-          // Preserva a data original sem ajustes de fuso horário
-          const dataOriginal = new Date(t.data);
+          // Criar uma data parseando apenas a parte da data (YYYY-MM-DD)
+          // sem considerar timezone para preservar o dia exato
+          const [ano, mes, dia] = t.data.split('-').map(Number);
+          const dataCorreta = new Date(ano, mes - 1, dia, 12, 0, 0, 0); // Meio-dia do dia correto
           
-          console.log(`Convertendo data: ${t.data} → ${dataOriginal.toISOString()}`);
+          console.log(`Convertendo data: ${t.data} → ${dataCorreta.toDateString()}`);
           
           return {
             id: t.id.toString(),
-            data: dataOriginal,
+            data: dataCorreta,
             categoria: t.categoria,
             valor: Number(t.valor),
             parcelas: t.parcelas || 1,
@@ -51,7 +53,7 @@ export function useTransacaoFetch() {
         // Log para depuração: listar as datas das transações
         transacoesConvertidas.forEach((t, idx) => {
           if (idx < 10) { // Limitar a 10 registros para não sobrecarregar o console
-            console.log(`Transação ${idx}: data=${t.data.toISOString()}, valor=${t.valor}, categoria=${t.categoria}`);
+            console.log(`Transação ${idx}: data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}`);
           }
         });
         

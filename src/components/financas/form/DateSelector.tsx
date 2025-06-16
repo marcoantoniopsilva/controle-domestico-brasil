@@ -24,9 +24,18 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (!selectedDate) return;
     
-    // Preservar a data exata selecionada sem ajustes 
-    console.log(`Data selecionada no calendário: ${selectedDate.toISOString()}`);
-    onDateChange(selectedDate);
+    // Criar uma nova data no meio-dia do dia selecionado para evitar problemas de timezone
+    const dataAjustada = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      12, 0, 0, 0
+    );
+    
+    console.log(`Data selecionada: ${selectedDate.toDateString()}`);
+    console.log(`Data ajustada: ${dataAjustada.toDateString()}`);
+    
+    onDateChange(dataAjustada);
   };
 
   return (
