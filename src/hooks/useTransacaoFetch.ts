@@ -35,7 +35,8 @@ export function useTransacaoFetch() {
           const [ano, mes, dia] = t.data.split('-').map(Number);
           const dataCorreta = new Date(ano, mes - 1, dia, 12, 0, 0, 0); // Meio-dia do dia correto
           
-          console.log(`Convertendo data: ${t.data} → ${dataCorreta.toDateString()}`);
+          console.log(`[useTransacaoFetch] Convertendo data: string="${t.data}" → Date="${dataCorreta.toDateString()}"`);
+          console.log(`[useTransacaoFetch] Verificação: ano=${ano}, mes=${mes}, dia=${dia}`);
           
           return {
             id: t.id.toString(),
@@ -52,8 +53,8 @@ export function useTransacaoFetch() {
         console.log("Transações convertidas:", transacoesConvertidas.length);
         // Log para depuração: listar as datas das transações
         transacoesConvertidas.forEach((t, idx) => {
-          if (idx < 10) { // Limitar a 10 registros para não sobrecarregar o console
-            console.log(`Transação ${idx}: data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}`);
+          if (idx < 5) { // Limitar a 5 registros para não sobrecarregar o console
+            console.log(`[useTransacaoFetch] Transação ${idx}: id=${t.id}, data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}`);
           }
         });
         
