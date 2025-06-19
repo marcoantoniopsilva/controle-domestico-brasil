@@ -31,7 +31,6 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     
   const [valor, setValor] = useState(valorInicial);
   const [parcelas, setParcelas] = useState(initialValues?.parcelas?.toString() || "1");
-  const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">(initialValues?.quemGastou || "Marco");
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
   const [tipo, setTipo] = useState<"despesa" | "receita">(initialValues?.tipo || "despesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +50,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   };
 
   const validateForm = (): boolean => {
-    if (!categoria || !valor || !parcelas || !quemGastou) {
+    if (!categoria || !valor || !parcelas) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return false;
     }
@@ -61,9 +60,12 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
       return false;
     }
     
-    const valorNumerico = parseFloat(valor.replace(",", "."));
-    if (isNaN(valorNumerico)) {
-      toast.error("Valor inválido");
+    // Validação melhorada para o valor
+    const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    const valorNumerico = parseFloat(valorLimpo);
+    
+    if (isNaN(valorNumerico) || valorNumerico <= 0) {
+      toast.error("Valor deve ser maior que zero");
       return false;
     }
     
@@ -84,7 +86,8 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     setIsSubmitting(true);
     
     // Converter valor formatado brasileiro de volta para número
-    const valorNumerico = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+    const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    const valorNumerico = parseFloat(valorLimpo);
     const parcelasNum = parseInt(parcelas);
     
     console.log(`[useTransacaoForm] Valor original: ${valor}`);
@@ -92,11 +95,11 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     console.log(`[useTransacaoForm] Data selecionada: ${data.toDateString()}`);
     
     const novaTransacao: Omit<Transacao, "id"> = {
-      data: data, // Usar a data diretamente sem modificações
+      data: data,
       categoria,
       valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,
-      quemGastou,
+      quemGastou: "Marco", // Valor padrão fixo, já que não usaremos mais este campo
       descricao: descricao || undefined,
       tipo
     };
@@ -130,8 +133,6 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     setValor,
     parcelas,
     setParcelas,
-    quemGastou,
-    setQuemGastou,
     descricao,
     setDescricao,
     tipo,

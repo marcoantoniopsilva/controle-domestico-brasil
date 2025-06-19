@@ -9,44 +9,27 @@ interface ValueInputProps {
 }
 
 const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
-  // Função para formatar o valor como moeda brasileira
-  const formatarValorMoeda = (valor: string) => {
-    // Remove todos os caracteres não numéricos exceto vírgula e ponto
-    let valorLimpo = valor.replace(/[^\d,\.]/g, '');
+  // Função simplificada para formatar o valor
+  const formatarValor = (input: string): string => {
+    // Remove tudo exceto números
+    const apenasNumeros = input.replace(/\D/g, '');
     
-    // Se o valor já contém vírgula ou ponto, trata como valor já formatado
-    if (valorLimpo.includes(',') || valorLimpo.includes('.')) {
-      // Substitui vírgula por ponto para processamento
-      valorLimpo = valorLimpo.replace(',', '.');
-      
-      // Converte para número
-      const valorNumerico = parseFloat(valorLimpo);
-      
-      if (isNaN(valorNumerico)) {
-        return '0,00';
-      }
-      
-      // Formata o número como moeda brasileira
-      return valorNumerico.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    } else {
-      // Se não contém vírgula/ponto, trata como centavos (comportamento original)
-      const apenasNumeros = valorLimpo;
-      const valorNumerico = parseInt(apenasNumeros || '0', 10) / 100;
-      
-      return valorNumerico.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
+    if (!apenasNumeros) return '';
+    
+    // Converte para número (centavos)
+    const valorEmCentavos = parseInt(apenasNumeros, 10);
+    const valorEmReais = valorEmCentavos / 100;
+    
+    // Formata como moeda brasileira
+    return valorEmReais.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
-  // Manipula a mudança no input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valorDigitado = e.target.value;
-    const valorFormatado = formatarValorMoeda(valorDigitado);
+    const inputValue = e.target.value;
+    const valorFormatado = formatarValor(inputValue);
     onValorChange(valorFormatado);
   };
 

@@ -8,7 +8,6 @@ import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";
 import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
-import SpenderSelector from "./form/SpenderSelector";
 import DescriptionInput from "./form/DescriptionInput";
 
 interface EditTransacaoFormProps {
@@ -33,8 +32,6 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     setValor,
     parcelas,
     setParcelas,
-    quemGastou,
-    setQuemGastou,
     descricao,
     setDescricao,
     tipo,
@@ -86,21 +83,10 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/2">
-          <ParcelasSelector 
-            parcelas={parcelas} 
-            onParcelasChange={setParcelas} 
-          />
-        </div>
-        
-        <div className="w-full md:w-1/2">
-          <SpenderSelector 
-            quemGastou={quemGastou} 
-            onQuemGastouChange={setQuemGastou} 
-          />
-        </div>
-      </div>
+      <ParcelasSelector 
+        parcelas={parcelas} 
+        onParcelasChange={setParcelas} 
+      />
       
       <DescriptionInput 
         descricao={descricao} 

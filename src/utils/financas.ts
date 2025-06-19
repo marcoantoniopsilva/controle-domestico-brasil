@@ -8,6 +8,7 @@ export const categorias: Categoria[] = [
   { nome: "Aplicativos e restaurantes", orcamento: 800, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Farmácia", orcamento: 600, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Saúde", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
   { nome: "Compras parceladas Marco", orcamento: 1100, gastosAtuais: 0, tipo: "despesa" }, 
   { nome: "Compras parceladas Bruna", orcamento: 1200, gastosAtuais: 0, tipo: "despesa" }, 
   { nome: "Compras do Marco", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },

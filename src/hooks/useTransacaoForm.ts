@@ -22,9 +22,6 @@ export function useTransacaoForm({
   const [categoria, setCategoria] = useState(initialValues?.categoria || "");
   const [valor, setValor] = useState<string>(initialValues?.valor ? Math.abs(initialValues.valor).toString() : "");
   const [parcelas, setParcelas] = useState<string>(initialValues?.parcelas?.toString() || "1");
-  const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">(
-    initialValues?.quemGastou || "Marco"
-  );
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
   const [tipo, setTipo] = useState<"despesa" | "receita">(initialValues?.tipo || "despesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +74,7 @@ export function useTransacaoForm({
           // Valor é negativo para despesas, positivo para receitas
           valor: tipo === "despesa" ? -Math.abs(parseFloat(valor)) : Math.abs(parseFloat(valor)),
           parcelas: parseInt(parcelas, 10),
-          quemGastou,
+          quemGastou: "Marco", // Valor fixo padrão, já que não usaremos mais este campo
           descricao,
           tipo,
         };
@@ -103,7 +100,6 @@ export function useTransacaoForm({
       categoria,
       valor,
       parcelas,
-      quemGastou,
       descricao,
       tipo,
       data,
@@ -121,8 +117,6 @@ export function useTransacaoForm({
     setValor,
     parcelas,
     setParcelas,
-    quemGastou,
-    setQuemGastou,
     descricao,
     setDescricao,
     tipo,

@@ -8,7 +8,6 @@ import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";
 import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
-import SpenderSelector from "./form/SpenderSelector";
 import DescriptionInput from "./form/DescriptionInput";
 
 interface AddTransacaoFormProps {
@@ -25,8 +24,6 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
     setValor,
     parcelas,
     setParcelas,
-    quemGastou,
-    setQuemGastou,
     descricao,
     setDescricao,
     tipo,
@@ -71,21 +68,10 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
         </div>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/2">
-          <ParcelasSelector 
-            parcelas={parcelas} 
-            onParcelasChange={setParcelas} 
-          />
-        </div>
-        
-        <div className="w-full md:w-1/2">
-          <SpenderSelector 
-            quemGastou={quemGastou} 
-            onQuemGastouChange={setQuemGastou} 
-          />
-        </div>
-      </div>
+      <ParcelasSelector 
+        parcelas={parcelas} 
+        onParcelasChange={setParcelas} 
+      />
       
       <DescriptionInput 
         descricao={descricao} 
