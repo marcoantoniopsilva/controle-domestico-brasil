@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Transacao } from "@/types";
@@ -9,16 +8,17 @@ import { toast } from "sonner";
  */
 export function useTransacaoCRUD() {
   /**
-   * Formata uma data para YYYY-MM-DD de forma simples
+   * Formata uma data para YYYY-MM-DD usando componentes da data
    */
   const formatarDataParaBanco = (data: Date): string => {
-    // Usar toLocaleDateString com formato específico para evitar problemas de timezone
+    // Usar os componentes da data diretamente para evitar problemas de timezone
     const ano = data.getFullYear();
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const dia = String(data.getDate()).padStart(2, '0');
     const dataFormatada = `${ano}-${mes}-${dia}`;
     
-    console.log(`[useTransacaoCRUD] Formatando data: ${data.toDateString()} → ${dataFormatada}`);
+    console.log(`[useTransacaoCRUD] Formatando data: ano=${ano}, mes=${mes}, dia=${dia} → ${dataFormatada}`);
+    console.log(`[useTransacaoCRUD] Data original: ${data.toDateString()} → ${dataFormatada}`);
     return dataFormatada;
   };
 

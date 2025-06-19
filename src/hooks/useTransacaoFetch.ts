@@ -28,12 +28,12 @@ export function useTransacaoFetch() {
       } else {
         console.log("Dados recebidos do Supabase:", data);
         
-        // Converte datas de string para objeto Date usando método mais simples
+        // Converter datas de forma mais simples - criar Date a partir da string YYYY-MM-DD
         const transacoesConvertidas = (data || []).map((t: any) => {
-          // Usar Date diretamente com a string no formato YYYY-MM-DD
-          // Isso cria uma data local sem problemas de timezone
-          const dataString = t.data + 'T00:00:00'; // Adicionar horário local para evitar UTC
-          const dataCorreta = new Date(dataString);
+          // Criar data usando os componentes da string YYYY-MM-DD
+          const [ano, mes, dia] = t.data.split('-').map(Number);
+          // Criar Date usando os componentes individuais (mês é 0-indexado)
+          const dataCorreta = new Date(ano, mes - 1, dia);
           
           console.log(`[useTransacaoFetch] Data original: "${t.data}" → Data convertida: "${dataCorreta.toDateString()}"`);
           
