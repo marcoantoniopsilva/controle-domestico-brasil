@@ -11,32 +11,10 @@ interface UseTransacaoFormProps {
 }
 
 export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = false }: UseTransacaoFormProps) {
-  // Criar data inicial sempre no meio-dia para evitar problemas de timezone
-  const criarDataSegura = (data?: Date): Date => {
-    if (data) {
-      // Se temos uma data, criar nova instância no meio-dia preservando o dia exato
-      return new Date(
-        data.getFullYear(),
-        data.getMonth(),
-        data.getDate(),
-        12, 0, 0, 0
-      );
-    } else {
-      // Data atual no meio-dia
-      const hoje = new Date();
-      return new Date(
-        hoje.getFullYear(),
-        hoje.getMonth(),
-        hoje.getDate(),
-        12, 0, 0, 0
-      );
-    }
-  };
-
-  const dataInicial = criarDataSegura(initialValues?.data);
+  // Usar data diretamente sem manipulações complexas
+  const dataInicial = initialValues?.data || new Date();
   
-  console.log(`[useTransacaoForm] Data inicial recebida: ${initialValues?.data?.toDateString()}`);
-  console.log(`[useTransacaoForm] Data inicial processada: ${dataInicial.toDateString()}`);
+  console.log(`[useTransacaoForm] Data inicial: ${dataInicial.toDateString()}`);
   
   const [data, setData] = useState<Date>(dataInicial);
   const [categoria, setCategoria] = useState(initialValues?.categoria || "");
@@ -109,16 +87,12 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     const valorNumerico = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
     const parcelasNum = parseInt(parcelas);
     
-    // Garantir que a data está no meio-dia para consistência
-    const dataSegura = criarDataSegura(data);
-    
     console.log(`[useTransacaoForm] Valor original: ${valor}`);
     console.log(`[useTransacaoForm] Valor convertido: ${valorNumerico}`);
     console.log(`[useTransacaoForm] Data selecionada: ${data.toDateString()}`);
-    console.log(`[useTransacaoForm] Data segura final: ${dataSegura.toDateString()}`);
     
     const novaTransacao: Omit<Transacao, "id"> = {
-      data: dataSegura,
+      data: data, // Usar a data diretamente sem modificações
       categoria,
       valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,

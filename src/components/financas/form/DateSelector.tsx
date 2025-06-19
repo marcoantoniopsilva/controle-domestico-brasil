@@ -20,22 +20,14 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   onDateChange,
   label = "Data" 
 }) => {
-  // Função para garantir que a data selecionada seja corretamente preservada
+  // Função simplificada para lidar com mudanças de data
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (!selectedDate) return;
     
-    // Criar uma nova data no meio-dia do dia selecionado para evitar problemas de timezone
-    const dataAjustada = new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate(),
-      12, 0, 0, 0
-    );
+    console.log(`[DateSelector] Data selecionada: ${selectedDate.toDateString()}`);
     
-    console.log(`Data selecionada: ${selectedDate.toDateString()}`);
-    console.log(`Data ajustada: ${dataAjustada.toDateString()}`);
-    
-    onDateChange(dataAjustada);
+    // Usar a data diretamente sem modificações
+    onDateChange(selectedDate);
   };
 
   return (

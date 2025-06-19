@@ -28,15 +28,14 @@ export function useTransacaoFetch() {
       } else {
         console.log("Dados recebidos do Supabase:", data);
         
-        // Converte datas de string para objeto Date preservando o dia correto
+        // Converte datas de string para objeto Date usando método mais simples
         const transacoesConvertidas = (data || []).map((t: any) => {
-          // Criar uma data parseando apenas a parte da data (YYYY-MM-DD)
-          // sem considerar timezone para preservar o dia exato
-          const [ano, mes, dia] = t.data.split('-').map(Number);
-          const dataCorreta = new Date(ano, mes - 1, dia, 12, 0, 0, 0); // Meio-dia do dia correto
+          // Usar Date diretamente com a string no formato YYYY-MM-DD
+          // Isso cria uma data local sem problemas de timezone
+          const dataString = t.data + 'T00:00:00'; // Adicionar horário local para evitar UTC
+          const dataCorreta = new Date(dataString);
           
-          console.log(`[useTransacaoFetch] Convertendo data: string="${t.data}" → Date="${dataCorreta.toDateString()}"`);
-          console.log(`[useTransacaoFetch] Verificação: ano=${ano}, mes=${mes}, dia=${dia}`);
+          console.log(`[useTransacaoFetch] Data original: "${t.data}" → Data convertida: "${dataCorreta.toDateString()}"`);
           
           return {
             id: t.id.toString(),

@@ -22,16 +22,7 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
   onSalvar,
   onCancelar 
 }) => {
-  // Garantir que a data seja preservada corretamente - criar nova data no meio-dia
-  const dataCorrigida = new Date(
-    transacao.data.getFullYear(),
-    transacao.data.getMonth(),
-    transacao.data.getDate(),
-    12, 0, 0, 0
-  );
-
-  console.log(`[EditTransacaoForm] Data original: ${transacao.data.toDateString()}`);
-  console.log(`[EditTransacaoForm] Data corrigida: ${dataCorrigida.toDateString()}`);
+  console.log(`[EditTransacaoForm] Data da transação: ${transacao.data.toDateString()}`);
 
   const {
     data,
@@ -55,7 +46,6 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     onAddTransacao: onSalvar,
     initialValues: {
       ...transacao,
-      data: dataCorrigida, // Usar a data corrigida
       valor: Math.abs(transacao.valor) // Pass the numeric value, not formatted string
     },
     isEditing: true

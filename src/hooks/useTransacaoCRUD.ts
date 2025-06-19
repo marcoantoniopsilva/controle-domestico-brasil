@@ -9,13 +9,17 @@ import { toast } from "sonner";
  */
 export function useTransacaoCRUD() {
   /**
-   * Formata uma data para YYYY-MM-DD sem problemas de timezone
+   * Formata uma data para YYYY-MM-DD de forma simples
    */
   const formatarDataParaBanco = (data: Date): string => {
+    // Usar toLocaleDateString com formato específico para evitar problemas de timezone
     const ano = data.getFullYear();
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
+    const dataFormatada = `${ano}-${mes}-${dia}`;
+    
+    console.log(`[useTransacaoCRUD] Formatando data: ${data.toDateString()} → ${dataFormatada}`);
+    return dataFormatada;
   };
 
   /**
@@ -25,11 +29,7 @@ export function useTransacaoCRUD() {
     try {
       console.log("Adicionando transação:", novaTransacao);
       
-      // Formatar data diretamente sem conversão UTC
       const dataFormatada = formatarDataParaBanco(novaTransacao.data);
-      
-      console.log(`Data original: ${novaTransacao.data.toDateString()}`);
-      console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const insertObj = {
         data: dataFormatada,
@@ -97,11 +97,7 @@ export function useTransacaoCRUD() {
     try {
       console.log("Atualizando transação:", id, transacaoAtualizada);
       
-      // Formatar data diretamente sem conversão UTC
       const dataFormatada = formatarDataParaBanco(transacaoAtualizada.data);
-      
-      console.log(`Data original: ${transacaoAtualizada.data.toDateString()}`);
-      console.log(`Data formatada para o banco: ${dataFormatada}`);
       
       const updateObj = {
         data: dataFormatada,
