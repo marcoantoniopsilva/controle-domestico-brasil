@@ -6,6 +6,8 @@ import ResumoOrcamento from "../ResumoOrcamento";
 import ListaTransacoes from "../ListaTransacoes";
 import GraficoGastosDiarios from "../GraficoGastosDiarios";
 import ProgressoCategoria from "../ProgressoCategoria";
+import RelatorioCartaoCredito from "../RelatorioCartaoCredito";
+import GraficoComparativoMensal from "../GraficoComparativoMensal";
 
 interface DashboardTabsProps {
   transacoes: Transacao[];
@@ -50,6 +52,14 @@ const DashboardTabs = ({
           cicloAtual={cicloAtual}
           totalDespesas={totalDespesasCategoria}
         />
+        
+        {/* Adicionar relatório de cartão de crédito no dashboard */}
+        <RelatorioCartaoCredito
+          transacoes={transacoes}
+          categorias={categorias}
+          cicloAtual={cicloAtual}
+        />
+        
         <ListaTransacoes 
           transacoes={transacoes.slice(0, 5)} 
           onExcluir={onExcluirTransacao}
@@ -87,14 +97,26 @@ const DashboardTabs = ({
         />
       </TabsContent>
       
-      <TabsContent value="graficos">
-        <div className="space-y-6">
-          <GraficoGastosDiarios 
-            transacoes={transacoes} 
-            ciclo={cicloAtual} 
-            orcamentoTotal={orcamentoTotal}
-          />
-        </div>
+      <TabsContent value="graficos" className="space-y-6">
+        {/* Relatório de Cartão de Crédito */}
+        <RelatorioCartaoCredito
+          transacoes={transacoes}
+          categorias={categorias}
+          cicloAtual={cicloAtual}
+        />
+        
+        {/* Gráfico Comparativo Mensal */}
+        <GraficoComparativoMensal
+          transacoes={transacoes}
+          categorias={categorias}
+        />
+        
+        {/* Gráfico de Gastos Diários (mantido) */}
+        <GraficoGastosDiarios 
+          transacoes={transacoes} 
+          ciclo={cicloAtual} 
+          orcamentoTotal={orcamentoTotal}
+        />
       </TabsContent>
     </Tabs>
   );
