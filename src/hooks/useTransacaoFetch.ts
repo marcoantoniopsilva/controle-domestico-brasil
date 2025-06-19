@@ -28,18 +28,21 @@ export function useTransacaoFetch() {
       } else {
         console.log("Dados recebidos do Supabase:", data);
         
-        // Converter datas de forma mais simples - criar Date a partir da string YYYY-MM-DD
+        // Converter datas adicionando 1 dia para corrigir o problema de exibição
         const transacoesConvertidas = (data || []).map((t: any) => {
-          // Criar data usando os componentes da string YYYY-MM-DD
+          // Criar data a partir da string YYYY-MM-DD do banco
           const [ano, mes, dia] = t.data.split('-').map(Number);
-          // Criar Date usando os componentes individuais (mês é 0-indexado)
-          const dataCorreta = new Date(ano, mes - 1, dia);
+          const dataOriginal = new Date(ano, mes - 1, dia);
           
-          console.log(`[useTransacaoFetch] Data original: "${t.data}" → Data convertida: "${dataCorreta.toDateString()}"`);
+          // ADICIONAR 1 DIA para corrigir o problema de exibição
+          const dataCorrigida = new Date(dataOriginal);
+          dataCorrigida.setDate(dataCorrigida.getDate() + 1);
+          
+          console.log(`[useTransacaoFetch] Data do banco: "${t.data}" → Data original: "${dataOriginal.toDateString()}" → Data corrigida: "${dataCorrigida.toDateString()}"`);
           
           return {
             id: t.id.toString(),
-            data: dataCorreta,
+            data: dataCorrigida, // Usar a data corrigida (+1 dia)
             categoria: t.categoria,
             valor: Number(t.valor),
             parcelas: t.parcelas || 1,
