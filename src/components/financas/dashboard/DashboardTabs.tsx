@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
@@ -7,7 +6,7 @@ import ListaTransacoes from "../ListaTransacoes";
 import GraficoGastosDiarios from "../GraficoGastosDiarios";
 import ProgressoCategoria from "../ProgressoCategoria";
 import RelatorioCartaoCredito from "../RelatorioCartaoCredito";
-import GraficoComparativoMensal from "../GraficoComparativoMensal";
+import GraficoComparativoMensal from "../GraficoComparativo/GraficoComparativoMensal";
 
 interface DashboardTabsProps {
   transacoes: Transacao[];
