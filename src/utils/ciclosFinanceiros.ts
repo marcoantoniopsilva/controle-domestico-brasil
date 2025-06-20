@@ -1,5 +1,5 @@
 
-import { format, subMonths } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Transacao } from "@/types";
 
@@ -11,37 +11,82 @@ export interface CicloFinanceiroDetalhado {
   temTransacoes: boolean;
 }
 
+// Função para calcular o início do ciclo financeiro baseado em uma data
+const calcularInicioCiclo = (data: Date): Date => {
+  const ano = data.getFullYear();
+  const mes = data.getMonth();
+  
+  // Se estamos antes do dia 25, o ciclo atual começou no dia 25 do mês anterior
+  if (data.getDate() < 25) {
+    return new Date(ano, mes - 1, 25);
+  } else {
+    // Se estamos no dia 25 ou depois, o ciclo atual começou no dia 25 deste mês
+    return new Date(ano, mes, 25);
+  }
+};
+
+// Função para calcular o fim do ciclo financeiro baseado no início
+const calcularFimCiclo = (inicioCiclo: Date): Date => {
+  const fimCiclo = new Date(inicioCiclo);
+  fimCiclo.setMonth(fimCiclo.getMonth() + 1);
+  fimCiclo.setDate(24);
+  return fimCiclo;
+};
+
 // Função aprimorada para gerar ciclos financeiros com dados históricos
 export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiroDetalhado[] => {
+  console.log("[ciclosFinanceiros] Iniciando geração de ciclos para", transacoes.length, "transações");
+  
+  if (transacoes.length === 0) {
+    console.log("[ciclosFinanceiros] Nenhuma transação encontrada, gerando ciclos padrão");
+    // Se não há transações, gerar os últimos 12 ciclos mesmo assim
+    const ciclos: CicloFinanceiroDetalhado[] = [];
+    const hoje = new Date();
+    
+    for (let i = 11; i >= 0; i--) {
+      const dataBase = subMonths(hoje, i);
+      const inicioCiclo = calcularInicioCiclo(dataBase);
+      const fimCiclo = calcularFimCiclo(inicioCiclo);
+      
+      ciclos.push({
+        inicio: inicioCiclo,
+        fim: fimCiclo,
+        nome: formatarNomeCiclo(inicioCiclo, fimCiclo),
+        nomeCompleto: formatarNomeCompletosCiclo(inicioCiclo, fimCiclo),
+        temTransacoes: false
+      });
+    }
+    
+    return ciclos;
+  }
+
+  // Encontrar a data mais antiga e mais recente das transações
+  const datasTransacoes = transacoes.map(t => new Date(t.data)).sort((a, b) => a.getTime() - b.getTime());
+  const dataMinima = datasTransacoes[0];
+  const dataMaxima = datasTransacoes[datasTransacoes.length - 1];
+  
+  console.log("[ciclosFinanceiros] Período das transações:", dataMinima.toDateString(), "até", dataMaxima.toDateString());
+  
+  // Calcular o primeiro e último ciclo baseado nas transações
+  const primeiroCicloInicio = calcularInicioCiclo(dataMinima);
+  const ultimoCicloInicio = calcularInicioCiclo(dataMaxima);
+  
+  console.log("[ciclosFinanceiros] Primeiro ciclo inicia em:", primeiroCicloInicio.toDateString());
+  console.log("[ciclosFinanceiros] Último ciclo inicia em:", ultimoCicloInicio.toDateString());
+  
+  // Gerar todos os ciclos entre o primeiro e o último
   const ciclos: CicloFinanceiroDetalhado[] = [];
-  const hoje = new Date();
+  let cicloAtual = new Date(primeiroCicloInicio);
   
-  console.log("[GraficoComparativo] Gerando ciclos históricos para", transacoes.length, "transações");
+  // Garantir que temos pelo menos 12 ciclos para comparação
+  const inicioMinimo = subMonths(ultimoCicloInicio, 11);
+  if (cicloAtual > inicioMinimo) {
+    cicloAtual = new Date(inicioMinimo);
+  }
   
-  // Sempre gerar os últimos 12 ciclos, independente das transações
-  // Isso garante que sempre temos dados históricos para comparação
-  for (let i = 11; i >= 0; i--) {
-    const dataBase = subMonths(hoje, i);
-    
-    // Calcular o início do ciclo financeiro (dia 25 do mês anterior)
-    const inicioCiclo = new Date(dataBase.getFullYear(), dataBase.getMonth() - 1, 25);
-    
-    // Calcular o fim do ciclo financeiro (dia 24 do mês atual)
-    const fimCiclo = new Date(dataBase.getFullYear(), dataBase.getMonth(), 24);
-    
-    // Formatação do nome do ciclo
-    const mesInicio = format(inicioCiclo, 'MMM', { locale: ptBR });
-    const mesFim = format(fimCiclo, 'MMM', { locale: ptBR });
-    const anoInicio = inicioCiclo.getFullYear();
-    const anoFim = fimCiclo.getFullYear();
-    
-    const nomeCiclo = anoInicio === anoFim 
-      ? `${mesInicio}/${mesFim} ${anoInicio}`
-      : `${mesInicio} ${anoInicio}/${mesFim} ${anoFim}`;
-    
-    const nomeCicloCompleto = anoInicio === anoFim
-      ? `${format(inicioCiclo, 'MMMM', { locale: ptBR })}/${format(fimCiclo, 'MMMM', { locale: ptBR })} de ${anoInicio}`
-      : `${format(inicioCiclo, 'MMMM', { locale: ptBR })} de ${anoInicio} / ${format(fimCiclo, 'MMMM', { locale: ptBR })} de ${anoFim}`;
+  while (cicloAtual <= ultimoCicloInicio) {
+    const inicioCiclo = new Date(cicloAtual);
+    const fimCiclo = calcularFimCiclo(inicioCiclo);
     
     // Verificar se este ciclo tem transações
     const transacoesCiclo = transacoes.filter(t => {
@@ -49,19 +94,52 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
       return dataTransacao >= inicioCiclo && dataTransacao <= fimCiclo;
     });
     
-    console.log(`[GraficoComparativo] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
+    const nomeCiclo = formatarNomeCiclo(inicioCiclo, fimCiclo);
+    
+    console.log(`[ciclosFinanceiros] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
     
     ciclos.push({
-      inicio: new Date(inicioCiclo),
-      fim: new Date(fimCiclo),
+      inicio: inicioCiclo,
+      fim: fimCiclo,
       nome: nomeCiclo,
-      nomeCompleto: nomeCicloCompleto,
+      nomeCompleto: formatarNomeCompletosCiclo(inicioCiclo, fimCiclo),
       temTransacoes: transacoesCiclo.length > 0
     });
+    
+    // Avançar para o próximo ciclo (próximo mês)
+    cicloAtual = addMonths(cicloAtual, 1);
   }
   
-  console.log("[GraficoComparativo] Total de ciclos gerados:", ciclos.length);
-  console.log("[GraficoComparativo] Ciclos com transações:", ciclos.filter(c => c.temTransacoes).length);
+  console.log("[ciclosFinanceiros] Total de ciclos gerados:", ciclos.length);
+  console.log("[ciclosFinanceiros] Ciclos com transações:", ciclos.filter(c => c.temTransacoes).length);
   
   return ciclos;
+};
+
+// Função para formatar o nome do ciclo
+const formatarNomeCiclo = (inicio: Date, fim: Date): string => {
+  const mesInicio = format(inicio, 'MMM', { locale: ptBR });
+  const mesFim = format(fim, 'MMM', { locale: ptBR });
+  const anoInicio = inicio.getFullYear();
+  const anoFim = fim.getFullYear();
+  
+  if (anoInicio === anoFim) {
+    return `${mesInicio}/${mesFim} ${anoInicio}`;
+  } else {
+    return `${mesInicio} ${anoInicio}/${mesFim} ${anoFim}`;
+  }
+};
+
+// Função para formatar o nome completo do ciclo
+const formatarNomeCompletosCiclo = (inicio: Date, fim: Date): string => {
+  const mesInicio = format(inicio, 'MMMM', { locale: ptBR });
+  const mesFim = format(fim, 'MMMM', { locale: ptBR });
+  const anoInicio = inicio.getFullYear();
+  const anoFim = fim.getFullYear();
+  
+  if (anoInicio === anoFim) {
+    return `${mesInicio}/${mesFim} de ${anoInicio}`;
+  } else {
+    return `${mesInicio} de ${anoInicio} / ${mesFim} de ${anoFim}`;
+  }
 };
