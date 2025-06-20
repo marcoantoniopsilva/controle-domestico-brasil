@@ -2,8 +2,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Transacao, Categoria } from "@/types";
-import { formatarMoeda } from "@/utils/financas";
-import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { formatarMoeda, calcularCicloAtual } from "@/utils/financas";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp } from "lucide-react";
 
@@ -18,47 +18,83 @@ const CORES_CATEGORIAS = [
   "#D97706", "#84CC16", "#7C3AED", "#F43F5E"
 ];
 
-const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativoMensalProps) => {
-  // Gerar últimos 6 meses
+// Função para gerar ciclos financeiros (do 25 de um mês ao 24 do próximo)
+const gerarCiclosFinanceiros = () => {
+  const ciclos = [];
   const hoje = new Date();
-  const seiseMesesAtras = subMonths(hoje, 5);
-  const meses = eachMonthOfInterval({
-    start: seiseMesesAtras,
-    end: hoje
-  });
+  
+  // Gerar últimos 6 ciclos incluindo o atual
+  for (let i = 5; i >= 0; i--) {
+    const dataBase = subMonths(hoje, i);
+    
+    // Determinar se estamos no primeiro ou segundo período do mês
+    const inicioCiclo = dataBase.getDate() < 25 
+      ? new Date(dataBase.getFullYear(), dataBase.getMonth() - 1, 25)
+      : new Date(dataBase.getFullYear(), dataBase.getMonth(), 25);
+    
+    const fimCiclo = new Date(inicioCiclo);
+    fimCiclo.setMonth(fimCiclo.getMonth() + 1);
+    fimCiclo.setDate(24);
+    
+    // Formatação do nome do ciclo
+    const mesInicio = format(inicioCiclo, 'MMM', { locale: ptBR });
+    const mesFim = format(fimCiclo, 'MMM', { locale: ptBR });
+    const anoInicio = inicioCiclo.getFullYear();
+    const anoFim = fimCiclo.getFullYear();
+    
+    const nomeCiclo = anoInicio === anoFim 
+      ? `${mesInicio}/${mesFim} ${anoInicio}`
+      : `${mesInicio} ${anoInicio}/${mesFim} ${anoFim}`;
+    
+    const nomeCicloCompleto = anoInicio === anoFim
+      ? `${format(inicioCiclo, 'MMMM', { locale: ptBR })}/${format(fimCiclo, 'MMMM', { locale: ptBR })} de ${anoInicio}`
+      : `${format(inicioCiclo, 'MMMM', { locale: ptBR })} de ${anoInicio} / ${format(fimCiclo, 'MMMM', { locale: ptBR })} de ${anoFim}`;
+    
+    ciclos.push({
+      inicio: new Date(inicioCiclo),
+      fim: new Date(fimCiclo),
+      nome: nomeCiclo,
+      nomeCompleto: nomeCicloCompleto
+    });
+  }
+  
+  return ciclos;
+};
+
+const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativoMensalProps) => {
+  // Gerar últimos 6 ciclos financeiros
+  const ciclos = gerarCiclosFinanceiros();
 
   // Preparar dados para o gráfico
-  const dadosGrafico = meses.map(mes => {
-    const inicioMes = startOfMonth(mes);
-    const fimMes = endOfMonth(mes);
-    
-    // Filtrar transações do mês
-    const transacoesMes = transacoes.filter(t => {
+  const dadosGrafico = ciclos.map(ciclo => {
+    // Filtrar transações do ciclo
+    const transacoesCiclo = transacoes.filter(t => {
       const dataTransacao = new Date(t.data);
-      return dataTransacao >= inicioMes && dataTransacao <= fimMes;
+      return dataTransacao >= ciclo.inicio && dataTransacao <= ciclo.fim;
     });
 
-    // Calcular total por categoria para este mês
-    const dadosMes: any = {
-      mes: format(mes, "MMM/yyyy", { locale: ptBR }),
-      mesCompleto: format(mes, "MMMM 'de' yyyy", { locale: ptBR })
+    // Calcular total por categoria para este ciclo
+    const dadosCiclo: any = {
+      ciclo: ciclo.nome,
+      cicloCompleto: ciclo.nomeCompleto,
+      temLancamentos: transacoesCiclo.length > 0
     };
 
     // Adicionar total por categoria
     categorias.forEach(categoria => {
-      const totalCategoria = transacoesMes
+      const totalCategoria = transacoesCiclo
         .filter(t => t.categoria === categoria.nome)
         .reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
-      dadosMes[categoria.nome] = totalCategoria;
+      dadosCiclo[categoria.nome] = totalCategoria;
     });
 
-    return dadosMes;
+    return dadosCiclo;
   });
 
   // Filtrar apenas categorias que têm dados para mostrar
   const categoriasComDados = categorias.filter(cat => 
-    dadosGrafico.some(mes => mes[cat.nome] > 0)
+    dadosGrafico.some(ciclo => ciclo[cat.nome] > 0)
   );
 
   // Função para formatar tooltip
@@ -72,10 +108,10 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          Evolução Mensal por Categoria
+          Evolução por Ciclo Financeiro
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Comparação dos gastos de cada categoria nos últimos 6 meses
+          Comparação dos gastos de cada categoria nos últimos 6 ciclos financeiros
         </p>
       </CardHeader>
       <CardContent>
@@ -84,7 +120,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
             <LineChart data={dadosGrafico}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="mes" 
+                dataKey="ciclo" 
                 tick={{ fontSize: 12 }}
               />
               <YAxis 
@@ -94,8 +130,8 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
               <Tooltip 
                 formatter={formatTooltip}
                 labelFormatter={(label) => {
-                  const item = dadosGrafico.find(d => d.mes === label);
-                  return item ? item.mesCompleto : label;
+                  const item = dadosGrafico.find(d => d.ciclo === label);
+                  return item ? item.cicloCompleto : label;
                 }}
                 contentStyle={{
                   backgroundColor: 'white',
@@ -123,8 +159,14 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
         {/* Resumo das categorias */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categoriasComDados.map((categoria, index) => {
-            const totalCategoria = dadosGrafico.reduce((acc, mes) => acc + mes[categoria.nome], 0);
-            const mediaCategoria = totalCategoria / dadosGrafico.length;
+            const totalCategoria = dadosGrafico.reduce((acc, ciclo) => acc + ciclo[categoria.nome], 0);
+            
+            // Calcular média apenas para ciclos com lançamentos efetivos
+            const ciclosComLancamentos = dadosGrafico.filter(ciclo => ciclo.temLancamentos);
+            const ciclosComLancamentosCategoria = ciclosComLancamentos.filter(ciclo => ciclo[categoria.nome] > 0);
+            const mediaCategoria = ciclosComLancamentosCategoria.length > 0 
+              ? ciclosComLancamentosCategoria.reduce((acc, ciclo) => acc + ciclo[categoria.nome], 0) / ciclosComLancamentosCategoria.length
+              : 0;
             
             return (
               <div key={categoria.nome} className="bg-slate-50 p-3 rounded-lg border">
@@ -138,6 +180,9 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
                 <div className="text-xs text-muted-foreground">
                   <div>Total: {formatarMoeda(totalCategoria)}</div>
                   <div>Média: {formatarMoeda(mediaCategoria)}</div>
+                  <div className="text-xs opacity-75">
+                    ({ciclosComLancamentosCategoria.length} ciclos)
+                  </div>
                 </div>
               </div>
             );
