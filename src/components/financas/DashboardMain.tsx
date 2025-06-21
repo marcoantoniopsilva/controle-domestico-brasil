@@ -53,6 +53,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     console.log('[DashboardMain] Ciclo atual modificado:', cicloAtual?.nome);
     console.log('[DashboardMain] Número total de transações recebidas:', transacoes.length);
     console.log('[DashboardMain] Número de transações filtradas para o ciclo atual:', transacoesFiltradas.length);
+    console.log('[DashboardMain] Passando transações originais (não filtradas) para gráfico comparativo');
   }, [cicloAtual, transacoes, transacoesFiltradas]);
 
   return (
@@ -60,6 +61,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
       <Container>
         <DashboardContent
           transacoes={transacoesFiltradas || []}
+          transacoesOriginais={transacoes} // Passar transações originais
           categorias={categorias || []}
           cicloAtual={cicloAtual}
           onExcluirTransacao={onExcluirTransacao}

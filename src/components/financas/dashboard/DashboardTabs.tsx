@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
@@ -10,6 +11,7 @@ import GraficoComparativoMensal from "../GraficoComparativo/GraficoComparativoMe
 
 interface DashboardTabsProps {
   transacoes: Transacao[];
+  transacoesOriginais?: Transacao[]; // Adicionar prop para transações não filtradas
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   onExcluirTransacao: (id: string) => Promise<void>;
@@ -22,6 +24,7 @@ interface DashboardTabsProps {
 
 const DashboardTabs = ({
   transacoes,
+  transacoesOriginais,
   categorias,
   cicloAtual,
   onExcluirTransacao,
@@ -104,9 +107,9 @@ const DashboardTabs = ({
           cicloAtual={cicloAtual}
         />
         
-        {/* Gráfico Comparativo Mensal */}
+        {/* Gráfico Comparativo Mensal - USAR TRANSAÇÕES ORIGINAIS */}
         <GraficoComparativoMensal
-          transacoes={transacoes}
+          transacoes={transacoesOriginais || transacoes}
           categorias={categorias}
         />
         

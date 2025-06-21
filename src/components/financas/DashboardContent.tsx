@@ -1,11 +1,14 @@
-
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
+import { formatarMoeda } from "@/utils/financas";
 import DashboardHeader from "./dashboard/DashboardHeader";
-import SummaryCards from "./dashboard/SummaryCards";
 import DashboardTabs from "./dashboard/DashboardTabs";
+import SummaryCards from "./dashboard/SummaryCards";
 
 interface DashboardContentProps {
   transacoes: Transacao[];
+  transacoesOriginais?: Transacao[]; // Adicionar prop para transações não filtradas
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   onExcluirTransacao: (id: string) => Promise<void>;
@@ -14,7 +17,7 @@ interface DashboardContentProps {
   totalDespesas: number;
   saldo: number;
   orcamentoTotal: number;
-  isLoading?: boolean;
+  isLoading: boolean;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
   updateKey?: number;
   cacheKey?: string;
@@ -22,6 +25,7 @@ interface DashboardContentProps {
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
   transacoes,
+  transacoesOriginais,
   categorias,
   cicloAtual,
   onExcluirTransacao,
@@ -35,39 +39,29 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   updateKey,
   cacheKey
 }) => {
-  // Completamente removido qualquer efeito ou lógica que cause re-renderização
-  
-  // Separamos categorias por tipo
-  const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
-  
-  // Calcular o total real de despesas (soma dos gastos atuais em todas as categorias de despesa)
-  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
-  // Calcular o saldo real com base nos totais das categorias
-  const saldoReal = totalReceitas - totalDespesasCategoria;
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <DashboardHeader onCicloChange={onCicloChange} />
       
-      <SummaryCards 
+      <SummaryCards
         totalReceitas={totalReceitas}
-        totalDespesasCategoria={totalDespesasCategoria}
-        saldoReal={saldoReal}
+        totalDespesas={totalDespesas}
+        saldo={saldo}
+        orcamentoTotal={orcamentoTotal}
       />
       
-      <DashboardTabs 
+      <DashboardTabs
         transacoes={transacoes}
+        transacoesOriginais={transacoesOriginais} // Repassar transações originais
         categorias={categorias}
         cicloAtual={cicloAtual}
         onExcluirTransacao={onExcluirTransacao}
         onEditarTransacao={onEditarTransacao}
-        totalDespesasCategoria={totalDespesasCategoria}
+        totalDespesasCategoria={totalDespesas}
         orcamentoTotal={orcamentoTotal}
-        cacheKey={cacheKey}
         updateKey={updateKey}
+        cacheKey={cacheKey}
       />
-      
-      {isLoading && <div className="text-center py-6">Carregando dados...</div>}
     </div>
   );
 };
