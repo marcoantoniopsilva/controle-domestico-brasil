@@ -13,6 +13,9 @@ interface GraficoComparativoMensalProps {
 }
 
 const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativoMensalProps) => {
+  console.log("[GraficoComparativo] Recebidas", transacoes.length, "transações para processamento");
+  console.log("[GraficoComparativo] Transações de despesa disponíveis:", transacoes.filter(t => t.tipo === "despesa").length);
+  
   // Processar dados financeiros
   const { dadosTabela, categoriasDespesa } = processFinancialData(transacoes, categorias);
 
@@ -26,6 +29,12 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
 
   console.log("[GraficoComparativo] Categorias de despesa com dados:", categoriasComDados.map(c => c.nome));
   console.log("[GraficoComparativo] Ciclos com dados encontrados:", ciclosFiltrados.map(c => c.ciclo));
+  
+  // Log dos totais de cada ciclo para comparação
+  ciclosFiltrados.forEach(ciclo => {
+    const totalCiclo = categoriasDespesa.reduce((acc, cat) => acc + ((ciclo[cat.nome] as number) || 0), 0);
+    console.log(`[GraficoComparativo] TOTAL do ciclo ${ciclo.ciclo}: R$ ${totalCiclo.toFixed(2)}`);
+  });
 
   return (
     <Card className="w-full">

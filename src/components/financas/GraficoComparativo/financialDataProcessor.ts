@@ -50,8 +50,6 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
       // Log detalhado para debug
       if (estaNoCiclo) {
         console.log(`[GraficoComparativo] ✅ Transação ${t.id} (${dataTransacao.toDateString()}) ESTÁ no ciclo ${ciclo.nome}`);
-      } else {
-        console.log(`[GraficoComparativo] ❌ Transação ${t.id} (${dataTransacao.toDateString()}) NÃO ESTÁ no ciclo ${ciclo.nome}`);
       }
       
       return estaNoCiclo;

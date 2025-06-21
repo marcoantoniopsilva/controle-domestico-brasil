@@ -5,11 +5,12 @@ import { PieChart, TrendingUp, TrendingDown } from "lucide-react";
 
 interface SummaryCardsProps {
   totalReceitas: number;
-  totalDespesasCategoria: number;
-  saldoReal: number;
+  totalDespesas: number;
+  saldo: number;
+  orcamentoTotal: number;
 }
 
-const SummaryCards = ({ totalReceitas, totalDespesasCategoria, saldoReal }: SummaryCardsProps) => {
+const SummaryCards = ({ totalReceitas, totalDespesas, saldo, orcamentoTotal }: SummaryCardsProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Card>
@@ -35,7 +36,7 @@ const SummaryCards = ({ totalReceitas, totalDespesasCategoria, saldoReal }: Summ
         </CardHeader>
         <CardContent>
           <p className="text-3xl font-bold text-destructive">
-            {formatarMoeda(totalDespesasCategoria)}
+            {formatarMoeda(totalDespesas)}
           </p>
         </CardContent>
       </Card>
@@ -48,8 +49,8 @@ const SummaryCards = ({ totalReceitas, totalDespesasCategoria, saldoReal }: Summ
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className={`text-3xl font-bold ${saldoReal >= 0 ? "text-primary" : "text-destructive"}`}>
-            {formatarMoeda(saldoReal)}
+          <p className={`text-3xl font-bold ${saldo >= 0 ? "text-primary" : "text-destructive"}`}>
+            {formatarMoeda(saldo)}
           </p>
         </CardContent>
       </Card>
