@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -8,19 +8,23 @@ import {
   DropdownMenuRadioItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { CicloFinanceiro } from "@/types";
 
 interface CicloSelectorProps {
   ciclosDisponiveis: CicloFinanceiro[];
   cicloSelecionado: string;
   onCicloChange: (value: string) => void;
+  onCicloAnterior: () => void;
+  onProximoCiclo: () => void;
 }
 
 const CicloSelector: React.FC<CicloSelectorProps> = ({
   ciclosDisponiveis,
   cicloSelecionado,
-  onCicloChange
+  onCicloChange,
+  onCicloAnterior,
+  onProximoCiclo
 }) => {
   // Determina o texto a ser exibido no botão
   const selectedIndex = cicloSelecionado !== "" ? Number(cicloSelecionado) : -1;
@@ -31,6 +35,10 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
     ? ciclosDisponiveis[selectedIndex].nome 
     : "Selecione o ciclo";
     
+  // Verificar se pode navegar para ciclos anterior/posterior
+  const canGoPrevious = selectedIndex > 0;
+  const canGoNext = selectedIndex < ciclosDisponiveis.length - 1;
+    
   console.log("[CicloSelector] Renderizando com ciclo selecionado:", cicloSelecionado);
   console.log("[CicloSelector] Índice selecionado:", selectedIndex);
   console.log("[CicloSelector] É índice válido:", isValidIndex);
@@ -38,23 +46,48 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
   console.log("[CicloSelector] Total de ciclos disponíveis:", ciclosDisponiveis.length);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="min-w-[200px] justify-between">
-          {displayText}
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[300px] max-h-[400px] overflow-y-auto">
-        <DropdownMenuRadioGroup value={cicloSelecionado} onValueChange={onCicloChange}>
-          {ciclosDisponiveis.map((ciclo, index) => (
-            <DropdownMenuRadioItem key={index} value={index.toString()} className="cursor-pointer">
-              {ciclo.nome}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-1">
+      {/* Botão para ciclo anterior */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onCicloAnterior}
+        disabled={!canGoPrevious}
+        className="h-10 w-10"
+      >
+        <ChevronUp className="h-4 w-4" />
+      </Button>
+
+      {/* Seletor de ciclo principal */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="min-w-[200px] justify-between">
+            {displayText}
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-[300px] max-h-[400px] overflow-y-auto">
+          <DropdownMenuRadioGroup value={cicloSelecionado} onValueChange={onCicloChange}>
+            {ciclosDisponiveis.map((ciclo, index) => (
+              <DropdownMenuRadioItem key={index} value={index.toString()} className="cursor-pointer">
+                {ciclo.nome}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Botão para próximo ciclo */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onProximoCiclo}
+        disabled={!canGoNext}
+        className="h-10 w-10"
+      >
+        <ChevronDown className="h-4 w-4" />
+      </Button>
+    </div>
   );
 };
 

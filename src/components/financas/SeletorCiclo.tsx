@@ -73,16 +73,36 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     onCicloChange(novoCiclo);
   };
 
+  // Função para navegar para o ciclo anterior
+  const handleCicloAnterior = () => {
+    const currentIndex = Number(cicloSelecionado);
+    if (currentIndex > 0) {
+      const novoIndex = currentIndex - 1;
+      handleCicloChange(novoIndex.toString());
+    }
+  };
+
+  // Função para navegar para o próximo ciclo
+  const handleProximoCiclo = () => {
+    const currentIndex = Number(cicloSelecionado);
+    if (currentIndex < ciclosDisponiveis.length - 1) {
+      const novoIndex = currentIndex + 1;
+      handleCicloChange(novoIndex.toString());
+    }
+  };
+
   console.log("[SeletorCiclo] Renderizando com cicloSelecionado:", cicloSelecionado);
   console.log("[SeletorCiclo] Total de ciclos:", ciclosDisponiveis.length);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       <CicloAtualButton onCicloAtual={handleCicloAtual} />
       <CicloSelector 
         ciclosDisponiveis={ciclosDisponiveis}
         cicloSelecionado={cicloSelecionado}
         onCicloChange={handleCicloChange}
+        onCicloAnterior={handleCicloAnterior}
+        onProximoCiclo={handleProximoCiclo}
       />
     </div>
   );
