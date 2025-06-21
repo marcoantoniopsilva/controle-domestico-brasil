@@ -31,20 +31,9 @@ const extrairDataDoCiclo = (cicloNome: string): Date => {
 };
 
 export const filterAndSortCycles = (dadosTabela: DadosCiclo[]) => {
-  // Filtrar apenas ciclos que tenham lançamentos e ordenar cronologicamente
+  // CORREÇÃO: Não filtrar mais aqui, já que os dados já vêm filtrados do processador
+  // Apenas ordenar cronologicamente
   const ciclosFiltrados = dadosTabela
-    .filter(ciclo => {
-      // Mostrar apenas ciclos que tenham transações (dados reais)
-      const temDados = ciclo.temLancamentos;
-      
-      if (temDados) {
-        console.log(`[GraficoComparativo] Incluindo ciclo com dados: ${ciclo.ciclo}`);
-      } else {
-        console.log(`[GraficoComparativo] Excluindo ciclo sem dados: ${ciclo.ciclo}`);
-      }
-      
-      return temDados;
-    })
     .sort((a, b) => {
       const dataA = extrairDataDoCiclo(a.ciclo);
       const dataB = extrairDataDoCiclo(b.ciclo);
@@ -55,7 +44,7 @@ export const filterAndSortCycles = (dadosTabela: DadosCiclo[]) => {
       return resultado;
     });
 
-  console.log(`[GraficoComparativo] Total de ciclos com dados: ${ciclosFiltrados.length}`);
+  console.log(`[GraficoComparativo] Ciclos após ordenação: ${ciclosFiltrados.map(c => c.ciclo).join(', ')}`);
   
   return { ciclosFiltrados, extrairDataDoCiclo };
 };
