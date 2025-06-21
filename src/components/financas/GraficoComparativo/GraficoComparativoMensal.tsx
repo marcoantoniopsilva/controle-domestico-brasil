@@ -21,11 +21,11 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
     dadosTabela.some(ciclo => (ciclo[cat.nome] as number) > 0)
   );
 
-  // Filtrar e ordenar ciclos
+  // Filtrar e ordenar ciclos - agora mostra apenas ciclos com dados
   const { ciclosFiltrados } = filterAndSortCycles(dadosTabela);
 
   console.log("[GraficoComparativo] Categorias de despesa com dados:", categoriasComDados.map(c => c.nome));
-  console.log("[GraficoComparativo] Ciclos filtrados e ordenados:", ciclosFiltrados.map(c => c.ciclo));
+  console.log("[GraficoComparativo] Ciclos com dados encontrados:", ciclosFiltrados.map(c => c.ciclo));
 
   return (
     <Card className="w-full">
@@ -35,7 +35,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
           Evolução por Ciclo Financeiro
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Gastos por categoria nos ciclos financeiros (a partir de março 2025)
+          Gastos por categoria nos ciclos financeiros (apenas ciclos com dados)
         </p>
       </CardHeader>
       <CardContent>

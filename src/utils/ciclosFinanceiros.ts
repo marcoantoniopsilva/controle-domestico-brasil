@@ -33,20 +33,21 @@ const calcularFimCiclo = (inicioCiclo: Date): Date => {
   return fimCiclo;
 };
 
-// Função aprimorada para gerar ciclos financeiros com dados históricos
+// Função aprimorada para gerar ciclos financeiros com dados históricos amplos
 export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiroDetalhado[] => {
   console.log("[ciclosFinanceiros] Iniciando geração de ciclos para", transacoes.length, "transações");
   
   const ciclos: CicloFinanceiroDetalhado[] = [];
   const hoje = new Date();
   
-  // Gerar ciclos de março 2025 até pelo menos o ciclo atual + 3 meses futuros
-  const inicioGeracao = new Date(2025, 2, 25); // 25 de março de 2025
+  // Gerar ciclos com histórico amplo - 24 meses atrás até 6 meses no futuro
+  const inicioGeracao = subMonths(hoje, 24); // 2 anos atrás
   const fimGeracao = addMonths(hoje, 6); // 6 meses no futuro
   
   console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
   
-  let cicloAtual = new Date(inicioGeracao);
+  // Começar do início do primeiro ciclo no período
+  let cicloAtual = calcularInicioCiclo(inicioGeracao);
   
   while (cicloAtual <= fimGeracao) {
     const inicioCiclo = new Date(cicloAtual);
@@ -60,7 +61,9 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
     
     const nomeCiclo = formatarNomeCiclo(inicioCiclo, fimCiclo);
     
-    console.log(`[ciclosFinanceiros] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
+    if (transacoesCiclo.length > 0) {
+      console.log(`[ciclosFinanceiros] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
+    }
     
     ciclos.push({
       inicio: inicioCiclo,

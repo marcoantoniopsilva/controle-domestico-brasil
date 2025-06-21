@@ -31,18 +31,19 @@ const extrairDataDoCiclo = (cicloNome: string): Date => {
 };
 
 export const filterAndSortCycles = (dadosTabela: DadosCiclo[]) => {
-  // Filtrar ciclos a partir de março/abril 2025 e ordenar cronologicamente
+  // Filtrar apenas ciclos que tenham lançamentos e ordenar cronologicamente
   const ciclosFiltrados = dadosTabela
     .filter(ciclo => {
-      const dataCiclo = extrairDataDoCiclo(ciclo.ciclo);
-      // Incluir a partir de março 2025 (mês 2)
-      const incluir = dataCiclo >= new Date(2025, 2, 1);
+      // Mostrar apenas ciclos que tenham transações (dados reais)
+      const temDados = ciclo.temLancamentos;
       
-      if (incluir) {
-        console.log(`[GraficoComparativo] Incluindo ciclo: ${ciclo.ciclo} (${dataCiclo.toDateString()})`);
+      if (temDados) {
+        console.log(`[GraficoComparativo] Incluindo ciclo com dados: ${ciclo.ciclo}`);
+      } else {
+        console.log(`[GraficoComparativo] Excluindo ciclo sem dados: ${ciclo.ciclo}`);
       }
       
-      return incluir;
+      return temDados;
     })
     .sort((a, b) => {
       const dataA = extrairDataDoCiclo(a.ciclo);
@@ -54,5 +55,7 @@ export const filterAndSortCycles = (dadosTabela: DadosCiclo[]) => {
       return resultado;
     });
 
+  console.log(`[GraficoComparativo] Total de ciclos com dados: ${ciclosFiltrados.length}`);
+  
   return { ciclosFiltrados, extrairDataDoCiclo };
 };
