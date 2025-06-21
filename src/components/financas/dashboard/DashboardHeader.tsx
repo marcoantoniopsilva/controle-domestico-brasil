@@ -6,10 +6,9 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
-  // Versão ultra-simplificada sem nenhuma lógica que possa causar loops
+  // Versão ultra-simplificada - apenas passa o ciclo para o componente pai sem processamento adicional
   const handleCicloChange = (ciclo: any) => {
-    console.log("[DashboardHeader] Mudança de ciclo solicitada pelo usuário");
-    console.log("[STABLE BUILD] Atualização manual solicitada pelo usuário");
+    console.log("[DashboardHeader] Mudança de ciclo solicitada pelo usuário para:", ciclo.nome);
     // Apenas passamos o ciclo para o componente pai, sem processamento adicional
     onCicloChange(ciclo);
   };

@@ -72,10 +72,10 @@ const Dashboard = () => {
     console.log("[Dashboard] Total de transações disponíveis:", transacoes.length);
   }, [transacoes]);
 
-  // Handler para mudar o ciclo selecionado - simplificado
+  // Handler para mudar o ciclo selecionado - SIMPLIFICADO PARA NÃO RECARREGAR DADOS
   const handleCicloChange = (novoCiclo: CicloFinanceiro) => {
     console.log("[Dashboard] Mudando para ciclo:", novoCiclo.nome);
-    console.log("[STABLE BUILD] Atualização manual solicitada pelo usuário");
+    console.log("[STABLE BUILD] Mudança de ciclo - SEM recarregamento de dados");
     
     // Garantir que as datas são objetos Date
     const cicloParaDefinir = {
@@ -86,9 +86,8 @@ const Dashboard = () => {
     
     setCicloAtual(cicloParaDefinir);
     
-    // Também recarregar dados quando muda o ciclo
-    toast.info(`Atualizando dados para o ciclo ${novoCiclo.nome}...`);
-    fetchTransacoes(true);
+    // NÃO recarregar dados quando muda o ciclo - apenas filtrar localmente
+    console.log("[Dashboard] Ciclo alterado sem recarregamento de dados");
   };
 
   // Handler para excluir transação

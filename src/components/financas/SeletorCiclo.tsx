@@ -13,9 +13,9 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
   const { ciclosDisponiveis, cicloAtual } = useCiclos();
   const [cicloSelecionado, setCicloSelecionado] = useState<string>("");
 
-  // Este useEffect inicializa o ciclo selecionado quando o componente é montado
+  // Este useEffect inicializa o ciclo selecionado quando o componente é montado - APENAS UMA VEZ
   useEffect(() => {
-    if (ciclosDisponiveis.length > 0) {
+    if (ciclosDisponiveis.length > 0 && cicloSelecionado === "") {
       const cicloAtualIndex = ciclosDisponiveis.findIndex(c => 
         c.inicio.getMonth() === cicloAtual.inicio.getMonth() && 
         c.inicio.getFullYear() === cicloAtual.inicio.getFullYear()
@@ -25,7 +25,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
         console.log("[SeletorCiclo] Inicializando com ciclo atual:", cicloAtualIndex, ciclosDisponiveis[cicloAtualIndex].nome);
         setCicloSelecionado(cicloAtualIndex.toString());
         
-        // Propagar a mudança inicial para o componente pai
+        // Propagar a mudança inicial para o componente pai - APENAS na inicialização
         const cicloInicial = ciclosDisponiveis[cicloAtualIndex];
         const cicloCopy = {
           inicio: new Date(cicloInicial.inicio),
@@ -35,7 +35,7 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
         onCicloChange(cicloCopy);
       }
     }
-  }, [ciclosDisponiveis, cicloAtual, onCicloChange]);
+  }, [ciclosDisponiveis, cicloAtual]); // REMOVIDO onCicloChange das dependências para evitar loop
 
   const handleCicloChange = (value: string) => {
     console.log("[SeletorCiclo] Alterando para o índice:", value);
