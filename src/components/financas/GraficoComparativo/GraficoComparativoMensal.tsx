@@ -61,48 +61,60 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
     dadosTabela.some(ciclo => (ciclo[cat.nome] as number) > 0)
   );
 
-  // Melhorar a lógica de filtragem de ciclos - começar de março/abril 2025
-  const ciclosFiltrados = dadosTabela.filter(ciclo => {
-    // Verificar se o ciclo é de março/abril 2025 ou posterior
-    const temMarco2025 = ciclo.ciclo.includes("mar") && ciclo.ciclo.includes("2025");
-    const temAbril2025 = ciclo.ciclo.includes("abr") && ciclo.ciclo.includes("2025");
-    const eh2025OuPosterior = ciclo.ciclo.includes("2025") || 
-                             ciclo.ciclo.includes("2026") || 
-                             ciclo.ciclo.includes("2027") ||
-                             ciclo.ciclo.includes("2028");
+  // Função melhorada para extrair data do nome do ciclo
+  const extrairDataDoCiclo = (cicloNome: string): Date => {
+    console.log(`[GraficoComparativo] Extraindo data do ciclo: "${cicloNome}"`);
     
-    // Incluir março/abril 2025 e todos os ciclos posteriores
-    return (temMarco2025 || temAbril2025) || 
-           (eh2025OuPosterior && !ciclo.ciclo.includes("jan/fev 2025") && !ciclo.ciclo.includes("fev/mar 2025"));
-  }).sort((a, b) => {
-    // Ordenar os ciclos cronologicamente
-    // Extrair ano e mês para comparação adequada
-    const extrairData = (cicloNome: string) => {
-      if (cicloNome.includes("mar") && cicloNome.includes("2025")) return new Date(2025, 2); // março
-      if (cicloNome.includes("abr") && cicloNome.includes("2025")) return new Date(2025, 3); // abril
-      if (cicloNome.includes("mai") && cicloNome.includes("2025")) return new Date(2025, 4); // maio
-      if (cicloNome.includes("jun") && cicloNome.includes("2025")) return new Date(2025, 5); // junho
-      if (cicloNome.includes("jul") && cicloNome.includes("2025")) return new Date(2025, 6); // julho
-      if (cicloNome.includes("ago") && cicloNome.includes("2025")) return new Date(2025, 7); // agosto
-      if (cicloNome.includes("set") && cicloNome.includes("2025")) return new Date(2025, 8); // setembro
-      if (cicloNome.includes("out") && cicloNome.includes("2025")) return new Date(2025, 9); // outubro
-      if (cicloNome.includes("nov") && cicloNome.includes("2025")) return new Date(2025, 10); // novembro
-      if (cicloNome.includes("dez") && cicloNome.includes("2025")) return new Date(2025, 11); // dezembro
-      
-      // Para anos futuros, assumir janeiro como padrão
-      if (cicloNome.includes("2026")) return new Date(2026, 0);
-      if (cicloNome.includes("2027")) return new Date(2027, 0);
-      
-      return new Date(2025, 0); // fallback
+    // Mapear abreviações de meses para números
+    const mesesMap: { [key: string]: number } = {
+      'jan': 0, 'fev': 1, 'mar': 2, 'abr': 3, 'mai': 4, 'jun': 5,
+      'jul': 6, 'ago': 7, 'set': 8, 'out': 9, 'nov': 10, 'dez': 11
     };
     
-    const dataA = extrairData(a.ciclo);
-    const dataB = extrairData(b.ciclo);
-    return dataA.getTime() - dataB.getTime();
-  });
+    // Extrair ano - procurar por padrão de 4 dígitos
+    const anoMatch = cicloNome.match(/(\d{4})/);
+    const ano = anoMatch ? parseInt(anoMatch[1]) : 2025;
+    
+    // Extrair primeiro mês do ciclo
+    let mes = 0;
+    for (const [nomeAbrev, numeroMes] of Object.entries(mesesMap)) {
+      if (cicloNome.includes(nomeAbrev)) {
+        mes = numeroMes;
+        break;
+      }
+    }
+    
+    const dataExtraida = new Date(ano, mes, 1);
+    console.log(`[GraficoComparativo] Ciclo "${cicloNome}" → Data: ${dataExtraida.toISOString()}`);
+    
+    return dataExtraida;
+  };
+
+  // Filtrar ciclos a partir de março/abril 2025 e ordenar cronologicamente
+  const ciclosFiltrados = dadosTabela
+    .filter(ciclo => {
+      const dataCiclo = extrairDataDoCiclo(ciclo.ciclo);
+      // Incluir a partir de março 2025 (mês 2)
+      const incluir = dataCiclo >= new Date(2025, 2, 1);
+      
+      if (incluir) {
+        console.log(`[GraficoComparativo] Incluindo ciclo: ${ciclo.ciclo} (${dataCiclo.toDateString()})`);
+      }
+      
+      return incluir;
+    })
+    .sort((a, b) => {
+      const dataA = extrairDataDoCiclo(a.ciclo);
+      const dataB = extrairDataDoCiclo(b.ciclo);
+      const resultado = dataA.getTime() - dataB.getTime();
+      
+      console.log(`[GraficoComparativo] Ordenação: "${a.ciclo}" (${dataA.toDateString()}) vs "${b.ciclo}" (${dataB.toDateString()}) = ${resultado}`);
+      
+      return resultado;
+    });
 
   console.log("[GraficoComparativo] Categorias de despesa com dados:", categoriasComDados.map(c => c.nome));
-  console.log("[GraficoComparativo] Ciclos filtrados:", ciclosFiltrados.map(c => c.ciclo));
+  console.log("[GraficoComparativo] Ciclos filtrados e ordenados:", ciclosFiltrados.map(c => c.ciclo));
 
   // Função para determinar a cor da célula
   const getCellColor = (valor: number, orcamento: number) => {
@@ -129,7 +141,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
           Evolução por Ciclo Financeiro
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Gastos por categoria nos ciclos financeiros (a partir de março/abril 2025)
+          Gastos por categoria nos ciclos financeiros (a partir de março 2025)
         </p>
       </CardHeader>
       <CardContent>
@@ -176,7 +188,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            <p>Nenhum dado de despesa encontrado a partir de março/abril 2025.</p>
+            <p>Nenhum dado de despesa encontrado a partir de março 2025.</p>
             <p className="text-sm mt-2">Adicione algumas transações de despesa para ver a evolução dos gastos.</p>
           </div>
         )}

@@ -37,54 +37,18 @@ const calcularFimCiclo = (inicioCiclo: Date): Date => {
 export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiroDetalhado[] => {
   console.log("[ciclosFinanceiros] Iniciando geração de ciclos para", transacoes.length, "transações");
   
-  if (transacoes.length === 0) {
-    console.log("[ciclosFinanceiros] Nenhuma transação encontrada, gerando ciclos padrão");
-    // Se não há transações, gerar os últimos 12 ciclos mesmo assim
-    const ciclos: CicloFinanceiroDetalhado[] = [];
-    const hoje = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
-      const dataBase = subMonths(hoje, i);
-      const inicioCiclo = calcularInicioCiclo(dataBase);
-      const fimCiclo = calcularFimCiclo(inicioCiclo);
-      
-      ciclos.push({
-        inicio: inicioCiclo,
-        fim: fimCiclo,
-        nome: formatarNomeCiclo(inicioCiclo, fimCiclo),
-        nomeCompleto: formatarNomeCompletosCiclo(inicioCiclo, fimCiclo),
-        temTransacoes: false
-      });
-    }
-    
-    return ciclos;
-  }
-
-  // Encontrar a data mais antiga e mais recente das transações
-  const datasTransacoes = transacoes.map(t => new Date(t.data)).sort((a, b) => a.getTime() - b.getTime());
-  const dataMinima = datasTransacoes[0];
-  const dataMaxima = datasTransacoes[datasTransacoes.length - 1];
-  
-  console.log("[ciclosFinanceiros] Período das transações:", dataMinima.toDateString(), "até", dataMaxima.toDateString());
-  
-  // Calcular o primeiro e último ciclo baseado nas transações
-  const primeiroCicloInicio = calcularInicioCiclo(dataMinima);
-  const ultimoCicloInicio = calcularInicioCiclo(dataMaxima);
-  
-  console.log("[ciclosFinanceiros] Primeiro ciclo inicia em:", primeiroCicloInicio.toDateString());
-  console.log("[ciclosFinanceiros] Último ciclo inicia em:", ultimoCicloInicio.toDateString());
-  
-  // Gerar todos os ciclos entre o primeiro e o último
   const ciclos: CicloFinanceiroDetalhado[] = [];
-  let cicloAtual = new Date(primeiroCicloInicio);
+  const hoje = new Date();
   
-  // Garantir que temos pelo menos 12 ciclos para comparação
-  const inicioMinimo = subMonths(ultimoCicloInicio, 11);
-  if (cicloAtual > inicioMinimo) {
-    cicloAtual = new Date(inicioMinimo);
-  }
+  // Gerar ciclos de março 2025 até pelo menos o ciclo atual + 3 meses futuros
+  const inicioGeracao = new Date(2025, 2, 25); // 25 de março de 2025
+  const fimGeracao = addMonths(hoje, 6); // 6 meses no futuro
   
-  while (cicloAtual <= ultimoCicloInicio) {
+  console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
+  
+  let cicloAtual = new Date(inicioGeracao);
+  
+  while (cicloAtual <= fimGeracao) {
     const inicioCiclo = new Date(cicloAtual);
     const fimCiclo = calcularFimCiclo(inicioCiclo);
     
