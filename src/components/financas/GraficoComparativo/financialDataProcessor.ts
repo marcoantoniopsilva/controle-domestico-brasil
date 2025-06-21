@@ -1,7 +1,6 @@
 
 import { Transacao, Categoria } from "@/types";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
-import { filtrarTransacoesPorCiclo } from "@/utils/financas";
 import { DadosCiclo } from "./types";
 
 export const processFinancialData = (transacoes: Transacao[], categorias: Categoria[]) => {
@@ -14,19 +13,49 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
   // Gerar ciclos baseados no período atual, sempre mostrando histórico
   const ciclos = gerarCiclosFinanceiros(transacoesDespesa);
 
-  // Preparar dados para a tabela usando a MESMA lógica da aba "Despesas"
+  // Preparar dados para a tabela usando a MESMA lógica exata do useDashboardData
   const dadosTabela: DadosCiclo[] = ciclos.map(ciclo => {
     console.log(`[GraficoComparativo] Processando ciclo ${ciclo.nome}: ${ciclo.inicio.toDateString()} até ${ciclo.fim.toDateString()}`);
 
-    // Criar objeto do ciclo financeiro no formato esperado por filtrarTransacoesPorCiclo
-    const cicloFinanceiro = {
-      inicio: ciclo.inicio,
-      fim: ciclo.fim,
-      nome: ciclo.nome
-    };
+    // USAR A MESMA LÓGICA DO useDashboardData - filtrar transações diretamente
+    const inicio = new Date(ciclo.inicio);
+    const fim = new Date(ciclo.fim);
+    
+    // Garantir que estamos trabalhando com objetos Date válidos
+    inicio.setHours(0, 0, 0, 0);
+    fim.setHours(23, 59, 59, 999);
 
-    // Usar a MESMA função que a aba "Despesas" usa para filtrar transações
-    const transacoesCiclo = filtrarTransacoesPorCiclo(transacoesDespesa, cicloFinanceiro);
+    // MESMA lógica do useDashboardData para filtrar transações
+    const transacoesCiclo = transacoesDespesa.filter(t => {
+      if (!t || !t.data) {
+        console.error("[GraficoComparativo] Encontrada transação sem data ou inválida");
+        return false;
+      }
+      
+      if (t.isParcela) return false; // Ignorar parcelas projetadas nas transações originais
+      
+      // Certifique-se de que a data da transação é um objeto Date válido
+      const dataTransacao = t.data instanceof Date ? t.data : new Date(t.data);
+      
+      if (isNaN(dataTransacao.getTime())) {
+        console.error(`[GraficoComparativo] Data inválida para transação ${t.id}`);
+        return true; // Include transactions with invalid dates rather than filtering them out
+      }
+      
+      dataTransacao.setHours(0, 0, 0, 0);
+      
+      // A transação deve estar estritamente entre o início e fim do ciclo
+      const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
+      
+      // Log detalhado para debug
+      if (estaNoCiclo) {
+        console.log(`[GraficoComparativo] ✅ Transação ${t.id} (${dataTransacao.toDateString()}) ESTÁ no ciclo ${ciclo.nome}`);
+      } else {
+        console.log(`[GraficoComparativo] ❌ Transação ${t.id} (${dataTransacao.toDateString()}) NÃO ESTÁ no ciclo ${ciclo.nome}`);
+      }
+      
+      return estaNoCiclo;
+    });
     
     console.log(`[GraficoComparativo] Transações filtradas para ${ciclo.nome}: ${transacoesCiclo.length}`);
 
@@ -37,7 +66,7 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
       temLancamentos: false
     };
 
-    // Usar a MESMA lógica da aba "Despesas" para calcular gastos por categoria
+    // MESMA lógica do useDashboardData para calcular gastos por categoria
     const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
     let totalGeralCiclo = 0;
     

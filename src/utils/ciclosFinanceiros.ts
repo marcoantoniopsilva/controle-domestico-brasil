@@ -51,9 +51,9 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
   
   console.log(`[ciclosFinanceiros] Período das transações: ${dataInicial.toDateString()} até ${dataFinal.toDateString()}`);
   
-  // Expandir o período para garantir que cobrimos todos os ciclos necessários
-  const inicioGeracao = subMonths(dataInicial, 2); // 2 meses antes da primeira transação
-  const fimGeracao = addMonths(dataFinal, 2); // 2 meses depois da última transação
+  // Expandir MUITO o período para garantir que cobrimos TODOS os ciclos possíveis
+  const inicioGeracao = subMonths(dataInicial, 6); // 6 meses antes da primeira transação
+  const fimGeracao = addMonths(dataFinal, 6); // 6 meses depois da última transação
   
   console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
   
