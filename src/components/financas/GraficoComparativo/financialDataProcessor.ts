@@ -43,8 +43,7 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
     const dadosCiclo: DadosCiclo = {
       ciclo: ciclo.nome,
       cicloCompleto: ciclo.nomeCompleto,
-      // CORREÇÃO: Verificar se há transações REAIS neste ciclo
-      temLancamentos: transacoesCiclo.length > 0
+      temLancamentos: false // Será atualizado abaixo
     };
 
     // Adicionar total por categoria (apenas categorias de despesa)
@@ -64,7 +63,7 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
       }
     });
 
-    // CORREÇÃO ADICIONAL: Re-verificar se tem lançamentos baseado nos totais calculados
+    // Definir se tem lançamentos baseado nos totais calculados
     dadosCiclo.temLancamentos = totalGeralCiclo > 0;
     
     console.log(`[GraficoComparativo] Ciclo ${ciclo.nome} - Total geral: R$ ${totalGeralCiclo.toFixed(2)} - Tem lançamentos: ${dadosCiclo.temLancamentos}`);
@@ -72,10 +71,9 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
     return dadosCiclo;
   });
 
-  // Filtrar apenas ciclos que realmente têm dados
-  const dadosTabelaFiltrados = dadosTabela.filter(ciclo => ciclo.temLancamentos);
-  
-  console.log("[GraficoComparativo] Ciclos com dados após processamento:", dadosTabelaFiltrados.map(c => c.ciclo));
+  // CORREÇÃO PRINCIPAL: Retornar TODOS os ciclos, não apenas os filtrados
+  // O filtro será aplicado apenas na apresentação, se necessário
+  console.log("[GraficoComparativo] Todos os ciclos processados:", dadosTabela.map(c => `${c.ciclo} (${c.temLancamentos ? 'com dados' : 'sem dados'})`));
 
-  return { dadosTabela: dadosTabelaFiltrados, categoriasDespesa: categorias.filter(cat => cat.tipo === "despesa") };
+  return { dadosTabela, categoriasDespesa: categorias.filter(cat => cat.tipo === "despesa") };
 };
