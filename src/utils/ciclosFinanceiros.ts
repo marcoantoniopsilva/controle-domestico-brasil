@@ -52,8 +52,8 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
   console.log(`[ciclosFinanceiros] Período das transações: ${dataInicial.toDateString()} até ${dataFinal.toDateString()}`);
   
   // Expandir o período para garantir que cobrimos todos os ciclos necessários
-  const inicioGeracao = subMonths(dataInicial, 1); // 1 mês antes da primeira transação
-  const fimGeracao = addMonths(dataFinal, 1); // 1 mês depois da última transação
+  const inicioGeracao = subMonths(dataInicial, 2); // 2 meses antes da primeira transação
+  const fimGeracao = addMonths(dataFinal, 2); // 2 meses depois da última transação
   
   console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
   
@@ -72,14 +72,19 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
       const inicioNormalizado = new Date(inicioCiclo.getFullYear(), inicioCiclo.getMonth(), inicioCiclo.getDate());
       const fimNormalizado = new Date(fimCiclo.getFullYear(), fimCiclo.getMonth(), fimCiclo.getDate());
       
-      return dataTransacaoNormalizada >= inicioNormalizado && dataTransacaoNormalizada <= fimNormalizado;
+      const dentroDoIntervalo = dataTransacaoNormalizada >= inicioNormalizado && dataTransacaoNormalizada <= fimNormalizado;
+      
+      // Log detalhado para debug
+      if (dentroDoIntervalo) {
+        console.log(`[ciclosFinanceiros] Transação ${t.id} (${dataTransacaoNormalizada.toDateString()}) está no ciclo ${formatarNomeCiclo(inicioCiclo, fimCiclo)}`);
+      }
+      
+      return dentroDoIntervalo;
     });
     
     const nomeCiclo = formatarNomeCiclo(inicioCiclo, fimCiclo);
     
-    if (transacoesCiclo.length > 0) {
-      console.log(`[ciclosFinanceiros] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
-    }
+    console.log(`[ciclosFinanceiros] Ciclo ${nomeCiclo}: ${transacoesCiclo.length} transações (${inicioCiclo.toDateString()} a ${fimCiclo.toDateString()})`);
     
     ciclos.push({
       inicio: inicioCiclo,

@@ -28,21 +28,17 @@ export function useTransacaoFetch() {
       } else {
         console.log("Dados recebidos do Supabase:", data);
         
-        // Converter datas adicionando 1 dia para corrigir o problema de exibição
+        // Converter datas SEM adicionar 1 dia - usar a data exata do banco
         const transacoesConvertidas = (data || []).map((t: any) => {
           // Criar data a partir da string YYYY-MM-DD do banco
           const [ano, mes, dia] = t.data.split('-').map(Number);
           const dataOriginal = new Date(ano, mes - 1, dia);
           
-          // ADICIONAR 1 DIA para corrigir o problema de exibição
-          const dataCorrigida = new Date(dataOriginal);
-          dataCorrigida.setDate(dataCorrigida.getDate() + 1);
-          
-          console.log(`[useTransacaoFetch] Data do banco: "${t.data}" → Data original: "${dataOriginal.toDateString()}" → Data corrigida: "${dataCorrigida.toDateString()}"`);
+          console.log(`[useTransacaoFetch] Data do banco: "${t.data}" → Data convertida: "${dataOriginal.toDateString()}"`);
           
           return {
             id: t.id.toString(),
-            data: dataCorrigida, // Usar a data corrigida (+1 dia)
+            data: dataOriginal, // Usar a data original SEM correção
             categoria: t.categoria,
             valor: Number(t.valor),
             parcelas: t.parcelas || 1,
@@ -55,7 +51,7 @@ export function useTransacaoFetch() {
         console.log("Transações convertidas:", transacoesConvertidas.length);
         // Log para depuração: listar as datas das transações
         transacoesConvertidas.forEach((t, idx) => {
-          if (idx < 5) { // Limitar a 5 registros para não sobrecarregar o console
+          if (idx < 10) { // Aumentar para 10 registros para ver mais exemplos
             console.log(`[useTransacaoFetch] Transação ${idx}: id=${t.id}, data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}`);
           }
         });
