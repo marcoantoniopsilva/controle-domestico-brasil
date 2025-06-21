@@ -61,25 +61,53 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
     dadosTabela.some(ciclo => (ciclo[cat.nome] as number) > 0)
   );
 
-  // Filtrar ciclos a partir de março/abril 2025
+  // Melhorar a lógica de filtragem de ciclos - começar de março/abril 2025
   const ciclosFiltrados = dadosTabela.filter(ciclo => {
-    // Procurar por "mar" ou "março" no nome do ciclo e ano 2025
-    return (ciclo.ciclo.includes("mar") || ciclo.ciclo.includes("março")) && ciclo.ciclo.includes("2025") ||
-           ciclo.ciclo > "mar/abr 2025"; // Para ciclos posteriores
+    // Verificar se o ciclo é de março/abril 2025 ou posterior
+    const temMarco2025 = ciclo.ciclo.includes("mar") && ciclo.ciclo.includes("2025");
+    const temAbril2025 = ciclo.ciclo.includes("abr") && ciclo.ciclo.includes("2025");
+    const eh2025OuPosterior = ciclo.ciclo.includes("2025") || 
+                             ciclo.ciclo.includes("2026") || 
+                             ciclo.ciclo.includes("2027") ||
+                             ciclo.ciclo.includes("2028");
+    
+    // Incluir março/abril 2025 e todos os ciclos posteriores
+    return (temMarco2025 || temAbril2025) || 
+           (eh2025OuPosterior && !ciclo.ciclo.includes("jan/fev 2025") && !ciclo.ciclo.includes("fev/mar 2025"));
   }).sort((a, b) => {
     // Ordenar os ciclos cronologicamente
-    if (a.ciclo < b.ciclo) return -1;
-    if (a.ciclo > b.ciclo) return 1;
-    return 0;
+    // Extrair ano e mês para comparação adequada
+    const extrairData = (cicloNome: string) => {
+      if (cicloNome.includes("mar") && cicloNome.includes("2025")) return new Date(2025, 2); // março
+      if (cicloNome.includes("abr") && cicloNome.includes("2025")) return new Date(2025, 3); // abril
+      if (cicloNome.includes("mai") && cicloNome.includes("2025")) return new Date(2025, 4); // maio
+      if (cicloNome.includes("jun") && cicloNome.includes("2025")) return new Date(2025, 5); // junho
+      if (cicloNome.includes("jul") && cicloNome.includes("2025")) return new Date(2025, 6); // julho
+      if (cicloNome.includes("ago") && cicloNome.includes("2025")) return new Date(2025, 7); // agosto
+      if (cicloNome.includes("set") && cicloNome.includes("2025")) return new Date(2025, 8); // setembro
+      if (cicloNome.includes("out") && cicloNome.includes("2025")) return new Date(2025, 9); // outubro
+      if (cicloNome.includes("nov") && cicloNome.includes("2025")) return new Date(2025, 10); // novembro
+      if (cicloNome.includes("dez") && cicloNome.includes("2025")) return new Date(2025, 11); // dezembro
+      
+      // Para anos futuros, assumir janeiro como padrão
+      if (cicloNome.includes("2026")) return new Date(2026, 0);
+      if (cicloNome.includes("2027")) return new Date(2027, 0);
+      
+      return new Date(2025, 0); // fallback
+    };
+    
+    const dataA = extrairData(a.ciclo);
+    const dataB = extrairData(b.ciclo);
+    return dataA.getTime() - dataB.getTime();
   });
 
   console.log("[GraficoComparativo] Categorias de despesa com dados:", categoriasComDados.map(c => c.nome));
-  console.log("[GraficoComparativo] Ciclos filtrados a partir de mar/abr 2025:", ciclosFiltrados.length);
+  console.log("[GraficoComparativo] Ciclos filtrados:", ciclosFiltrados.map(c => c.ciclo));
 
   // Função para determinar a cor da célula
   const getCellColor = (valor: number, orcamento: number) => {
     if (valor === 0) return "bg-gray-50 text-gray-400";
-    if (valor <= orcamento) return "bg-blue-50 text-blue-800 border-blue-200";
+    if (valor <= orcamento) return "bg-green-50 text-green-800 border-green-200";
     return "bg-red-50 text-red-800 border-red-200";
   };
 
@@ -101,7 +129,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
           Evolução por Ciclo Financeiro
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Tabela de gastos por categoria nos ciclos financeiros (a partir de março/abril 2025)
+          Gastos por categoria nos ciclos financeiros (a partir de março/abril 2025)
         </p>
       </CardHeader>
       <CardContent>
@@ -120,10 +148,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categoriasComDados.map(categoria => {
-                  const temDados = ciclosFiltrados.some(ciclo => (ciclo[categoria.nome] as number) > 0);
-                  if (!temDados) return null;
-                  
+                {categoriasDespesa.map(categoria => {
                   return (
                     <TableRow key={categoria.nome}>
                       <TableCell className="font-medium">{categoria.nome}</TableCell>
@@ -159,7 +184,7 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
         {/* Legenda */}
         <div className="mt-4 flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+            <div className="w-4 h-4 bg-green-50 border border-green-200 rounded"></div>
             <span>Dentro do orçamento</span>
           </div>
           <div className="flex items-center gap-2">
