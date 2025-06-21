@@ -24,9 +24,18 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
       if (cicloAtualIndex !== -1) {
         console.log("[SeletorCiclo] Inicializando com ciclo atual:", cicloAtualIndex, ciclosDisponiveis[cicloAtualIndex].nome);
         setCicloSelecionado(cicloAtualIndex.toString());
+        
+        // Propagar a mudança inicial para o componente pai
+        const cicloInicial = ciclosDisponiveis[cicloAtualIndex];
+        const cicloCopy = {
+          inicio: new Date(cicloInicial.inicio),
+          fim: new Date(cicloInicial.fim),
+          nome: cicloInicial.nome
+        };
+        onCicloChange(cicloCopy);
       }
     }
-  }, [ciclosDisponiveis, cicloAtual]);
+  }, [ciclosDisponiveis, cicloAtual, onCicloChange]);
 
   const handleCicloChange = (value: string) => {
     console.log("[SeletorCiclo] Alterando para o índice:", value);
@@ -54,11 +63,6 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
 
   const handleCicloAtual = () => {
     console.log("[SeletorCiclo] Botão 'Ciclo Atual' clicado");
-    const novoCiclo = {
-      inicio: new Date(cicloAtual.inicio),
-      fim: new Date(cicloAtual.fim),
-      nome: cicloAtual.nome
-    };
     
     const cicloAtualIndex = ciclosDisponiveis.findIndex(c => 
       c.inicio.getMonth() === cicloAtual.inicio.getMonth() && 
@@ -67,27 +71,35 @@ const SeletorCiclo: React.FC<SeletorCicloProps> = ({ onCicloChange }) => {
     
     if (cicloAtualIndex !== -1) {
       console.log("[SeletorCiclo] Selecionando ciclo atual no índice:", cicloAtualIndex);
-      setCicloSelecionado(cicloAtualIndex.toString());
+      handleCicloChange(cicloAtualIndex.toString());
     }
-    
-    onCicloChange(novoCiclo);
   };
 
   // Função para navegar para o ciclo anterior
   const handleCicloAnterior = () => {
     const currentIndex = Number(cicloSelecionado);
+    console.log("[SeletorCiclo] Navegando para ciclo anterior. Índice atual:", currentIndex);
+    
     if (currentIndex > 0) {
       const novoIndex = currentIndex - 1;
+      console.log("[SeletorCiclo] Novo índice anterior:", novoIndex);
       handleCicloChange(novoIndex.toString());
+    } else {
+      console.log("[SeletorCiclo] Já está no primeiro ciclo disponível");
     }
   };
 
   // Função para navegar para o próximo ciclo
   const handleProximoCiclo = () => {
     const currentIndex = Number(cicloSelecionado);
-    if (currentIndex < ciclosDisponiveis.length - 1) {
+    console.log("[SeletorCiclo] Navegando para próximo ciclo. Índice atual:", currentIndex);
+    
+    if (currentIndex >= 0 && currentIndex < ciclosDisponiveis.length - 1) {
       const novoIndex = currentIndex + 1;
+      console.log("[SeletorCiclo] Novo índice próximo:", novoIndex);
       handleCicloChange(novoIndex.toString());
+    } else {
+      console.log("[SeletorCiclo] Já está no último ciclo disponível");
     }
   };
 

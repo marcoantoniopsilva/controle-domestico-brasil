@@ -26,7 +26,7 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
   onCicloAnterior,
   onProximoCiclo
 }) => {
-  // Determina o texto a ser exibido no botão
+  // Determina o texto a ser exibido no botão baseado no ciclo selecionado
   const selectedIndex = cicloSelecionado !== "" ? Number(cicloSelecionado) : -1;
   
   // Garante que o índice é válido antes de usar
@@ -35,15 +35,16 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
     ? ciclosDisponiveis[selectedIndex].nome 
     : "Selecione o ciclo";
     
-  // Verificar se pode navegar para ciclos anterior/posterior
+  // Verificar se pode navegar para ciclos anterior/posterior baseado no índice selecionado
   const canGoPrevious = selectedIndex > 0;
-  const canGoNext = selectedIndex < ciclosDisponiveis.length - 1;
+  const canGoNext = selectedIndex >= 0 && selectedIndex < ciclosDisponiveis.length - 1;
     
   console.log("[CicloSelector] Renderizando com ciclo selecionado:", cicloSelecionado);
   console.log("[CicloSelector] Índice selecionado:", selectedIndex);
   console.log("[CicloSelector] É índice válido:", isValidIndex);
   console.log("[CicloSelector] Nome do ciclo exibido:", displayText);
   console.log("[CicloSelector] Total de ciclos disponíveis:", ciclosDisponiveis.length);
+  console.log("[CicloSelector] Pode ir anterior:", canGoPrevious, "Pode ir próximo:", canGoNext);
 
   return (
     <div className="flex items-center gap-1">
@@ -66,7 +67,7 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[300px] max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent className="w-[300px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 shadow-lg z-50">
           <DropdownMenuRadioGroup value={cicloSelecionado} onValueChange={onCicloChange}>
             {ciclosDisponiveis.map((ciclo, index) => (
               <DropdownMenuRadioItem key={index} value={index.toString()} className="cursor-pointer">
