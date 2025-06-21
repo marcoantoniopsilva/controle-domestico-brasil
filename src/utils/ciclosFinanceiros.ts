@@ -33,16 +33,27 @@ const calcularFimCiclo = (inicioCiclo: Date): Date => {
   return fimCiclo;
 };
 
-// Função aprimorada para gerar ciclos financeiros com dados históricos amplos
+// Função aprimorada para gerar ciclos financeiros que detecta TODOS os ciclos com dados
 export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiroDetalhado[] => {
   console.log("[ciclosFinanceiros] Iniciando geração de ciclos para", transacoes.length, "transações");
   
-  const ciclos: CicloFinanceiroDetalhado[] = [];
-  const hoje = new Date();
+  if (transacoes.length === 0) {
+    console.log("[ciclosFinanceiros] Nenhuma transação fornecida");
+    return [];
+  }
   
-  // Gerar ciclos com histórico amplo - 24 meses atrás até 6 meses no futuro
-  const inicioGeracao = subMonths(hoje, 24); // 2 anos atrás
-  const fimGeracao = addMonths(hoje, 6); // 6 meses no futuro
+  const ciclos: CicloFinanceiroDetalhado[] = [];
+  
+  // Encontrar a data mais antiga e mais recente das transações
+  const datasTransacoes = transacoes.map(t => new Date(t.data)).sort((a, b) => a.getTime() - b.getTime());
+  const dataInicial = datasTransacoes[0];
+  const dataFinal = datasTransacoes[datasTransacoes.length - 1];
+  
+  console.log(`[ciclosFinanceiros] Período das transações: ${dataInicial.toDateString()} até ${dataFinal.toDateString()}`);
+  
+  // Expandir o período para garantir que cobrimos todos os ciclos necessários
+  const inicioGeracao = subMonths(dataInicial, 1); // 1 mês antes da primeira transação
+  const fimGeracao = addMonths(dataFinal, 1); // 1 mês depois da última transação
   
   console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
   
@@ -53,10 +64,15 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
     const inicioCiclo = new Date(cicloAtual);
     const fimCiclo = calcularFimCiclo(inicioCiclo);
     
-    // Verificar se este ciclo tem transações
+    // Verificar se este ciclo tem transações usando comparação de datas normalizada
     const transacoesCiclo = transacoes.filter(t => {
       const dataTransacao = new Date(t.data);
-      return dataTransacao >= inicioCiclo && dataTransacao <= fimCiclo;
+      // Normalizar datas para comparação apenas de dia/mês/ano
+      const dataTransacaoNormalizada = new Date(dataTransacao.getFullYear(), dataTransacao.getMonth(), dataTransacao.getDate());
+      const inicioNormalizado = new Date(inicioCiclo.getFullYear(), inicioCiclo.getMonth(), inicioCiclo.getDate());
+      const fimNormalizado = new Date(fimCiclo.getFullYear(), fimCiclo.getMonth(), fimCiclo.getDate());
+      
+      return dataTransacaoNormalizada >= inicioNormalizado && dataTransacaoNormalizada <= fimNormalizado;
     });
     
     const nomeCiclo = formatarNomeCiclo(inicioCiclo, fimCiclo);

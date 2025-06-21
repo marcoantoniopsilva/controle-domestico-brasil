@@ -10,18 +10,34 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
   console.log("[GraficoComparativo] Transações de despesa:", transacoesDespesa.length);
   console.log("[GraficoComparativo] Total de transações:", transacoes.length);
   
+  // Debug: vamos ver as datas das transações
+  const datasTransacoes = transacoesDespesa.map(t => new Date(t.data).toISOString().split('T')[0]).sort();
+  console.log("[GraficoComparativo] Datas das transações (ordenadas):", datasTransacoes.slice(0, 10), "...", datasTransacoes.slice(-10));
+  
   // Gerar ciclos baseados no período atual, sempre mostrando histórico
   const ciclos = gerarCiclosFinanceiros(transacoesDespesa);
 
   // Preparar dados para a tabela
   const dadosTabela: DadosCiclo[] = ciclos.map(ciclo => {
-    // Filtrar transações do ciclo (apenas despesas)
+    // Filtrar transações do ciclo (apenas despesas) - usando comparação mais flexível
     const transacoesCiclo = transacoesDespesa.filter(t => {
       const dataTransacao = new Date(t.data);
-      return dataTransacao >= ciclo.inicio && dataTransacao <= ciclo.fim;
+      // Normalizar para comparação apenas de datas (sem horário)
+      const dataTransacaoNormalizada = new Date(dataTransacao.getFullYear(), dataTransacao.getMonth(), dataTransacao.getDate());
+      const inicioNormalizado = new Date(ciclo.inicio.getFullYear(), ciclo.inicio.getMonth(), ciclo.inicio.getDate());
+      const fimNormalizado = new Date(ciclo.fim.getFullYear(), ciclo.fim.getMonth(), ciclo.fim.getDate());
+      
+      const estaNoCiclo = dataTransacaoNormalizada >= inicioNormalizado && dataTransacaoNormalizada <= fimNormalizado;
+      
+      if (estaNoCiclo) {
+        console.log(`[GraficoComparativo] Transação ${t.id} (${dataTransacao.toDateString()}) está no ciclo ${ciclo.nome}`);
+      }
+      
+      return estaNoCiclo;
     });
 
     console.log(`[GraficoComparativo] Processando ciclo ${ciclo.nome}: ${transacoesCiclo.length} transações de despesa`);
+    console.log(`[GraficoComparativo] Período do ciclo: ${ciclo.inicio.toDateString()} até ${ciclo.fim.toDateString()}`);
 
     // Calcular total por categoria para este ciclo
     const dadosCiclo: DadosCiclo = {
