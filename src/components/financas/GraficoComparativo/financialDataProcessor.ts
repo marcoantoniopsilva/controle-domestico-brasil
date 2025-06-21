@@ -1,6 +1,7 @@
 
 import { Transacao, Categoria } from "@/types";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
+import { filtrarTransacoesPorCiclo } from "@/utils/financas";
 import { DadosCiclo } from "./types";
 
 export const processFinancialData = (transacoes: Transacao[], categorias: Categoria[]) => {
@@ -10,56 +11,46 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
   console.log("[GraficoComparativo] Transações de despesa:", transacoesDespesa.length);
   console.log("[GraficoComparativo] Total de transações:", transacoes.length);
   
-  // Debug: vamos ver as datas das transações
-  const datasTransacoes = transacoesDespesa.map(t => new Date(t.data).toISOString().split('T')[0]).sort();
-  console.log("[GraficoComparativo] Datas das transações (ordenadas):", datasTransacoes.slice(0, 10), "...", datasTransacoes.slice(-10));
-  
   // Gerar ciclos baseados no período atual, sempre mostrando histórico
   const ciclos = gerarCiclosFinanceiros(transacoesDespesa);
 
-  // Preparar dados para a tabela
+  // Preparar dados para a tabela usando a MESMA lógica da aba "Despesas"
   const dadosTabela: DadosCiclo[] = ciclos.map(ciclo => {
-    // Filtrar transações do ciclo (apenas despesas) - usando comparação mais flexível
-    const transacoesCiclo = transacoesDespesa.filter(t => {
-      const dataTransacao = new Date(t.data);
-      // Normalizar para comparação apenas de datas (sem horário)
-      const dataTransacaoNormalizada = new Date(dataTransacao.getFullYear(), dataTransacao.getMonth(), dataTransacao.getDate());
-      const inicioNormalizado = new Date(ciclo.inicio.getFullYear(), ciclo.inicio.getMonth(), ciclo.inicio.getDate());
-      const fimNormalizado = new Date(ciclo.fim.getFullYear(), ciclo.fim.getMonth(), ciclo.fim.getDate());
-      
-      const estaNoCiclo = dataTransacaoNormalizada >= inicioNormalizado && dataTransacaoNormalizada <= fimNormalizado;
-      
-      if (estaNoCiclo) {
-        console.log(`[GraficoComparativo] Transação ${t.id} (${dataTransacao.toDateString()}) está no ciclo ${ciclo.nome}`);
-      }
-      
-      return estaNoCiclo;
-    });
+    console.log(`[GraficoComparativo] Processando ciclo ${ciclo.nome}: ${ciclo.inicio.toDateString()} até ${ciclo.fim.toDateString()}`);
 
-    console.log(`[GraficoComparativo] Processando ciclo ${ciclo.nome}: ${transacoesCiclo.length} transações de despesa`);
-    console.log(`[GraficoComparativo] Período do ciclo: ${ciclo.inicio.toDateString()} até ${ciclo.fim.toDateString()}`);
+    // Criar objeto do ciclo financeiro no formato esperado por filtrarTransacoesPorCiclo
+    const cicloFinanceiro = {
+      inicio: ciclo.inicio,
+      fim: ciclo.fim,
+      nome: ciclo.nome
+    };
 
-    // Calcular total por categoria para este ciclo
+    // Usar a MESMA função que a aba "Despesas" usa para filtrar transações
+    const transacoesCiclo = filtrarTransacoesPorCiclo(transacoesDespesa, cicloFinanceiro);
+    
+    console.log(`[GraficoComparativo] Transações filtradas para ${ciclo.nome}: ${transacoesCiclo.length}`);
+
+    // Inicializar dados do ciclo
     const dadosCiclo: DadosCiclo = {
       ciclo: ciclo.nome,
       cicloCompleto: ciclo.nomeCompleto,
-      temLancamentos: false // Será atualizado abaixo
+      temLancamentos: false
     };
 
-    // Adicionar total por categoria (apenas categorias de despesa)
+    // Usar a MESMA lógica da aba "Despesas" para calcular gastos por categoria
     const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
     let totalGeralCiclo = 0;
     
     categoriasDespesa.forEach(categoria => {
-      const totalCategoria = transacoesCiclo
-        .filter(t => t.categoria === categoria.nome)
-        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      // MESMA lógica do useDashboardData: filtrar transações da categoria e somar valores
+      const transacoesDaCategoria = transacoesCiclo.filter(t => t.categoria === categoria.nome);
+      const totalCategoria = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
       dadosCiclo[categoria.nome] = totalCategoria;
       totalGeralCiclo += totalCategoria;
       
       if (totalCategoria > 0) {
-        console.log(`[GraficoComparativo] ${ciclo.nome} - ${categoria.nome}: R$ ${totalCategoria.toFixed(2)}`);
+        console.log(`[GraficoComparativo] ${ciclo.nome} - ${categoria.nome}: R$ ${totalCategoria.toFixed(2)} (${transacoesDaCategoria.length} transações)`);
       }
     });
 
@@ -71,8 +62,6 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
     return dadosCiclo;
   });
 
-  // CORREÇÃO PRINCIPAL: Retornar TODOS os ciclos, não apenas os filtrados
-  // O filtro será aplicado apenas na apresentação, se necessário
   console.log("[GraficoComparativo] Todos os ciclos processados:", dadosTabela.map(c => `${c.ciclo} (${c.temLancamentos ? 'com dados' : 'sem dados'})`));
 
   return { dadosTabela, categoriasDespesa: categorias.filter(cat => cat.tipo === "despesa") };

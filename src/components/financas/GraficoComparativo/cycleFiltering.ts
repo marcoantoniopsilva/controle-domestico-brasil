@@ -31,8 +31,7 @@ const extrairDataDoCiclo = (cicloNome: string): Date => {
 };
 
 export const filterAndSortCycles = (dadosTabela: DadosCiclo[]) => {
-  // CORREÇÃO PRINCIPAL: Primeiro filtrar apenas ciclos que têm dados reais
-  // e depois ordenar cronologicamente
+  // Filtrar apenas ciclos que têm dados reais e ordenar cronologicamente
   const ciclosFiltrados = dadosTabela
     .filter(ciclo => {
       const temDados = ciclo.temLancamentos;
