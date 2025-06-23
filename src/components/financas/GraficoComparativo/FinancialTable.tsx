@@ -6,9 +6,10 @@ import { DadosCiclo } from "./types";
 interface FinancialTableProps {
   categoriasDespesa: Categoria[];
   ciclosFiltrados: DadosCiclo[];
+  onCellClick?: (categoria: string, ciclo: string, valor: number) => void;
 }
 
-const FinancialTable = ({ categoriasDespesa, ciclosFiltrados }: FinancialTableProps) => {
+const FinancialTable = ({ categoriasDespesa, ciclosFiltrados, onCellClick }: FinancialTableProps) => {
   // Função para determinar a cor da célula
   const getCellColor = (valor: number, orcamento: number) => {
     if (valor === 0) return "bg-gray-50 text-gray-400";
@@ -55,7 +56,15 @@ const FinancialTable = ({ categoriasDespesa, ciclosFiltrados }: FinancialTablePr
                   return (
                     <TableCell 
                       key={`${categoria.nome}-${ciclo.ciclo}`}
-                      className={`text-center text-sm font-medium border ${colorClass}`}
+                      className={`text-center text-sm font-medium border ${colorClass} ${
+                        valor > 0 && onCellClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                      }`}
+                      onClick={() => {
+                        if (valor > 0 && onCellClick) {
+                          onCellClick(categoria.nome, ciclo.ciclo, valor);
+                        }
+                      }}
+                      title={valor > 0 ? "Clique para ver as transações" : undefined}
                     >
                       {valor > 0 ? formatarMoeda(valor) : "-"}
                     </TableCell>
