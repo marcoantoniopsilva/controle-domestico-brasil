@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
@@ -8,13 +9,14 @@ import SummaryCards from "./dashboard/SummaryCards";
 
 interface DashboardContentProps {
   transacoes: Transacao[];
-  transacoesOriginais?: Transacao[]; // Adicionar prop para transações não filtradas
+  transacoesOriginais?: Transacao[]; 
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   onExcluirTransacao: (id: string) => Promise<void>;
   onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos?: number; // Adicionar suporte para investimentos
   saldo: number;
   orcamentoTotal: number;
   isLoading: boolean;
@@ -32,6 +34,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onEditarTransacao,
   totalReceitas,
   totalDespesas,
+  totalInvestimentos = 0,
   saldo,
   orcamentoTotal,
   isLoading,
@@ -46,13 +49,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       <SummaryCards
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
+        totalInvestimentos={totalInvestimentos}
         saldo={saldo}
         orcamentoTotal={orcamentoTotal}
       />
       
       <DashboardTabs
         transacoes={transacoes}
-        transacoesOriginais={transacoesOriginais} // Repassar transações originais
+        transacoesOriginais={transacoesOriginais}
         categorias={categorias}
         cicloAtual={cicloAtual}
         onExcluirTransacao={onExcluirTransacao}

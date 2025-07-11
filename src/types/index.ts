@@ -1,4 +1,3 @@
-
 export interface Usuario {
   id: string;
   nome: string;
@@ -11,19 +10,19 @@ export interface Transacao {
   categoria: string;
   valor: number;
   parcelas: number;
-  quemGastou: 'Marco' | 'Bruna';
+  quemGastou: "Marco" | "Bruna";
   descricao?: string;
-  tipo: 'despesa' | 'receita' | 'investimento';
-  ganhos?: number; // Ganhos/perdas para investimentos
-  isParcela?: boolean; // Indica se é uma parcela projetada
-  parcelaAtual?: number; // Número da parcela atual
+  tipo: "despesa" | "receita" | "investimento";
+  ganhos?: number; // Novo campo para ganhos/perdas de investimentos
+  isParcela?: boolean;
+  parcelaAtual?: number;
 }
 
 export interface Categoria {
   nome: string;
+  tipo: "despesa" | "receita" | "investimento";
   orcamento: number;
-  gastosAtuais: number;
-  tipo: 'despesa' | 'receita' | 'investimento';
+  gastosAtuais?: number;
 }
 
 export interface CicloFinanceiro {

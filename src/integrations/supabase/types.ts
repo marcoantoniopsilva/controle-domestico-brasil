@@ -35,6 +35,7 @@ export type Database = {
           created_at: string
           data: string
           descricao: string | null
+          ganhos: number | null
           id: number
           parcelas: number
           quem_gastou: string
@@ -47,6 +48,7 @@ export type Database = {
           created_at?: string
           data: string
           descricao?: string | null
+          ganhos?: number | null
           id?: number
           parcelas?: number
           quem_gastou: string
@@ -59,6 +61,7 @@ export type Database = {
           created_at?: string
           data?: string
           descricao?: string | null
+          ganhos?: number | null
           id?: number
           parcelas?: number
           quem_gastou?: string
