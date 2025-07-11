@@ -44,9 +44,9 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   } = useDashboardData(transacoes, cicloAtual);
   
   // Calcular orçamento total - corrigir o erro de tipo
-  const orcamentoTotal = categorias?.reduce((acc, cat) => {
-    return cat.tipo === "despesa" ? acc + cat.orcamento : acc;
-  }, 0) || 0;
+  const orcamentoTotal = categorias ? categorias
+    .filter(cat => cat.tipo === "despesa")
+    .reduce((acc, cat) => acc + cat.orcamento, 0) : 0;
 
   // Log for debugging
   useEffect(() => {

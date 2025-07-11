@@ -32,7 +32,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   const [valor, setValor] = useState(valorInicial);
   const [parcelas, setParcelas] = useState(initialValues?.parcelas?.toString() || "1");
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
-  const [tipo, setTipo] = useState<"despesa" | "receita">(initialValues?.tipo || "despesa");
+  const [tipo, setTipo] = useState<"despesa" | "receita" | "investimento">(initialValues?.tipo || "despesa");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtramos as categorias com base no tipo selecionado
@@ -41,7 +41,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   }, [tipo]);
 
   // Resetamos a categoria selecionada quando o tipo muda
-  const handleTipoChange = (novoTipo: "despesa" | "receita") => {
+  const handleTipoChange = (novoTipo: "despesa" | "receita" | "investimento") => {
     setTipo(novoTipo);
     // Apenas resetar categoria se não estiver editando ou se o tipo for diferente
     if (!isEditing || initialValues?.tipo !== novoTipo) {
