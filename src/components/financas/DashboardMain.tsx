@@ -39,13 +39,14 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     categoriasAtualizadas: categorias,
     totalReceitas,
     totalDespesas,
-    totalInvestimentos, // Agora incluído nos dados do dashboard
+    totalInvestimentos,
     saldo
   } = useDashboardData(transacoes, cicloAtual);
   
-  // Calcular orçamento total
-  const orcamentoTotal = categorias?.reduce((acc, cat) => 
-    cat.tipo === "despesa" ? acc + cat.orcamento : acc, 0) || 0;
+  // Calcular orçamento total - corrigir o erro de tipo
+  const orcamentoTotal = categorias?.reduce((acc, cat) => {
+    return cat.tipo === "despesa" ? acc + cat.orcamento : acc;
+  }, 0) || 0;
 
   // Log for debugging
   useEffect(() => {

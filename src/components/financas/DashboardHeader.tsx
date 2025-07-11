@@ -13,11 +13,12 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleAddTransacao = async (transacao: Omit<Transacao, "id">) => {
+  const handleAddTransacao = async (transacao: Omit<Transacao, "id">): Promise<boolean> => {
     const success = await onAddTransacao(transacao);
     if (success) {
       setDialogOpen(false);
     }
+    return success;
   };
 
   return (

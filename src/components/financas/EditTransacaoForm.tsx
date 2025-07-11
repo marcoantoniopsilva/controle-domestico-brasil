@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Transacao } from "@/types";
-import { useTransacaoForm } from "./form/useTransacaoForm";
+import { useTransacaoForm } from "@/hooks/useTransacaoForm";
 import DateSelector from "./form/DateSelector";
 import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";
@@ -40,11 +40,11 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     categoriasFiltradas,
     handleSubmit
   } = useTransacaoForm({ 
-    onAddTransacao: onSalvar,
-    initialValues: {
-      ...transacao,
-      valor: Math.abs(transacao.valor) // Pass the numeric value, not formatted string
+    onAddTransacao: async (transacao) => {
+      await onSalvar(transacao);
+      return true;
     },
+    initialValues: transacao,
     isEditing: true
   });
 

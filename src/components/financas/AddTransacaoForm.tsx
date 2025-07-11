@@ -45,7 +45,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DateSelector data={data} onDataChange={setData} />
+            <DateSelector date={data} onDateChange={setData} />
             <TypeSelector tipo={tipo} onTipoChange={handleTipoChange} />
           </div>
           
@@ -53,7 +53,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
             <CategorySelector
               categoria={categoria}
               onCategoriaChange={setCategoria}
-              categorias={categoriasFiltradas}
+              categoriasFiltradas={categoriasFiltradas}
             />
             <ValueInput valor={valor} onValorChange={setValor} />
           </div>
@@ -72,6 +72,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
           <DescriptionInput
             descricao={descricao}
             onDescricaoChange={setDescricao}
+            isObrigatorio={categoria === "Outros"}
             categoria={categoria}
           />
 
