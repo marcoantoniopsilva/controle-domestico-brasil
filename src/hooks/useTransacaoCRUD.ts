@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Transacao } from "@/types";
@@ -39,6 +40,7 @@ export function useTransacaoCRUD() {
         quem_gastou: novaTransacao.quemGastou,
         descricao: novaTransacao.descricao || null,
         tipo: novaTransacao.tipo,
+        ganhos: novaTransacao.ganhos || 0, // Incluir ganhos
         usuario_id: usuarioId,
       };
       
@@ -106,7 +108,8 @@ export function useTransacaoCRUD() {
         parcelas: transacaoAtualizada.parcelas,
         quem_gastou: transacaoAtualizada.quemGastou,
         descricao: transacaoAtualizada.descricao || null,
-        tipo: transacaoAtualizada.tipo
+        tipo: transacaoAtualizada.tipo,
+        ganhos: transacaoAtualizada.ganhos || 0 // Incluir ganhos
       };
       
       console.log("Objeto para atualização:", updateObj);

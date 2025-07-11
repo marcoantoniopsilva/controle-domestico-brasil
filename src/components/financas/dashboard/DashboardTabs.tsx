@@ -9,6 +9,9 @@ import ProgressoCategoriaClickable from "../ProgressoCategoriaClickable";
 import RelatorioCartaoCredito from "../RelatorioCartaoCredito";
 import GraficoComparativoMensal from "../GraficoComparativo/GraficoComparativoMensal";
 import TransactionDetailModal from "../GraficoComparativo/TransactionDetailModal";
+import InvestmentSummaryCards from "../investimentos/InvestmentSummaryCards";
+import InvestmentEvolutionChart from "../investimentos/InvestmentEvolutionChart";
+import InvestmentsList from "../investimentos/InvestmentsList";
 import { useTransactionsByCategory } from "@/hooks/useTransactionsByCategory";
 
 interface DashboardTabsProps {
@@ -60,6 +63,7 @@ const DashboardTabs = ({
   // Separamos categorias por tipo
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
+  const categoriasInvestimento = categorias.filter(cat => cat.tipo === "investimento");
 
   // Handler para abrir o modal com detalhes das transações
   const handleCategoryClick = (categoria: string, ciclo: string, valor: number) => {
@@ -94,6 +98,7 @@ const DashboardTabs = ({
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
           <TabsTrigger value="receitas">Receitas</TabsTrigger>
+          <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
         </TabsList>
@@ -142,6 +147,16 @@ const DashboardTabs = ({
               />
             ))}
           </div>
+        </TabsContent>
+        
+        <TabsContent value="investimentos" className="space-y-6">
+          <InvestmentSummaryCards transacoes={transacoesOriginais || transacoes} />
+          <InvestmentEvolutionChart transacoes={transacoesOriginais || transacoes} />
+          <InvestmentsList 
+            transacoes={transacoesOriginais || transacoes}
+            onExcluir={onExcluirTransacao}
+            onEditar={onEditarTransacao}
+          />
         </TabsContent>
         
         <TabsContent value="transacoes">

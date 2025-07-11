@@ -1,17 +1,19 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTransacaoForm } from "@/hooks/useTransacaoForm";
 import { Transacao } from "@/types";
-import { useTransacaoForm } from "./form/useTransacaoForm";
 import DateSelector from "./form/DateSelector";
 import TypeSelector from "./form/TypeSelector";
 import CategorySelector from "./form/CategorySelector";
 import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
 import DescriptionInput from "./form/DescriptionInput";
+import GanhosInput from "./form/GanhosInput";
 
 interface AddTransacaoFormProps {
-  onAddTransacao: (transacao: Omit<Transacao, "id">) => void;
+  onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean>;
 }
 
 const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) => {
@@ -27,63 +29,58 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
     descricao,
     setDescricao,
     tipo,
+    ganhos,
+    setGanhos,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
-    handleSubmit
+    handleSubmit,
   } = useTransacaoForm({ onAddTransacao });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/2">
-          <DateSelector 
-            date={data} 
-            onDateChange={setData} 
+    <Card>
+      <CardHeader>
+        <CardTitle>Adicionar Nova Transação</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DateSelector data={data} onDataChange={setData} />
+            <TypeSelector tipo={tipo} onTipoChange={handleTipoChange} />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CategorySelector
+              categoria={categoria}
+              onCategoriaChange={setCategoria}
+              categorias={categoriasFiltradas}
+            />
+            <ValueInput valor={valor} onValorChange={setValor} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ParcelasSelector parcelas={parcelas} onParcelasChange={setParcelas} />
+            {tipo === "investimento" && (
+              <GanhosInput
+                ganhos={ganhos}
+                onGanhosChange={setGanhos}
+                tipo={tipo}
+              />
+            )}
+          </div>
+
+          <DescriptionInput
+            descricao={descricao}
+            onDescricaoChange={setDescricao}
+            categoria={categoria}
           />
-        </div>
-        
-        <div className="w-full md:w-1/2">
-          <TypeSelector 
-            tipo={tipo} 
-            onTipoChange={handleTipoChange} 
-          />
-        </div>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/2">
-          <CategorySelector 
-            categoria={categoria} 
-            onCategoriaChange={setCategoria} 
-            categoriasFiltradas={categoriasFiltradas} 
-          />
-        </div>
-        
-        <div className="w-full md:w-1/2">
-          <ValueInput 
-            valor={valor} 
-            onValorChange={setValor} 
-          />
-        </div>
-      </div>
-      
-      <ParcelasSelector 
-        parcelas={parcelas} 
-        onParcelasChange={setParcelas} 
-      />
-      
-      <DescriptionInput 
-        descricao={descricao} 
-        onDescricaoChange={setDescricao}
-        isObrigatorio={categoria === "Outros"}
-        categoria={categoria}
-      />
-      
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Adicionando..." : `Adicionar ${tipo === "despesa" ? "Despesa" : "Receita"}`}
-      </Button>
-    </form>
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Adicionando..." : "Adicionar Transação"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

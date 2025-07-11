@@ -4,8 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TypeSelectorProps {
-  tipo: "despesa" | "receita";
-  onTipoChange: (tipo: "despesa" | "receita") => void;
+  tipo: "despesa" | "receita" | "investimento";
+  onTipoChange: (tipo: "despesa" | "receita" | "investimento") => void;
 }
 
 const TypeSelector: React.FC<TypeSelectorProps> = ({ tipo, onTipoChange }) => {
@@ -14,7 +14,7 @@ const TypeSelector: React.FC<TypeSelectorProps> = ({ tipo, onTipoChange }) => {
       <Label htmlFor="tipo">Tipo</Label>
       <Select 
         value={tipo} 
-        onValueChange={(value) => onTipoChange(value as "despesa" | "receita")}
+        onValueChange={(value) => onTipoChange(value as "despesa" | "receita" | "investimento")}
       >
         <SelectTrigger id="tipo">
           <SelectValue placeholder="Selecione o tipo" />
@@ -22,6 +22,7 @@ const TypeSelector: React.FC<TypeSelectorProps> = ({ tipo, onTipoChange }) => {
         <SelectContent>
           <SelectItem value="despesa">Despesa</SelectItem>
           <SelectItem value="receita">Receita</SelectItem>
+          <SelectItem value="investimento">Investimento</SelectItem>
         </SelectContent>
       </Select>
     </div>

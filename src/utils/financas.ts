@@ -1,169 +1,79 @@
+import { Categoria } from "@/types";
+import { categoriasInvestimentos } from "./investimentos";
 
-import { Categoria, CicloFinanceiro, Transacao } from "@/types";
-
-// Definição das categorias com orçamentos
 export const categorias: Categoria[] = [
-  // Categorias de despesas
-  { nome: "Supermercado", orcamento: 2000, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Aplicativos e restaurantes", orcamento: 800, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Uber / transporte", orcamento: 250, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Farmácia", orcamento: 600, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Saúde", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Compras parceladas Marco", orcamento: 1100, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Compras parceladas Bruna", orcamento: 1200, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Compras do Marco", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Compras da Bruna", orcamento: 400, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Serviços de internet", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Academia", orcamento: 350, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Poupança/investimento", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Doações", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Aniversário da Aurora", orcamento: 0, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Fraldas Aurora", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Fórmula e leite Aurora", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Essence", orcamento: 0, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Estacionamento", orcamento: 120, gastosAtuais: 0, tipo: "despesa" }, 
-  { nome: "Outros", orcamento: 500, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Viagens", orcamento: 150, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Casa", orcamento: 120, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Gato", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
-  { nome: "Despesas fixas no dinheiro", orcamento: 11910, gastosAtuais: 0, tipo: "despesa" },
+  // Despesas
+  { nome: "Casa", orcamento: 800, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Alimentação", orcamento: 1200, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Transporte", orcamento: 400, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Lazer", orcamento: 300, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Saúde", orcamento: 200, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Educação", orcamento: 150, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Vestuário", orcamento: 200, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Pets", orcamento: 100, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Cartão de Crédito", orcamento: 1000, gastosAtuais: 0, tipo: "despesa" },
+  { nome: "Outros", orcamento: 200, gastosAtuais: 0, tipo: "despesa" },
   
-  // Categorias de receitas
+  // Receitas
   { nome: "Salário", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "13º", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "⅓ de férias", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "Restituição", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "Pagamento mamãe", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "Receita Essence", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
-  { nome: "Outras receitas", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Freelance", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Investimentos", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  { nome: "Outros Ganhos", orcamento: 0, gastosAtuais: 0, tipo: "receita" },
+  
+  // Investimentos - importados do arquivo investimentos.ts
+  ...categoriasInvestimentos
 ];
 
-// Função para calcular o início e fim do ciclo atual
-export function calcularCicloAtual(): CicloFinanceiro {
+export const formatarMoeda = (valor: number): string => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(valor);
+};
+
+export const calcularCicloAtual = () => {
   const hoje = new Date();
-  let inicioMes: Date;
-  let fimMes: Date;
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth();
   
-  if (hoje.getDate() < 25) {
-    // Estamos entre 1 e 24 do mês atual
-    const mesAnterior = hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1;
-    const anoInicio = mesAnterior === 11 ? hoje.getFullYear() - 1 : hoje.getFullYear();
+  // Se estamos na primeira quinzena, o ciclo atual é do dia 21 do mês anterior ao dia 20 do mês atual
+  // Se estamos na segunda quinzena, o ciclo atual é do dia 21 do mês atual ao dia 20 do próximo mês
+  
+  let inicioMes, fimMes;
+  
+  if (hoje.getDate() < 21) {
+    // Primeira quinzena: ciclo do mês anterior
+    inicioMes = mes - 1;
+    fimMes = mes;
     
-    inicioMes = new Date(anoInicio, mesAnterior, 25);
-    fimMes = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
+    // Ajustar para dezembro do ano anterior se necessário
+    if (inicioMes < 0) {
+      inicioMes = 11;
+      return {
+        inicio: new Date(ano - 1, inicioMes, 21),
+        fim: new Date(ano, fimMes, 20),
+        nome: `21/${String(inicioMes + 1).padStart(2, '0')}/${inicioMes === 11 ? ano - 1 : ano} - 20/${String(fimMes + 1).padStart(2, '0')}/${ano}`
+      };
+    }
   } else {
-    // Estamos entre 25 e 31 do mês atual
-    inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 25);
+    // Segunda quinzena: ciclo do mês atual
+    inicioMes = mes;
+    fimMes = mes + 1;
     
-    const proxMes = hoje.getMonth() === 11 ? 0 : hoje.getMonth() + 1;
-    const anoFim = proxMes === 0 ? hoje.getFullYear() + 1 : hoje.getFullYear();
-    
-    fimMes = new Date(anoFim, proxMes, 24);
+    // Ajustar para janeiro do próximo ano se necessário
+    if (fimMes > 11) {
+      fimMes = 0;
+      return {
+        inicio: new Date(ano, inicioMes, 21),
+        fim: new Date(ano + 1, fimMes, 20),
+        nome: `21/${String(inicioMes + 1).padStart(2, '0')}/${ano} - 20/${String(fimMes + 1).padStart(2, '0')}/${ano + 1}`
+      };
+    }
   }
-  
-  // Formatação do nome do ciclo com os anos sempre incluídos
-  const meses = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-  
-  const mesInicioNome = meses[inicioMes.getMonth()].toLowerCase();
-  const mesFimNome = meses[fimMes.getMonth()].toLowerCase();
-  const anoInicio = inicioMes.getFullYear();
-  const anoFim = fimMes.getFullYear();
-  
-  // Sempre incluir os anos no nome do ciclo
-  const nomeCiclo = `${mesInicioNome} ${anoInicio} - ${mesFimNome} ${anoFim}`;
-  
-  console.log(`[financas.ts] Ciclo atual calculado: ${nomeCiclo} (${inicioMes.toISOString()} até ${fimMes.toISOString()})`);
   
   return {
-    inicio: inicioMes,
-    fim: fimMes,
-    nome: nomeCiclo
+    inicio: new Date(ano, inicioMes, 21),
+    fim: new Date(ano, fimMes, 20),
+    nome: `21/${String(inicioMes + 1).padStart(2, '0')}/${ano} - 20/${String(fimMes + 1).padStart(2, '0')}/${ano}`
   };
-}
-
-// Função para formatar valor em moeda brasileira
-export function formatarMoeda(valor: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(valor);
-}
-
-// Função para calcular limite diário ideal
-export function calcularLimiteDiario(ciclo: CicloFinanceiro, orcamentoTotal: number): number {
-  const umDia = 24 * 60 * 60 * 1000; // milissegundos em um dia
-  const inicio = new Date(ciclo.inicio);
-  const fim = new Date(ciclo.fim);
-  const diasNoCiclo = Math.round((fim.getTime() - inicio.getTime()) / umDia) + 1;
-  return orcamentoTotal / diasNoCiclo;
-}
-
-// Função para filtrar transações por ciclo - melhorada para garantir comparação correta
-export function filtrarTransacoesPorCiclo(transacoes: Transacao[], ciclo: CicloFinanceiro): Transacao[] {
-  // Certifique-se de que ciclo.inicio e ciclo.fim são instâncias de Date válidas
-  const inicio = new Date(ciclo.inicio);
-  const fim = new Date(ciclo.fim);
-  
-  // Verificar se as datas são válidas
-  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
-    console.error("[financas.ts] Datas de ciclo inválidas ao filtrar transações!");
-    return [];
-  }
-  
-  // Certifique-se de que as datas estejam na hora 00:00:00 para início e 23:59:59 para fim
-  inicio.setHours(0, 0, 0, 0);
-  fim.setHours(23, 59, 59, 999);
-  
-  console.log("[financas.ts] Filtrando transações para o ciclo:", ciclo.nome);
-  
-  const transacoesFiltradas = transacoes.filter(transacao => {
-    // Certifique-se de que estamos trabalhando com objetos Date válidos
-    const dataTransacao = new Date(transacao.data);
-    
-    // Verificar se a data é válida
-    if (isNaN(dataTransacao.getTime())) {
-      console.error(`[financas.ts] Data inválida para transação ${transacao.id}`);
-      return false;
-    }
-    
-    dataTransacao.setHours(0, 0, 0, 0);
-    
-    // A transação deve estar estritamente entre o início e fim do ciclo
-    const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
-    
-    return estaNoCiclo;
-  });
-  
-  console.log(`[financas.ts] Total de transações filtradas: ${transacoesFiltradas.length}`);
-  return transacoesFiltradas;
-}
-
-// Função para verificar se uma data está dentro do ciclo
-export function dataEstaNoCiclo(data: Date, ciclo: CicloFinanceiro): boolean {
-  // Verificar se data é válida
-  if (!(data instanceof Date) || isNaN(data.getTime())) {
-    console.error("[financas.ts] Data inválida ao verificar se está no ciclo!");
-    return false;
-  }
-
-  // Certifique-se de que estamos trabalhando com objetos Date válidos
-  const dataParaComparar = new Date(data);
-  const inicio = new Date(ciclo.inicio);
-  const fim = new Date(ciclo.fim);
-  
-  // Verificar se as datas do ciclo são válidas
-  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
-    console.error("[financas.ts] Datas de ciclo inválidas ao verificar se data está no ciclo!");
-    return false;
-  }
-  
-  // Configure as horas para garantir comparação correta
-  dataParaComparar.setHours(0, 0, 0, 0);
-  inicio.setHours(0, 0, 0, 0);
-  fim.setHours(23, 59, 59, 999);
-  
-  return dataParaComparar >= inicio && dataParaComparar <= fim;
-}
+};

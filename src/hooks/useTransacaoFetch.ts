@@ -44,7 +44,8 @@ export function useTransacaoFetch() {
             parcelas: t.parcelas || 1,
             quemGastou: t.quem_gastou as "Marco" | "Bruna",
             descricao: t.descricao,
-            tipo: t.tipo as "despesa" | "receita",
+            tipo: t.tipo as "despesa" | "receita" | "investimento",
+            ganhos: Number(t.ganhos) || 0, // Incluir ganhos
           };
         });
         
@@ -52,7 +53,7 @@ export function useTransacaoFetch() {
         // Log para depuração: listar as datas das transações
         transacoesConvertidas.forEach((t, idx) => {
           if (idx < 10) { // Aumentar para 10 registros para ver mais exemplos
-            console.log(`[useTransacaoFetch] Transação ${idx}: id=${t.id}, data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}`);
+            console.log(`[useTransacaoFetch] Transação ${idx}: id=${t.id}, data=${t.data.toDateString()}, valor=${t.valor}, categoria=${t.categoria}, tipo=${t.tipo}, ganhos=${t.ganhos}`);
           }
         });
         

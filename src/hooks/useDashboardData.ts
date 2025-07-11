@@ -73,9 +73,6 @@ export function useDashboardData(
     
     console.log(`[useDashboardData] Encontradas ${transacoesCicloAtual.length} transações reais no ciclo ${cicloAtual.nome}`);
     
-    // TEMPORARILY FOR DEBUGGING: Return all transactions to verify they exist
-    // return transacoes;
-    
     // Combinar transações reais com parcelas futuras projetadas para este ciclo
     const todasTransacoes = [
       ...transacoesCicloAtual,
@@ -91,18 +88,19 @@ export function useDashboardData(
   const totais = useMemo(() => {
     console.log(`[useDashboardData] Calculando totais para o ciclo ${cicloAtual.nome} com ${transacoesFiltradas.length} transações`);
     
-    // Lista definitiva de categorias de receita
+    // Lista definitiva de categorias por tipo
     const categoriasReceita = categoriasIniciais
       .filter(cat => cat.tipo === "receita")
+      .map(cat => cat.nome);
+    
+    const categoriasInvestimento = categoriasIniciais
+      .filter(cat => cat.tipo === "investimento")
       .map(cat => cat.nome);
     
     // Calcular totais para cada categoria usando APENAS transações do ciclo atual
     const categoriasAtualizadas = categoriasIniciais.map(cat => {
       // Filtrar transações desta categoria que pertencem ao ciclo atual
       const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === cat.nome);
-      
-      // Verificar explicitamente se é uma categoria de despesa ou receita
-      const ehCategoriaReceita = cat.tipo === "receita";
       
       // Para todas as categorias, somamos os valores absolutos
       const valorTotal = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
@@ -120,32 +118,42 @@ export function useDashboardData(
     
     let totalReceitasCalculado = 0;
     let totalDespesasCalculado = 0;
+    let totalInvestimentosCalculado = 0;
+    let totalGanhosCalculado = 0;
     
     // Analisamos cada transação para classificá-la corretamente
     transacoesFiltradas.forEach(t => {
       const categoriaCorrespondente = categoriasIniciais.find(cat => cat.nome === t.categoria);
-      const ehReceita = categoriaCorrespondente?.tipo === "receita";
+      const tipoCategoria = categoriaCorrespondente?.tipo || t.tipo;
       const valorAbs = Math.abs(t.valor);
       
-      if (ehReceita) {
+      if (tipoCategoria === "receita") {
         totalReceitasCalculado += valorAbs;
         console.log(`[useDashboardData] RECEITA: ${t.id} - ${t.categoria} - ${valorAbs}`);
+      } else if (tipoCategoria === "investimento") {
+        totalInvestimentosCalculado += valorAbs;
+        totalGanhosCalculado += (t.ganhos || 0);
+        console.log(`[useDashboardData] INVESTIMENTO: ${t.id} - ${t.categoria} - Investido: ${valorAbs}, Ganhos: ${t.ganhos || 0}`);
       } else {
         totalDespesasCalculado += valorAbs;
         console.log(`[useDashboardData] DESPESA: ${t.id} - ${t.categoria} - ${valorAbs}`);
       }
     });
     
-    const saldo = totalReceitasCalculado - totalDespesasCalculado;
+    const saldo = totalReceitasCalculado - totalDespesasCalculado + totalGanhosCalculado;
     
     console.log(`[useDashboardData] Total de receitas: ${totalReceitasCalculado}`);
     console.log(`[useDashboardData] Total de despesas: ${totalDespesasCalculado}`);
+    console.log(`[useDashboardData] Total de investimentos: ${totalInvestimentosCalculado}`);
+    console.log(`[useDashboardData] Total de ganhos: ${totalGanhosCalculado}`);
     console.log(`[useDashboardData] Saldo: ${saldo}`);
     
     return {
       categoriasAtualizadas,
       totalReceitas: totalReceitasCalculado,
       totalDespesas: totalDespesasCalculado,
+      totalInvestimentos: totalInvestimentosCalculado,
+      totalGanhos: totalGanhosCalculado,
       saldo
     };
   }, [transacoesFiltradas, cicloAtual]);

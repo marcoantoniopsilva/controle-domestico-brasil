@@ -23,7 +23,10 @@ export function useTransacaoForm({
   const [valor, setValor] = useState<string>(initialValues?.valor ? Math.abs(initialValues.valor).toString() : "");
   const [parcelas, setParcelas] = useState<string>(initialValues?.parcelas?.toString() || "1");
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
-  const [tipo, setTipo] = useState<"despesa" | "receita">(initialValues?.tipo || "despesa");
+  const [tipo, setTipo] = useState<"despesa" | "receita" | "investimento">(initialValues?.tipo || "despesa");
+  const [ganhos, setGanhos] = useState<string>(
+    initialValues?.ganhos ? initialValues.ganhos.toString() : "0"
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lista de categorias filtradas com base no tipo selecionado
@@ -33,7 +36,7 @@ export function useTransacaoForm({
 
   // Limpar o campo categoria quando mudar o tipo
   const handleTipoChange = useCallback(
-    (novoTipo: "despesa" | "receita") => {
+    (novoTipo: "despesa" | "receita" | "investimento") => {
       setTipo(novoTipo);
       setCategoria("");
     },
@@ -71,12 +74,18 @@ export function useTransacaoForm({
         const transacao: Omit<Transacao, "id"> = {
           data,
           categoria,
-          // Valor é negativo para despesas, positivo para receitas
-          valor: tipo === "despesa" ? -Math.abs(parseFloat(valor)) : Math.abs(parseFloat(valor)),
+          // Para investimentos, valor é sempre positivo (representando o valor investido)
+          // Para despesas, valor é negativo
+          // Para receitas, valor é positivo
+          valor: tipo === "despesa" 
+            ? -Math.abs(parseFloat(valor)) 
+            : Math.abs(parseFloat(valor)),
           parcelas: parseInt(parcelas, 10),
-          quemGastou: "Marco", // Valor fixo padrão, já que não usaremos mais este campo
+          quemGastou: "Marco", // Valor fixo padrão
           descricao,
           tipo,
+          // Adicionar ganhos apenas para investimentos
+          ganhos: tipo === "investimento" ? parseFloat(ganhos) || 0 : 0,
         };
 
         // Enviar para o handler
@@ -88,6 +97,7 @@ export function useTransacaoForm({
           setValor("");
           setParcelas("1");
           setDescricao("");
+          setGanhos("0");
         }
       } catch (error) {
         console.error("Erro ao salvar transação:", error);
@@ -103,6 +113,7 @@ export function useTransacaoForm({
       descricao,
       tipo,
       data,
+      ganhos,
       onAddTransacao,
       isEditing,
     ]
@@ -121,6 +132,8 @@ export function useTransacaoForm({
     setDescricao,
     tipo,
     setTipo,
+    ganhos,
+    setGanhos,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,

@@ -13,7 +13,8 @@ export interface Transacao {
   parcelas: number;
   quemGastou: 'Marco' | 'Bruna';
   descricao?: string;
-  tipo: 'despesa' | 'receita';
+  tipo: 'despesa' | 'receita' | 'investimento';
+  ganhos?: number; // Ganhos/perdas para investimentos
   isParcela?: boolean; // Indica se é uma parcela projetada
   parcelaAtual?: number; // Número da parcela atual
 }
@@ -22,7 +23,7 @@ export interface Categoria {
   nome: string;
   orcamento: number;
   gastosAtuais: number;
-  tipo: 'despesa' | 'receita';
+  tipo: 'despesa' | 'receita' | 'investimento';
 }
 
 export interface CicloFinanceiro {
@@ -34,5 +35,14 @@ export interface CicloFinanceiro {
 export interface ResumoFinanceiro {
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos: number;
+  totalGanhos: number;
   saldoAtual: number;
+}
+
+export interface InvestmentEvolution {
+  data: Date;
+  valorInvestido: number;
+  ganhos: number;
+  saldoTotal: number;
 }
