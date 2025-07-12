@@ -59,10 +59,10 @@ export function useTransacaoForm({
         return;
       }
 
-      // Verificar se descrição é obrigatória para categoria "Outros"
-      if (categoria === "Outros" && !descricao) {
+      // Verificar se descrição é obrigatória para categorias "Outros"
+      if ((categoria.includes("Outros") || categoria === "Outros") && !descricao) {
         toast.error(
-          "A descrição é obrigatória para a categoria 'Outros'"
+          "A descrição é obrigatória para categorias 'Outros'"
         );
         return;
       }

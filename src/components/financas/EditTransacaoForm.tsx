@@ -9,6 +9,7 @@ import CategorySelector from "./form/CategorySelector";
 import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
 import DescriptionInput from "./form/DescriptionInput";
+import GanhosInput from "./form/GanhosInput";
 
 interface EditTransacaoFormProps {
   transacao: Transacao;
@@ -35,6 +36,8 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     descricao,
     setDescricao,
     tipo,
+    ganhos,
+    setGanhos,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
@@ -83,15 +86,24 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
         </div>
       </div>
       
-      <ParcelasSelector 
-        parcelas={parcelas} 
-        onParcelasChange={setParcelas} 
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ParcelasSelector 
+          parcelas={parcelas} 
+          onParcelasChange={setParcelas} 
+        />
+        {tipo === "investimento" && (
+          <GanhosInput
+            ganhos={ganhos}
+            onGanhosChange={setGanhos}
+            tipo={tipo}
+          />
+        )}
+      </div>
       
       <DescriptionInput 
         descricao={descricao} 
         onDescricaoChange={setDescricao}
-        isObrigatorio={categoria === "Outros"}
+        isObrigatorio={categoria.includes("Outros") || categoria === "Outros"}
         categoria={categoria}
       />
       

@@ -24,7 +24,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
   
   // Calculamos o total de despesas com base nas categorias
-  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + cat.gastosAtuais, 0);
+  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + (cat.gastosAtuais || 0), 0);
   
   // Calculamos o percentual gasto em relação ao orçamento total (limitado a 100%)
   const percentualGasto = totalOrcamento > 0 
@@ -36,8 +36,8 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
 
   // Identificar categorias com maior percentual do orçamento gasto
   const categoriasComMaiorGasto = categoriasDespesa
-    .filter(cat => cat.orcamento > 0 && cat.gastosAtuais > 0)
-    .sort((a, b) => (b.gastosAtuais / b.orcamento) - (a.gastosAtuais / a.orcamento))
+    .filter(cat => cat.orcamento > 0 && (cat.gastosAtuais || 0) > 0)
+    .sort((a, b) => ((b.gastosAtuais || 0) / b.orcamento) - ((a.gastosAtuais || 0) / a.orcamento))
     .slice(0, 3);
 
   // Sugestões de economia
@@ -47,10 +47,10 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
 
   // Filtramos para o gráfico apenas categorias que têm gastos reais
   const dados = categoriasDespesa
-    .filter(cat => cat.gastosAtuais > 0)
+    .filter(cat => (cat.gastosAtuais || 0) > 0)
     .map(cat => ({
       name: cat.nome,
-      value: cat.gastosAtuais
+      value: cat.gastosAtuais || 0
     }));
 
   // Definimos a classe de estilo baseada no percentual gasto
@@ -110,9 +110,10 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
                 Sugestões de Economia
               </div>
               <ul className="space-y-2">
-                {sugestoesEconomia.map(cat => {
-                  const percentGasto = Math.round((cat.gastosAtuais / cat.orcamento) * 100);
-                  const excedido = cat.gastosAtuais - cat.orcamento;
+                 {sugestoesEconomia.map(cat => {
+                   const gastosAtuais = cat.gastosAtuais || 0;
+                   const percentGasto = Math.round((gastosAtuais / cat.orcamento) * 100);
+                   const excedido = gastosAtuais - cat.orcamento;
                   
                   return (
                     <li key={cat.nome} className="text-sm flex justify-between">

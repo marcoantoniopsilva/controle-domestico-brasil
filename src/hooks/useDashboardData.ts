@@ -71,12 +71,14 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
 
     // Atualizar categorias com gastos atuais
     const categoriasAtualizadas = categoriasIniciais.map(categoria => {
-      const transacoesDaCategoria = transacoesFiltradas.filter(t => t.categoria === categoria.nome);
+      const transacoesDaCategoria = transacoesFiltradas.filter(t => 
+        t.categoria === categoria.nome && t.tipo === categoria.tipo
+      );
       const gastosAtuais = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
       return {
         ...categoria,
-        gastosAtuais
+        gastosAtuais: gastosAtuais || 0
       };
     });
 

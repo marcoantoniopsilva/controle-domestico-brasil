@@ -12,29 +12,29 @@ export const formatarMoeda = (valor: number): string => {
 
 export const categorias = [
   // Categorias de Despesa
-  { nome: "Alimentação", tipo: "despesa" as const, orcamento: 800 },
-  { nome: "Transporte", tipo: "despesa" as const, orcamento: 300 },
-  { nome: "Moradia", tipo: "despesa" as const, orcamento: 1200 },
-  { nome: "Saúde", tipo: "despesa" as const, orcamento: 200 },
-  { nome: "Educação", tipo: "despesa" as const, orcamento: 150 },
-  { nome: "Lazer", tipo: "despesa" as const, orcamento: 300 },
-  { nome: "Roupas", tipo: "despesa" as const, orcamento: 200 },
-  { nome: "Serviços", tipo: "despesa" as const, orcamento: 150 },
-  { nome: "Outros", tipo: "despesa" as const, orcamento: 100 },
+  { nome: "Alimentação", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
+  { nome: "Transporte", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Moradia", tipo: "despesa" as const, orcamento: 1200, gastosAtuais: 0 },
+  { nome: "Saúde", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Educação", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
+  { nome: "Lazer", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Roupas", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Serviços", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
+  { nome: "Outros Despesas", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
   
   // Categorias de Receita
-  { nome: "Salário", tipo: "receita" as const, orcamento: 5000 },
-  { nome: "Freelance", tipo: "receita" as const, orcamento: 1000 },
-  { nome: "Renda Extra", tipo: "receita" as const, orcamento: 500 },
-  { nome: "Outros", tipo: "receita" as const, orcamento: 200 },
+  { nome: "Salário", tipo: "receita" as const, orcamento: 5000, gastosAtuais: 0 },
+  { nome: "Freelance", tipo: "receita" as const, orcamento: 1000, gastosAtuais: 0 },
+  { nome: "Renda Extra", tipo: "receita" as const, orcamento: 500, gastosAtuais: 0 },
+  { nome: "Outros Receitas", tipo: "receita" as const, orcamento: 200, gastosAtuais: 0 },
   
   // Categorias de Investimento
-  { nome: "Ações", tipo: "investimento" as const, orcamento: 1000 },
-  { nome: "Fundos", tipo: "investimento" as const, orcamento: 800 },
-  { nome: "Renda Fixa", tipo: "investimento" as const, orcamento: 600 },
-  { nome: "Criptomoedas", tipo: "investimento" as const, orcamento: 300 },
-  { nome: "Imóveis", tipo: "investimento" as const, orcamento: 2000 },
-  { nome: "Outros", tipo: "investimento" as const, orcamento: 500 },
+  { nome: "Ações", tipo: "investimento" as const, orcamento: 1000, gastosAtuais: 0 },
+  { nome: "Fundos", tipo: "investimento" as const, orcamento: 800, gastosAtuais: 0 },
+  { nome: "Renda Fixa", tipo: "investimento" as const, orcamento: 600, gastosAtuais: 0 },
+  { nome: "Criptomoedas", tipo: "investimento" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Imóveis", tipo: "investimento" as const, orcamento: 2000, gastosAtuais: 0 },
+  { nome: "Outros Investimentos", tipo: "investimento" as const, orcamento: 500, gastosAtuais: 0 },
 ];
 
 export const quemGastouOpcoes = [

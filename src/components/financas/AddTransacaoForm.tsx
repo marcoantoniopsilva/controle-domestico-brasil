@@ -72,7 +72,7 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
           <DescriptionInput
             descricao={descricao}
             onDescricaoChange={setDescricao}
-            isObrigatorio={categoria === "Outros"}
+            isObrigatorio={categoria.includes("Outros") || categoria === "Outros"}
             categoria={categoria}
           />
 
