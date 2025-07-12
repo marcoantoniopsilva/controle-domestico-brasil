@@ -11,30 +11,37 @@ export const formatarMoeda = (valor: number): string => {
 };
 
 export const categorias = [
-  // Categorias de Despesa - VERIFICANDO ORÇAMENTOS CORRETOS
-  { nome: "Alimentação", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
-  { nome: "Transporte", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
-  { nome: "Moradia", tipo: "despesa" as const, orcamento: 1200, gastosAtuais: 0 },
-  { nome: "Saúde", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
-  { nome: "Educação", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
-  { nome: "Lazer", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
-  { nome: "Roupas", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
-  { nome: "Serviços", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
-  { nome: "Outros Despesas", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
+  // Categorias de Despesa - Baseadas nos dados reais do banco
+  { nome: "Academia", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
+  { nome: "Aniversário da Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Aplicativos e restaurantes", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
+  { nome: "Casa", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
+  { nome: "Compras da Bruna", tipo: "despesa" as const, orcamento: 400, gastosAtuais: 0 },
+  { nome: "Compras do Marco", tipo: "despesa" as const, orcamento: 400, gastosAtuais: 0 },
+  { nome: "Compras parceladas", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Compras parceladas Bruna", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Compras parceladas Marco", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Despesas fixas no dinheiro", tipo: "despesa" as const, orcamento: 1500, gastosAtuais: 0 },
+  { nome: "Doações", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
+  { nome: "Essence", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Estacionamento", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
+  { nome: "Farmácia", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
+  { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Fraldas Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Gato", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
+  { nome: "Outros", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Saúde", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Serviços de internet", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Supermercado", tipo: "despesa" as const, orcamento: 1000, gastosAtuais: 0 },
+  { nome: "Uber / transporte", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Viagens", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
   
-  // Categorias de Receita
-  { nome: "Salário", tipo: "receita" as const, orcamento: 5000, gastosAtuais: 0 },
-  { nome: "Freelance", tipo: "receita" as const, orcamento: 1000, gastosAtuais: 0 },
-  { nome: "Renda Extra", tipo: "receita" as const, orcamento: 500, gastosAtuais: 0 },
-  { nome: "Outros Receitas", tipo: "receita" as const, orcamento: 200, gastosAtuais: 0 },
-  
-  // Categorias de Investimento
-  { nome: "Ações", tipo: "investimento" as const, orcamento: 1000, gastosAtuais: 0 },
-  { nome: "Fundos", tipo: "investimento" as const, orcamento: 800, gastosAtuais: 0 },
-  { nome: "Renda Fixa", tipo: "investimento" as const, orcamento: 600, gastosAtuais: 0 },
-  { nome: "Criptomoedas", tipo: "investimento" as const, orcamento: 300, gastosAtuais: 0 },
-  { nome: "Imóveis", tipo: "investimento" as const, orcamento: 2000, gastosAtuais: 0 },
-  { nome: "Outros Investimentos", tipo: "investimento" as const, orcamento: 500, gastosAtuais: 0 },
+  // Categorias de Receita - Baseadas nos dados reais do banco
+  { nome: "⅓ de férias", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Outras receitas", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Pagamento mamãe", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Receita Essence", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Salário", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
 ];
 
 // Log para verificar o total dos orçamentos de despesa
