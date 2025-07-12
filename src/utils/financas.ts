@@ -28,14 +28,14 @@ export const categorias = [
   { nome: "Serviços de internet", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
   { nome: "Supermercado", tipo: "despesa" as const, orcamento: 1800, gastosAtuais: 0 },
   
-  // Categorias eventuais (sem atividade no ciclo atual, mas mantidas para planejamento)
-  { nome: "Academia", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Aniversário da Aurora", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Doações", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Saúde", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Uber / transporte", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Viagens", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
+  // Categorias com orçamentos baseados no histórico real
+  { nome: "Academia", tipo: "despesa" as const, orcamento: 160, gastosAtuais: 0 },
+  { nome: "Aniversário da Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Doações", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
+  { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Saúde", tipo: "despesa" as const, orcamento: 700, gastosAtuais: 0 },
+  { nome: "Uber / transporte", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Viagens", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   
   // Categorias de Receita - Baseadas nos dados reais do banco
   { nome: "⅓ de férias", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },

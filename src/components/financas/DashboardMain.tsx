@@ -4,6 +4,7 @@ import { CicloFinanceiro, Usuario, Transacao } from "@/types";
 import { useCiclos } from "@/hooks/useCiclos";
 import DashboardContent from "./DashboardContent";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useParcelasFuturas } from "@/hooks/useParcelasFuturas";
 import { Container } from "@/components/ui/container";
 
 interface DashboardMainProps {
@@ -33,7 +34,15 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   const { ciclosDisponiveis } = useCiclos();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Obter dados do dashboard
+  // Gerar parcelas futuras para o ciclo atual
+  const parcelasFuturas = useParcelasFuturas(transacoes, cicloAtual);
+  
+  // Combinar transações originais com parcelas futuras
+  const todasTransacoes = [...transacoes, ...parcelasFuturas];
+  
+  console.log(`[DashboardMain] Transações originais: ${transacoes.length}, Parcelas futuras: ${parcelasFuturas.length}, Total: ${todasTransacoes.length}`);
+  
+  // Obter dados do dashboard usando todas as transações (originais + parcelas futuras)
   const { 
     transacoesFiltradas,
     categoriasAtualizadas: categorias,
@@ -41,7 +50,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     totalDespesas,
     totalInvestimentos,
     saldo
-  } = useDashboardData(transacoes, cicloAtual);
+  } = useDashboardData(todasTransacoes, cicloAtual);
   
   // Calcular orçamento total corretamente - CORRIGINDO O PROBLEMA DO ORÇAMENTO
   const orcamentoTotal = categorias ? categorias
