@@ -103,13 +103,24 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
       const transacoesDaCategoria = transacoesFiltradas.filter(t => {
         const mesmaCategoria = t.categoria === categoria.nome;
         const mesmoTipo = t.tipo === categoria.tipo;
-        return mesmaCategoria && mesmoTipo;
+        const match = mesmaCategoria && mesmoTipo;
+        
+        // Log detalhado para debug
+        if (categoria.nome === "Supermercado" || categoria.nome === "Casa" || categoria.nome === "Despesas fixas no dinheiro") {
+          console.log(`[useDashboardData] Verificando categoria ${categoria.nome}:`);
+          console.log(`  - Transação: ${t.categoria} (${t.tipo}) = R$ ${t.valor}`);
+          console.log(`  - Match: ${match} (categoria: ${mesmaCategoria}, tipo: ${mesmoTipo})`);
+        }
+        
+        return match;
       });
       
       const gastosAtuais = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
-      if (gastosAtuais > 0) {
+      // Log para todas as categorias com gastos
+      if (gastosAtuais > 0 || categoria.nome === "Supermercado" || categoria.nome === "Casa" || categoria.nome === "Despesas fixas no dinheiro") {
         console.log(`[useDashboardData] Categoria ${categoria.nome} (${categoria.tipo}): R$ ${gastosAtuais} (${transacoesDaCategoria.length} transações)`);
+        console.log(`[useDashboardData] Orçamento da categoria ${categoria.nome}: R$ ${categoria.orcamento}`);
       }
       
       return {
