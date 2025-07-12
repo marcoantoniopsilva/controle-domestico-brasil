@@ -35,9 +35,9 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
         return false;
       }
       
+      // Incluir parcelas futuras no cálculo dos gastos
       if (t.isParcela) {
-        console.log("[useDashboardData] Ignorando parcela projetada:", t.id);
-        return false; // Ignorar parcelas projetadas nas transações originais
+        console.log("[useDashboardData] Incluindo parcela projetada:", t.id, "valor:", t.valor);
       }
       
       // Certifique-se de que a data da transação é um objeto Date válido
