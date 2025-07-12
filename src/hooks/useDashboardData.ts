@@ -26,21 +26,26 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
     inicio.setHours(0, 0, 0, 0);
     fim.setHours(23, 59, 59, 999);
 
-    // Filtrar transações do ciclo atual
+    console.log("[useDashboardData] Período do ciclo:", inicio.toDateString(), "até", fim.toDateString());
+
+    // Filtrar transações do ciclo atual com logs detalhados
     const transacoesFiltradas = transacoes.filter(t => {
       if (!t || !t.data) {
-        console.error("[useDashboardData] Encontrada transação sem data ou inválida");
+        console.error("[useDashboardData] Encontrada transação sem data ou inválida:", t);
         return false;
       }
       
-      if (t.isParcela) return false; // Ignorar parcelas projetadas nas transações originais
+      if (t.isParcela) {
+        console.log("[useDashboardData] Ignorando parcela projetada:", t.id);
+        return false; // Ignorar parcelas projetadas nas transações originais
+      }
       
       // Certifique-se de que a data da transação é um objeto Date válido
       const dataTransacao = t.data instanceof Date ? t.data : new Date(t.data);
       
       if (isNaN(dataTransacao.getTime())) {
-        console.error(`[useDashboardData] Data inválida para transação ${t.id}`);
-        return true; // Include transactions with invalid dates rather than filtering them out
+        console.error(`[useDashboardData] Data inválida para transação ${t.id}:`, t.data);
+        return false; // Excluir transações com datas inválidas
       }
       
       dataTransacao.setHours(0, 0, 0, 0);
@@ -48,33 +53,64 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
       // A transação deve estar estritamente entre o início e fim do ciclo
       const estaNoCiclo = dataTransacao >= inicio && dataTransacao <= fim;
       
+      if (estaNoCiclo) {
+        console.log(`[useDashboardData] ✅ Transação ${t.id} incluída: ${dataTransacao.toDateString()}, categoria: ${t.categoria}, valor: ${t.valor}, tipo: ${t.tipo}`);
+      }
+      
       return estaNoCiclo;
     });
 
     console.log("[useDashboardData] Transações filtradas:", transacoesFiltradas.length);
 
-    // Calcular totais por tipo
-    const totalReceitas = transacoesFiltradas
-      .filter(t => t.tipo === "receita")
-      .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    // Debug: Log das transações filtradas por tipo
+    const transacoesPorTipo = {
+      receita: transacoesFiltradas.filter(t => t.tipo === "receita"),
+      despesa: transacoesFiltradas.filter(t => t.tipo === "despesa"),
+      investimento: transacoesFiltradas.filter(t => t.tipo === "investimento")
+    };
 
-    const totalDespesas = transacoesFiltradas
-      .filter(t => t.tipo === "despesa")
-      .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    console.log("[useDashboardData] Transações por tipo:", {
+      receitas: transacoesPorTipo.receita.length,
+      despesas: transacoesPorTipo.despesa.length,
+      investimentos: transacoesPorTipo.investimento.length
+    });
 
-    const totalInvestimentos = transacoesFiltradas
-      .filter(t => t.tipo === "investimento")
-      .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+    // Calcular totais por tipo com logs detalhados
+    const totalReceitas = transacoesPorTipo.receita.reduce((acc, t) => {
+      const valor = Math.abs(t.valor);
+      console.log(`[useDashboardData] Receita: ${t.categoria} = R$ ${valor}`);
+      return acc + valor;
+    }, 0);
+
+    const totalDespesas = transacoesPorTipo.despesa.reduce((acc, t) => {
+      const valor = Math.abs(t.valor);
+      console.log(`[useDashboardData] Despesa: ${t.categoria} = R$ ${valor}`);
+      return acc + valor;
+    }, 0);
+
+    const totalInvestimentos = transacoesPorTipo.investimento.reduce((acc, t) => {
+      const valor = Math.abs(t.valor);
+      const ganhos = t.ganhos || 0;
+      console.log(`[useDashboardData] Investimento: ${t.categoria} = R$ ${valor}, ganhos: R$ ${ganhos}`);
+      return acc + valor;
+    }, 0);
 
     // Saldo considerando receitas - despesas (investimentos não afetam o saldo diretamente)
     const saldo = totalReceitas - totalDespesas;
 
-    // Atualizar categorias com gastos atuais
+    // Atualizar categorias com gastos atuais - usando filtragem mais rigorosa
     const categoriasAtualizadas = categoriasIniciais.map(categoria => {
-      const transacoesDaCategoria = transacoesFiltradas.filter(t => 
-        t.categoria === categoria.nome && t.tipo === categoria.tipo
-      );
+      const transacoesDaCategoria = transacoesFiltradas.filter(t => {
+        const mesmaCategoria = t.categoria === categoria.nome;
+        const mesmoTipo = t.tipo === categoria.tipo;
+        return mesmaCategoria && mesmoTipo;
+      });
+      
       const gastosAtuais = transacoesDaCategoria.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      
+      if (gastosAtuais > 0) {
+        console.log(`[useDashboardData] Categoria ${categoria.nome} (${categoria.tipo}): R$ ${gastosAtuais} (${transacoesDaCategoria.length} transações)`);
+      }
       
       return {
         ...categoria,

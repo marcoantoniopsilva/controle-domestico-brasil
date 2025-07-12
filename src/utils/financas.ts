@@ -11,7 +11,7 @@ export const formatarMoeda = (valor: number): string => {
 };
 
 export const categorias = [
-  // Categorias de Despesa
+  // Categorias de Despesa - VERIFICANDO ORÇAMENTOS CORRETOS
   { nome: "Alimentação", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
   { nome: "Transporte", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   { nome: "Moradia", tipo: "despesa" as const, orcamento: 1200, gastosAtuais: 0 },
@@ -36,6 +36,14 @@ export const categorias = [
   { nome: "Imóveis", tipo: "investimento" as const, orcamento: 2000, gastosAtuais: 0 },
   { nome: "Outros Investimentos", tipo: "investimento" as const, orcamento: 500, gastosAtuais: 0 },
 ];
+
+// Log para verificar o total dos orçamentos de despesa
+const totalOrcamentoDespesas = categorias
+  .filter(cat => cat.tipo === "despesa")
+  .reduce((acc, cat) => acc + cat.orcamento, 0);
+
+console.log("[financas.ts] TOTAL ORÇAMENTO DESPESAS:", totalOrcamentoDespesas);
+console.log("[financas.ts] Categorias de despesa:", categorias.filter(cat => cat.tipo === "despesa").map(cat => `${cat.nome}: R$ ${cat.orcamento}`));
 
 export const quemGastouOpcoes = [
   { value: "Marco", label: "Marco" },

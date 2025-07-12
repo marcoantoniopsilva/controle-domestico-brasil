@@ -43,18 +43,36 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     saldo
   } = useDashboardData(transacoes, cicloAtual);
   
-  // Calcular orçamento total - corrigir o erro de tipo
+  // Calcular orçamento total corretamente - CORRIGINDO O PROBLEMA DO ORÇAMENTO
   const orcamentoTotal = categorias ? categorias
     .filter(cat => cat.tipo === "despesa")
-    .reduce((acc, cat) => acc + cat.orcamento, 0) : 0;
+    .reduce((acc, cat) => {
+      console.log(`[DashboardMain] Categoria ${cat.nome}: orçamento R$ ${cat.orcamento}`);
+      return acc + (cat.orcamento || 0);
+    }, 0) : 0;
+
+  console.log(`[DashboardMain] ORÇAMENTO TOTAL CALCULADO: R$ ${orcamentoTotal}`);
 
   // Log for debugging
   useEffect(() => {
     console.log('[DashboardMain] Ciclo atual modificado:', cicloAtual?.nome);
     console.log('[DashboardMain] Número total de transações recebidas:', transacoes.length);
     console.log('[DashboardMain] Número de transações filtradas para o ciclo atual:', transacoesFiltradas.length);
+    console.log('[DashboardMain] Total de receitas:', totalReceitas);
+    console.log('[DashboardMain] Total de despesas:', totalDespesas);
     console.log('[DashboardMain] Total de investimentos:', totalInvestimentos);
-  }, [cicloAtual, transacoes, transacoesFiltradas, totalInvestimentos]);
+    console.log('[DashboardMain] Saldo calculado:', saldo);
+    console.log('[DashboardMain] Orçamento total:', orcamentoTotal);
+    
+    // Log das categorias e seus gastos
+    if (categorias) {
+      const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
+      console.log('[DashboardMain] Categorias de despesa e gastos:');
+      categoriasDespesa.forEach(cat => {
+        console.log(`  - ${cat.nome}: orçamento R$ ${cat.orcamento}, gastos R$ ${cat.gastosAtuais || 0}`);
+      });
+    }
+  }, [cicloAtual, transacoes, transacoesFiltradas, totalReceitas, totalDespesas, totalInvestimentos, saldo, orcamentoTotal, categorias]);
 
   return (
     <main className="flex-1 py-8">
