@@ -31,7 +31,9 @@ export function useTransacaoForm({
 
   // Lista de categorias filtradas com base no tipo selecionado
   const categoriasFiltradas = useMemo(() => {
-    return categoriasIniciais.filter((cat) => cat.tipo === tipo);
+    const filtered = categoriasIniciais.filter((cat) => cat.tipo === tipo);
+    console.log("useTransacaoForm - tipo:", tipo, "categorias filtradas:", filtered);
+    return filtered;
   }, [tipo]);
 
   // Limpar o campo categoria quando mudar o tipo

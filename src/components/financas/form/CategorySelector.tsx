@@ -15,19 +15,32 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   onCategoriaChange,
   categoriasFiltradas
 }) => {
+  // Debug log para verificar as categorias
+  console.log("CategorySelector - categoriasFiltradas:", categoriasFiltradas);
+  
   return (
     <div className="w-full space-y-2">
       <Label htmlFor="categoria">Categoria</Label>
       <Select value={categoria} onValueChange={onCategoriaChange}>
-        <SelectTrigger id="categoria">
+        <SelectTrigger id="categoria" className="relative">
           <SelectValue placeholder="Selecione uma categoria" />
         </SelectTrigger>
-        <SelectContent>
-          {categoriasFiltradas.map((cat) => (
-            <SelectItem key={cat.nome} value={cat.nome}>
-              {cat.nome}
+        <SelectContent 
+          position="popper" 
+          side="bottom"
+          className="z-[99999] bg-popover border border-border"
+        >
+          {categoriasFiltradas.length === 0 ? (
+            <SelectItem value="no-options" disabled>
+              Nenhuma categoria encontrada
             </SelectItem>
-          ))}
+          ) : (
+            categoriasFiltradas.map((cat) => (
+              <SelectItem key={cat.nome} value={cat.nome}>
+                {cat.nome}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     </div>
