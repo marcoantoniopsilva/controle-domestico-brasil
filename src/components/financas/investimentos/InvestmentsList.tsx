@@ -89,8 +89,10 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      // Implementar edição se necessário
-                      console.log("Editar investimento:", investimento.id);
+                      if (onEditar) {
+                        const { id, ...transacaoSemId } = investimento;
+                        onEditar(id, transacaoSemId);
+                      }
                     }}
                   >
                     <Edit className="h-4 w-4" />
