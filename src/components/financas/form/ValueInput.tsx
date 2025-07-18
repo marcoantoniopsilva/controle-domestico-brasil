@@ -28,7 +28,9 @@ const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
+    console.log('[ValueInput] Input digitado:', inputValue);
     const valorFormatado = formatarValor(inputValue);
+    console.log('[ValueInput] Valor formatado:', valorFormatado);
     onValorChange(valorFormatado);
   };
 

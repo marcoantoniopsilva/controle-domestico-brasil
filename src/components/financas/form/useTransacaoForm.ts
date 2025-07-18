@@ -90,7 +90,10 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     
     // Converter valor formatado brasileiro de volta para número
     const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    console.log('[useTransacaoForm] Valor original do form:', valor);
+    console.log('[useTransacaoForm] Valor limpo:', valorLimpo);
     const valorNumerico = parseFloat(valorLimpo);
+    console.log('[useTransacaoForm] Valor numérico final:', valorNumerico);
     const parcelasNum = parseInt(parcelas);
     
     console.log(`[useTransacaoForm] Valor original: ${valor}`);
