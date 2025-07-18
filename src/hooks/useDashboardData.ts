@@ -2,13 +2,18 @@
 import { useMemo } from "react";
 import { Transacao, Categoria, CicloFinanceiro } from "@/types";
 import { categorias as categoriasIniciais } from "@/utils/financas";
+import { useCategoryBudgets } from "./useCategoryBudgets";
 
 export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinanceiro) {
+  const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
   const dadosProcessados = useMemo(() => {
+    // Obter categorias com orçamentos personalizados
+    const categoriasComOrcamento = getCategoriesWithCustomBudgets();
+    
     if (!cicloAtual || !transacoes) {
       return {
         transacoesFiltradas: [],
-        categoriasAtualizadas: categoriasIniciais,
+        categoriasAtualizadas: categoriasComOrcamento,
         totalReceitas: 0,
         totalDespesas: 0,
         totalInvestimentos: 0,
@@ -99,7 +104,7 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
     const saldo = totalReceitas - totalDespesas;
 
     // Atualizar categorias com gastos atuais - usando filtragem mais rigorosa
-    const categoriasAtualizadas = categoriasIniciais.map(categoria => {
+    const categoriasAtualizadas = categoriasComOrcamento.map(categoria => {
       const transacoesDaCategoria = transacoesFiltradas.filter(t => {
         const mesmaCategoria = t.categoria === categoria.nome;
         const mesmoTipo = t.tipo === categoria.tipo;
@@ -144,7 +149,7 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
       totalInvestimentos,
       saldo
     };
-  }, [transacoes, cicloAtual]);
+  }, [transacoes, cicloAtual, getCategoriesWithCustomBudgets]);
 
   return dadosProcessados;
 }

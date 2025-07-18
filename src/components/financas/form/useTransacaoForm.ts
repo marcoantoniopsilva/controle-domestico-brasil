@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { categorias } from "@/utils/financas";
 import { Transacao } from "@/types";
+import { useCategoryBudgets } from "@/hooks/useCategoryBudgets";
 
 interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => void;
@@ -11,6 +12,7 @@ interface UseTransacaoFormProps {
 }
 
 export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = false }: UseTransacaoFormProps) {
+  const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
   // Usar data diretamente sem manipulações complexas
   const dataInicial = initialValues?.data || new Date();
   
@@ -37,8 +39,9 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
 
   // Filtramos as categorias com base no tipo selecionado
   const categoriasFiltradas = useMemo(() => {
-    return categorias.filter(cat => cat.tipo === tipo);
-  }, [tipo]);
+    const categoriasAtuais = getCategoriesWithCustomBudgets();
+    return categoriasAtuais.filter(cat => cat.tipo === tipo);
+  }, [tipo, getCategoriesWithCustomBudgets]);
 
   // Resetamos a categoria selecionada quando o tipo muda
   const handleTipoChange = (novoTipo: "despesa" | "receita" | "investimento") => {

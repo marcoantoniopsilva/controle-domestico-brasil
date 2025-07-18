@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      category_budgets: {
+        Row: {
+          categoria_nome: string
+          categoria_tipo: string
+          created_at: string
+          id: string
+          orcamento: number
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          categoria_nome: string
+          categoria_tipo: string
+          created_at?: string
+          id?: string
+          orcamento?: number
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          categoria_nome?: string
+          categoria_tipo?: string
+          created_at?: string
+          id?: string
+          orcamento?: number
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       "Dados planilha": {
         Row: {
           created_at: string

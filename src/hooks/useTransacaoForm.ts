@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Transacao, Categoria } from "@/types";
 import { categorias as categoriasIniciais } from "@/utils/financas";
+import { useCategoryBudgets } from "./useCategoryBudgets";
 
 export interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean> | Promise<void>;
@@ -15,6 +16,7 @@ export function useTransacaoForm({
   initialValues,
   isEditing = false
 }: UseTransacaoFormProps) {
+  const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
   // Estado para todos os campos do formulário
   const [data, setData] = useState<Date>(
     initialValues?.data ? new Date(initialValues.data) : new Date()
@@ -31,10 +33,11 @@ export function useTransacaoForm({
 
   // Lista de categorias filtradas com base no tipo selecionado
   const categoriasFiltradas = useMemo(() => {
-    const filtered = categoriasIniciais.filter((cat) => cat.tipo === tipo);
+    const categoriasAtuais = getCategoriesWithCustomBudgets();
+    const filtered = categoriasAtuais.filter((cat) => cat.tipo === tipo);
     console.log("useTransacaoForm - tipo:", tipo, "categorias filtradas:", filtered);
     return filtered;
-  }, [tipo]);
+  }, [tipo, getCategoriesWithCustomBudgets]);
 
   // Limpar o campo categoria quando mudar o tipo
   const handleTipoChange = useCallback(

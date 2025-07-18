@@ -5,13 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NavBar from "@/components/layout/NavBar";
 import ResumoOrcamento from "@/components/financas/ResumoOrcamento";
 import { categorias, calcularCicloAtual } from "@/utils/financas";
+import { useCategoryBudgets } from "@/hooks/useCategoryBudgets";
+import { useAuth } from "@/hooks/useAuth";
 
 const Home = () => {
+  const { usuario } = useAuth();
+  const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
+  
   // Get the current financial cycle for the demo display
   const cicloAtual = calcularCicloAtual();
   
   // Para a página inicial, definimos um valor demo para totalDespesas
   const totalDespesas = 0; // Valor demonstrativo
+  
+  // Use categorias personalizadas se o usuário estiver logado, senão use as padrão
+  const categoriasParaExibir = usuario ? getCategoriesWithCustomBudgets() : categorias;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -52,7 +60,7 @@ const Home = () => {
                 </CardHeader>
                 <CardContent>
                   <ResumoOrcamento 
-                    categorias={categorias} 
+                    categorias={categoriasParaExibir} 
                     cicloAtual={cicloAtual}
                     totalDespesas={totalDespesas}
                   />
