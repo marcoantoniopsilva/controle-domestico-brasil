@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,29 +8,25 @@ interface ValueInputProps {
 }
 
 const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
-  // Função para formatar o valor como moeda brasileira
-  const formatarValor = (input: string): string => {
-    // Remove tudo exceto números
-    const apenasNumeros = input.replace(/\D/g, '');
-    
-    if (!apenasNumeros) return '';
-    
-    // Converte para número tratando como centavos
-    const valorEmCentavos = parseInt(apenasNumeros, 10);
-    
-    // Formata como moeda brasileira (valor já está em centavos)
-    return (valorEmCentavos / 100).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    console.log('[ValueInput] Input digitado:', inputValue);
-    const valorFormatado = formatarValor(inputValue);
-    console.log('[ValueInput] Valor formatado:', valorFormatado);
-    onValorChange(valorFormatado);
+    let input = e.target.value;
+    
+    // Remove tudo exceto números e vírgula
+    input = input.replace(/[^\d,]/g, '');
+    
+    // Permite apenas uma vírgula
+    const parts = input.split(',');
+    if (parts.length > 2) {
+      input = parts[0] + ',' + parts[1];
+    }
+    
+    // Limita a 2 casas decimais após a vírgula
+    if (parts[1] && parts[1].length > 2) {
+      input = parts[0] + ',' + parts[1].substring(0, 2);
+    }
+    
+    console.log('[ValueInput] Valor digitado:', input);
+    onValorChange(input);
   };
 
   return (
