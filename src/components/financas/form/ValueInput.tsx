@@ -9,19 +9,18 @@ interface ValueInputProps {
 }
 
 const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
-  // Função simplificada para formatar o valor
+  // Função para formatar o valor como moeda brasileira
   const formatarValor = (input: string): string => {
     // Remove tudo exceto números
     const apenasNumeros = input.replace(/\D/g, '');
     
     if (!apenasNumeros) return '';
     
-    // Converte para número (centavos)
+    // Converte para número tratando como centavos
     const valorEmCentavos = parseInt(apenasNumeros, 10);
-    const valorEmReais = valorEmCentavos / 100;
     
-    // Formata como moeda brasileira
-    return valorEmReais.toLocaleString('pt-BR', {
+    // Formata como moeda brasileira (valor já está em centavos)
+    return (valorEmCentavos / 100).toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
