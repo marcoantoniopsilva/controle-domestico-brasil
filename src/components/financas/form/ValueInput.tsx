@@ -9,29 +9,17 @@ interface ValueInputProps {
 }
 
 const ValueInput: React.FC<ValueInputProps> = ({ valor, onValorChange }) => {
-  // Função para formatar o valor permitindo entrada direta em formato brasileiro
+  // Função para formatar o valor como moeda brasileira
   const formatarValor = (input: string): string => {
-    // Se já contém vírgula, assumir que é formato brasileiro (ex: 1281,33)
-    if (input.includes(',')) {
-      // Remove pontos (separadores de milhares) e mantém vírgula
-      const valorLimpo = input.replace(/\./g, '');
-      // Valida se está no formato correto (números, vírgula e 2 casas decimais)
-      const regex = /^\d+,\d{0,2}$/;
-      if (regex.test(valorLimpo)) {
-        const partes = valorLimpo.split(',');
-        const inteiro = parseInt(partes[0], 10);
-        const decimal = partes[1] || '00';
-        const decimalPadded = decimal.padEnd(2, '0');
-        return inteiro.toLocaleString('pt-BR') + ',' + decimalPadded;
-      }
-      return input; // Retorna o input original se não estiver no formato correto
-    }
-    
-    // Se não contém vírgula, tratar como centavos (comportamento atual)
+    // Remove tudo exceto números
     const apenasNumeros = input.replace(/\D/g, '');
+    
     if (!apenasNumeros) return '';
     
+    // Converte para número tratando como centavos
     const valorEmCentavos = parseInt(apenasNumeros, 10);
+    
+    // Formata como moeda brasileira (valor já está em centavos)
     return (valorEmCentavos / 100).toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2

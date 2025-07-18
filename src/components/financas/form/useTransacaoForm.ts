@@ -89,10 +89,13 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     setIsSubmitting(true);
     
     // Converter valor formatado brasileiro de volta para número
-    const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    // Para valores formatados como "1.281,33", precisamos processar corretamente
+    const valorSemSeparadorMilhar = valor.replace(/\./g, ''); // Remove pontos separadores de milhares
+    const valorComPontoDecimal = valorSemSeparadorMilhar.replace(',', '.'); // Converte vírgula para ponto
     console.log('[useTransacaoForm] Valor original do form:', valor);
-    console.log('[useTransacaoForm] Valor limpo:', valorLimpo);
-    const valorNumerico = parseFloat(valorLimpo);
+    console.log('[useTransacaoForm] Sem separador:', valorSemSeparadorMilhar);
+    console.log('[useTransacaoForm] Com ponto decimal:', valorComPontoDecimal);
+    const valorNumerico = parseFloat(valorComPontoDecimal);
     console.log('[useTransacaoForm] Valor numérico final:', valorNumerico);
     const parcelasNum = parseInt(parcelas);
     
