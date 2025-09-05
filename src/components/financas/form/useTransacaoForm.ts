@@ -88,8 +88,9 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     
     setIsSubmitting(true);
     
-    // Converter valor brasileiro (1281,33) para número
-    const valorNumerico = parseFloat(valor.replace(',', '.'));
+    // Converter valor brasileiro para número (mesma lógica da validação)
+    const valorLimpo = valor.replace(/\./g, '').replace(',', '.');
+    const valorNumerico = parseFloat(valorLimpo);
     console.log('[useTransacaoForm] Valor original:', valor);
     console.log('[useTransacaoForm] Valor convertido:', valorNumerico);
     const parcelasNum = parseInt(parcelas);
