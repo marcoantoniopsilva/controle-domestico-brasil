@@ -7,13 +7,121 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      auto_search_results: {
+        Row: {
+          address: string
+          area: number
+          bathrooms: number
+          bedrooms: number
+          condo: number
+          created_at: string
+          fire_insurance: number
+          id: string
+          images: string[] | null
+          iptu: number
+          is_extracted: boolean
+          other_fees: number
+          parking_spaces: number
+          rent: number
+          search_criteria: Json
+          search_query: string
+          source_url: string
+          title: string
+          total_monthly_cost: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          area: number
+          bathrooms?: number
+          bedrooms?: number
+          condo?: number
+          created_at?: string
+          fire_insurance?: number
+          id?: string
+          images?: string[] | null
+          iptu?: number
+          is_extracted?: boolean
+          other_fees?: number
+          parking_spaces?: number
+          rent: number
+          search_criteria?: Json
+          search_query: string
+          source_url: string
+          title: string
+          total_monthly_cost: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          area?: number
+          bathrooms?: number
+          bedrooms?: number
+          condo?: number
+          created_at?: string
+          fire_insurance?: number
+          id?: string
+          images?: string[] | null
+          iptu?: number
+          is_extracted?: boolean
+          other_fees?: number
+          parking_spaces?: number
+          rent?: number
+          search_criteria?: Json
+          search_query?: string
+          source_url?: string
+          title?: string
+          total_monthly_cost?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bot_config: {
+        Row: {
+          bot_name: string
+          company_name: string
+          created_at: string
+          fallback_message: string
+          id: string
+          openai_api_key: string | null
+          updated_at: string
+          user_id: string
+          welcome_message: string
+        }
+        Insert: {
+          bot_name?: string
+          company_name?: string
+          created_at?: string
+          fallback_message?: string
+          id?: string
+          openai_api_key?: string | null
+          updated_at?: string
+          user_id: string
+          welcome_message?: string
+        }
+        Update: {
+          bot_name?: string
+          company_name?: string
+          created_at?: string
+          fallback_message?: string
+          id?: string
+          openai_api_key?: string | null
+          updated_at?: string
+          user_id?: string
+          welcome_message?: string
+        }
+        Relationships: []
+      }
       category_budgets: {
         Row: {
           categoria_nome: string
@@ -44,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_time: string
+          phone_number: string
+          user_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_time?: string
+          phone_number: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_time?: string
+          phone_number?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       "Dados planilha": {
         Row: {
           created_at: string
@@ -56,6 +194,36 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      keywords: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string
+          response: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword: string
+          response: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string
+          response?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -101,31 +269,57 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          is_from_bot: boolean
+          message_text: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_from_bot?: boolean
+          message_text: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_from_bot?: boolean
+          message_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       properties: {
         Row: {
-          accessibility_score: number
           address: string
           area: number
           bathrooms: number
           bedrooms: number
           condo: number
-          condo_score: number
           created_at: string
           final_score: number
-          finishing_score: number
           fire_insurance: number
           floor: string | null
-          furniture_score: number
           id: string
           images: string[] | null
-          internal_space_score: number
           iptu: number
-          location_score: number
           location_summary: string | null
           other_fees: number
           parking_spaces: number
-          price_score: number
           rent: number
+          scores: Json
           source_url: string | null
           title: string
           total_monthly_cost: number
@@ -133,29 +327,23 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          accessibility_score?: number
           address: string
           area: number
           bathrooms?: number
           bedrooms?: number
           condo?: number
-          condo_score?: number
           created_at?: string
           final_score?: number
-          finishing_score?: number
           fire_insurance?: number
           floor?: string | null
-          furniture_score?: number
           id?: string
           images?: string[] | null
-          internal_space_score?: number
           iptu?: number
-          location_score?: number
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number
-          price_score?: number
           rent: number
+          scores?: Json
           source_url?: string | null
           title: string
           total_monthly_cost: number
@@ -163,32 +351,239 @@ export type Database = {
           user_id: string
         }
         Update: {
-          accessibility_score?: number
           address?: string
           area?: number
           bathrooms?: number
           bedrooms?: number
           condo?: number
-          condo_score?: number
           created_at?: string
           final_score?: number
-          finishing_score?: number
           fire_insurance?: number
           floor?: string | null
-          furniture_score?: number
           id?: string
           images?: string[] | null
-          internal_space_score?: number
           iptu?: number
-          location_score?: number
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number
-          price_score?: number
           rent?: number
+          scores?: Json
           source_url?: string | null
           title?: string
           total_monthly_cost?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_addresses: {
+        Row: {
+          address: string
+          cep: string | null
+          created_at: string
+          custom_label: string | null
+          id: string
+          label: string
+          latitude: number | null
+          longitude: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          cep?: string | null
+          created_at?: string
+          custom_label?: string | null
+          id?: string
+          label: string
+          latitude?: number | null
+          longitude?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          cep?: string | null
+          created_at?: string
+          custom_label?: string | null
+          id?: string
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_criteria_preferences: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          criterio_nome: string
+          id: string
+          peso: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          criterio_nome: string
+          id?: string
+          peso?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          criterio_nome?: string
+          id?: string
+          peso?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          faixa_preco: string | null
+          id: string
+          intencao: string | null
+          objetivo_principal: string
+          objetivo_principal_multi: string[] | null
+          phone: string | null
+          profile_type: string
+          regiao_referencia: string | null
+          situacao_moradia: string
+          situacao_moradia_multi: string[] | null
+          updated_at: string
+          user_id: string
+          valor_principal: string
+          valor_principal_multi: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          faixa_preco?: string | null
+          id?: string
+          intencao?: string | null
+          objetivo_principal: string
+          objetivo_principal_multi?: string[] | null
+          phone?: string | null
+          profile_type: string
+          regiao_referencia?: string | null
+          situacao_moradia: string
+          situacao_moradia_multi?: string[] | null
+          updated_at?: string
+          user_id: string
+          valor_principal: string
+          valor_principal_multi?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          faixa_preco?: string | null
+          id?: string
+          intencao?: string | null
+          objetivo_principal?: string
+          objetivo_principal_multi?: string[] | null
+          phone?: string | null
+          profile_type?: string
+          regiao_referencia?: string | null
+          situacao_moradia?: string
+          situacao_moradia_multi?: string[] | null
+          updated_at?: string
+          user_id?: string
+          valor_principal?: string
+          valor_principal_multi?: string[] | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waha_config: {
+        Row: {
+          api_token: string
+          api_url: string
+          created_at: string
+          id: string
+          instance_id: string
+          phone_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_token: string
+          api_url: string
+          created_at?: string
+          id?: string
+          instance_id: string
+          phone_number?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_token?: string
+          api_url?: string
+          created_at?: string
+          id?: string
+          instance_id?: string
+          phone_number?: string
           updated_at?: string
           user_id?: string
         }
@@ -199,10 +594,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -329,6 +730,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
