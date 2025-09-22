@@ -30,7 +30,7 @@ export const categorias = [
   
   // Categorias com orçamentos baseados no histórico real
   { nome: "Academia", tipo: "despesa" as const, orcamento: 160, gastosAtuais: 0 },
-  { nome: "Aniversário da Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Presentes/roupas Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   { nome: "Doações", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
   { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
   { nome: "Saúde", tipo: "despesa" as const, orcamento: 700, gastosAtuais: 0 },
