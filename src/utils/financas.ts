@@ -12,7 +12,7 @@ export const formatarMoeda = (valor: number): string => {
 
 export const categorias = [
   // Categorias de Despesa - Apenas categorias com atividade no ciclo atual
-  { nome: "Aplicativos e restaurantes", tipo: "despesa" as const, orcamento: 400, gastosAtuais: 0 },
+  { nome: "Aplicativos e restaurantes", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
   { nome: "Casa", tipo: "despesa" as const, orcamento: 1000, gastosAtuais: 0 },
   { nome: "Compras da Bruna", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
   { nome: "Compras do Marco", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
@@ -26,15 +26,15 @@ export const categorias = [
   { nome: "Gato", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
   { nome: "Outros", tipo: "despesa" as const, orcamento: 350, gastosAtuais: 0 },
   { nome: "Serviços de internet", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
-  { nome: "Supermercado", tipo: "despesa" as const, orcamento: 1800, gastosAtuais: 0 },
+  { nome: "Supermercado", tipo: "despesa" as const, orcamento: 2300, gastosAtuais: 0 },
   
   // Categorias com orçamentos baseados no histórico real
   { nome: "Academia", tipo: "despesa" as const, orcamento: 160, gastosAtuais: 0 },
   { nome: "Presentes/roupas Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   { nome: "Doações", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
   { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
-  { nome: "Saúde", tipo: "despesa" as const, orcamento: 700, gastosAtuais: 0 },
-  { nome: "Uber / transporte", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Saúde", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
+  { nome: "Seguro, Carro e Uber", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
   { nome: "Viagens", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   
   // Categorias de Receita - Baseadas nos dados reais do banco
