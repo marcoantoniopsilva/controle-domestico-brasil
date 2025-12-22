@@ -12,6 +12,12 @@ import TransactionDetailModal from "../GraficoComparativo/TransactionDetailModal
 import InvestmentSummaryCards from "../investimentos/InvestmentSummaryCards";
 import InvestmentEvolutionChart from "../investimentos/InvestmentEvolutionChart";
 import InvestmentsList from "../investimentos/InvestmentsList";
+import PrevisaoFechamentoCiclo from "../relatorios/PrevisaoFechamentoCiclo";
+import RelatorioParcelamentos from "../relatorios/RelatorioParcelamentos";
+import TendenciasInsights from "../relatorios/TendenciasInsights";
+import RelatorioEconomia from "../relatorios/RelatorioEconomia";
+import ReceitasDespesas from "../relatorios/ReceitasDespesas";
+import AnaliseRecorrencias from "../relatorios/AnaliseRecorrencias";
 import { useTransactionsByCategory } from "@/hooks/useTransactionsByCategory";
 
 interface DashboardTabsProps {
@@ -101,6 +107,7 @@ const DashboardTabs = ({
           <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
+          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-4">
@@ -183,6 +190,40 @@ const DashboardTabs = ({
             transacoes={transacoes} 
             ciclo={cicloAtual} 
             orcamentoTotal={orcamentoTotal}
+          />
+        </TabsContent>
+
+        <TabsContent value="relatorios" className="space-y-6">
+          <PrevisaoFechamentoCiclo
+            transacoes={transacoes}
+            cicloAtual={cicloAtual}
+            orcamentoTotal={orcamentoTotal}
+          />
+          
+          <ReceitasDespesas
+            transacoes={transacoes}
+            cicloAtual={cicloAtual}
+          />
+          
+          <RelatorioEconomia
+            transacoes={transacoes}
+            categorias={categorias}
+            cicloAtual={cicloAtual}
+            orcamentoTotal={orcamentoTotal}
+          />
+          
+          <TendenciasInsights
+            transacoes={transacoesOriginais || transacoes}
+            categorias={categorias}
+            cicloAtual={cicloAtual}
+          />
+          
+          <RelatorioParcelamentos
+            transacoes={transacoesOriginais || transacoes}
+          />
+          
+          <AnaliseRecorrencias
+            transacoes={transacoesOriginais || transacoes}
           />
         </TabsContent>
       </Tabs>
