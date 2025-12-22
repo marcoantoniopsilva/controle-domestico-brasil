@@ -32,6 +32,12 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
     console.log("[ListaTransacoes] Recebidas transações:", transacoes?.length || 0);
   }, [transacoes]);
   
+  // Função para converter string YYYY-MM-DD em Date local (evita problema de timezone)
+  const parseDataLocal = (dataString: string): Date => {
+    const [ano, mes, dia] = dataString.split('-').map(Number);
+    return new Date(ano, mes - 1, dia);
+  };
+
   // Agrupar transações por data
   const transacoesAgrupadas: TransacaoPorData[] = React.useMemo(() => {
     if (!Array.isArray(transacoes) || transacoes.length === 0) {
@@ -81,7 +87,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
         data, 
         transacoes 
       }))
-      .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+      .sort((a, b) => parseDataLocal(b.data).getTime() - parseDataLocal(a.data).getTime());
     
     console.log("[ListaTransacoes] Agrupamento concluído:", resultado.length, "grupos de data");
     return resultado;
@@ -137,7 +143,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
         transacoesAgrupadas.map(grupo => (
           <div key={grupo.data} className="mb-4">
             <div className="bg-slate-100 p-3 font-medium text-slate-800">
-              {format(new Date(grupo.data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              {format(parseDataLocal(grupo.data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </div>
             
             <Table>
