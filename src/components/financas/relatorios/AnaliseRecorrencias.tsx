@@ -60,7 +60,7 @@ const AnaliseRecorrencias = ({ transacoes }: AnaliseRecorrenciasProps) => {
       return mesesUnicos.size >= 2; // Aparece em pelo menos 2 meses
     })
     .map(grupo => {
-      const valores = grupo.transacoes.map(t => t.valor);
+      const valores = grupo.transacoes.map(t => Math.abs(t.valor));
       const valorMedio = valores.reduce((a, b) => a + b, 0) / valores.length;
       
       // Calcular meses consecutivos
@@ -92,7 +92,7 @@ const AnaliseRecorrencias = ({ transacoes }: AnaliseRecorrenciasProps) => {
 
   // Calcular totais
   const totalRecorrente = despesasRecorrentes.reduce((acc, d) => acc + d.valorMedio, 0);
-  const totalDespesas = despesas.reduce((acc, t) => acc + t.valor, 0) / 6; // Média mensal
+  const totalDespesas = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0) / 6; // Média mensal
   const percentualRecorrente = totalDespesas > 0 ? (totalRecorrente / totalDespesas) * 100 : 0;
 
   // Identificar categorias com mais recorrências
