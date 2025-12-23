@@ -22,27 +22,28 @@ const ReceitasDespesas = ({
   const despesas = transacoes.filter(t => t.tipo === "despesa");
   const investimentos = transacoes.filter(t => t.tipo === "investimento");
 
-  const totalReceitas = receitas.reduce((acc, t) => acc + t.valor, 0);
-  const totalDespesas = despesas.reduce((acc, t) => acc + t.valor, 0);
-  const totalInvestimentos = investimentos.reduce((acc, t) => acc + t.valor, 0);
+  // Usar Math.abs() para garantir valores positivos (despesas são armazenadas como negativos)
+  const totalReceitas = receitas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  const totalDespesas = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  const totalInvestimentos = investimentos.reduce((acc, t) => acc + Math.abs(t.valor), 0);
   
   const saldoLiquido = totalReceitas - totalDespesas - totalInvestimentos;
   const taxaPoupanca = totalReceitas > 0 ? ((totalReceitas - totalDespesas) / totalReceitas) * 100 : 0;
 
-  // Agrupar por categoria
+  // Agrupar por categoria (com Math.abs para valores positivos)
   const receitasPorCategoria = receitas.reduce((acc, t) => {
     if (!acc[t.categoria]) acc[t.categoria] = 0;
-    acc[t.categoria] += t.valor;
+    acc[t.categoria] += Math.abs(t.valor);
     return acc;
   }, {} as Record<string, number>);
 
   const despesasPorCategoria = despesas.reduce((acc, t) => {
     if (!acc[t.categoria]) acc[t.categoria] = 0;
-    acc[t.categoria] += t.valor;
+    acc[t.categoria] += Math.abs(t.valor);
     return acc;
   }, {} as Record<string, number>);
 
-  // Ordenar categorias por valor
+  // Ordenar categorias por valor (maior para menor)
   const topReceitas = Object.entries(receitasPorCategoria)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
