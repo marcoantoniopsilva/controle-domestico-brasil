@@ -55,11 +55,11 @@ const TendenciasInsights = ({
     .map(cat => {
       const gastoAtual = transacoesCicloAtual
         .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + t.valor, 0);
+        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
       const gastoAnterior = transacoesCicloAnterior
         .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + t.valor, 0);
+        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
       const variacao = gastoAtual - gastoAnterior;
       const variacaoPercentual = gastoAnterior > 0 
@@ -83,8 +83,8 @@ const TendenciasInsights = ({
     .sort((a, b) => Math.abs(b.variacaoPercentual) - Math.abs(a.variacaoPercentual));
 
   // Estatísticas gerais
-  const totalAtual = transacoesCicloAtual.reduce((acc, t) => acc + t.valor, 0);
-  const totalAnterior = transacoesCicloAnterior.reduce((acc, t) => acc + t.valor, 0);
+  const totalAtual = transacoesCicloAtual.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  const totalAnterior = transacoesCicloAnterior.reduce((acc, t) => acc + Math.abs(t.valor), 0);
   const variacaoTotal = totalAtual - totalAnterior;
   const variacaoTotalPercentual = totalAnterior > 0 
     ? ((totalAtual - totalAnterior) / totalAnterior) * 100 

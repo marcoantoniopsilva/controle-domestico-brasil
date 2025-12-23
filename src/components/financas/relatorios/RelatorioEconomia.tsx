@@ -30,7 +30,7 @@ const RelatorioEconomia = ({
 }: RelatorioEconomiaProps) => {
   // Filtrar apenas despesas do ciclo atual
   const despesas = transacoes.filter(t => t.tipo === "despesa");
-  const totalGasto = despesas.reduce((acc, t) => acc + t.valor, 0);
+  const totalGasto = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
   
   // Calcular economia/estouro geral
   const economiaGeral = orcamentoTotal - totalGasto;
@@ -43,7 +43,7 @@ const RelatorioEconomia = ({
     .map(cat => {
       const gasto = despesas
         .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + t.valor, 0);
+        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
       
       const economia = cat.orcamento - gasto;
       const percentualUsado = cat.orcamento > 0 ? (gasto / cat.orcamento) * 100 : 0;

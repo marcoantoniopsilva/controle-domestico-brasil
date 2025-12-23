@@ -28,7 +28,7 @@ const PrevisaoFechamentoCiclo = ({
   
   // Calcular gastos atuais (apenas despesas)
   const despesas = transacoes.filter(t => t.tipo === "despesa");
-  const totalGastoAtual = despesas.reduce((acc, t) => acc + t.valor, 0);
+  const totalGastoAtual = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
   
   // Calcular média diária atual
   const mediaDiariaAtual = diasPassados > 0 ? totalGastoAtual / diasPassados : 0;
