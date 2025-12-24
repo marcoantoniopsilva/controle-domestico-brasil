@@ -53,6 +53,9 @@ const NavBar = () => {
               <Link to="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
+              <Link to="/simulador">
+                <Button variant="ghost">Simulador 2026</Button>
+              </Link>
               <Button onClick={handleLogout} variant="outline">
                 Sair
               </Button>
