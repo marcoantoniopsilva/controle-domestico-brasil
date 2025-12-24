@@ -1,4 +1,4 @@
-
+// Utilitários para cálculo de ciclos financeiros
 import { format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Transacao } from "@/types";
