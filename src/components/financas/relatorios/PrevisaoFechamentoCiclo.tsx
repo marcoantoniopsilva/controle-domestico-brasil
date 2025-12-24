@@ -2,8 +2,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Transacao, CicloFinanceiro, Categoria } from "@/types";
+import { Transacao, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { filtrarPorTipo, somarTransacoes } from "@/utils/calculosFinanceiros";
 import { differenceInDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, AlertTriangle, Target, Calendar, Wallet } from "lucide-react";
@@ -26,9 +27,9 @@ const PrevisaoFechamentoCiclo = ({
   const diasPassados = Math.max(0, differenceInDays(hoje, cicloAtual.inicio) + 1);
   const diasRestantes = Math.max(0, differenceInDays(cicloAtual.fim, hoje));
   
-  // Calcular gastos atuais (apenas despesas)
-  const despesas = transacoes.filter(t => t.tipo === "despesa");
-  const totalGastoAtual = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  // Calcular gastos atuais usando função centralizada
+  const despesas = filtrarPorTipo(transacoes, "despesa");
+  const totalGastoAtual = somarTransacoes(despesas);
   
   // Calcular média diária atual
   const mediaDiariaAtual = diasPassados > 0 ? totalGastoAtual / diasPassados : 0;
@@ -48,8 +49,6 @@ const PrevisaoFechamentoCiclo = ({
   
   // Status do ciclo
   const getStatus = () => {
-    const percentualDias = (diasPassados / totalDiasCiclo) * 100;
-    
     if (projecaoGastos <= orcamentoTotal * 0.9) {
       return { 
         tipo: "success", 

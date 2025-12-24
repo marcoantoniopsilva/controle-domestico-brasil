@@ -3,10 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Transacao, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import {
+  filtrarPorTipo,
+  calcularTotalReceitas,
+  calcularTotalDespesas,
+  calcularTotalInvestimentos,
+  calcularTaxaPoupanca,
+  topCategorias
+} from "@/utils/calculosFinanceiros";
 import { ArrowDownUp, ArrowUpCircle, ArrowDownCircle, Wallet, TrendingUp, TrendingDown } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface ReceitasDespesasProps {
   transacoes: Transacao[];
@@ -17,40 +23,16 @@ const ReceitasDespesas = ({
   transacoes,
   cicloAtual
 }: ReceitasDespesasProps) => {
-  // Separar receitas e despesas
-  const receitas = transacoes.filter(t => t.tipo === "receita");
-  const despesas = transacoes.filter(t => t.tipo === "despesa");
-  const investimentos = transacoes.filter(t => t.tipo === "investimento");
-
-  // Usar Math.abs() para garantir valores positivos (despesas são armazenadas como negativos)
-  const totalReceitas = receitas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-  const totalDespesas = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-  const totalInvestimentos = investimentos.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-  
+  // Usar funções centralizadas para cálculos
+  const totalReceitas = calcularTotalReceitas(transacoes);
+  const totalDespesas = calcularTotalDespesas(transacoes);
+  const totalInvestimentos = calcularTotalInvestimentos(transacoes);
   const saldoLiquido = totalReceitas - totalDespesas - totalInvestimentos;
-  const taxaPoupanca = totalReceitas > 0 ? ((totalReceitas - totalDespesas) / totalReceitas) * 100 : 0;
+  const taxaPoupanca = calcularTaxaPoupanca(transacoes);
 
-  // Agrupar por categoria (com Math.abs para valores positivos)
-  const receitasPorCategoria = receitas.reduce((acc, t) => {
-    if (!acc[t.categoria]) acc[t.categoria] = 0;
-    acc[t.categoria] += Math.abs(t.valor);
-    return acc;
-  }, {} as Record<string, number>);
-
-  const despesasPorCategoria = despesas.reduce((acc, t) => {
-    if (!acc[t.categoria]) acc[t.categoria] = 0;
-    acc[t.categoria] += Math.abs(t.valor);
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Ordenar categorias por valor (maior para menor)
-  const topReceitas = Object.entries(receitasPorCategoria)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  const topDespesas = Object.entries(despesasPorCategoria)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  // Usar função centralizada para top categorias
+  const topReceitas = topCategorias(transacoes, "receita", 5);
+  const topDespesas = topCategorias(transacoes, "despesa", 5);
 
   // Dados para o gráfico
   const dadosGrafico = [
@@ -163,10 +145,10 @@ const ReceitasDespesas = ({
               <div className="text-sm text-muted-foreground p-3">Nenhuma receita neste ciclo</div>
             ) : (
               <div className="space-y-2">
-                {topReceitas.map(([categoria, valor]) => (
-                  <div key={categoria} className="flex justify-between items-center p-3 rounded-lg bg-green-50 border border-green-100">
-                    <span className="text-sm">{categoria}</span>
-                    <span className="font-medium text-green-600">{formatarMoeda(valor)}</span>
+                {topReceitas.map((item) => (
+                  <div key={item.categoria} className="flex justify-between items-center p-3 rounded-lg bg-green-50 border border-green-100">
+                    <span className="text-sm">{item.categoria}</span>
+                    <span className="font-medium text-green-600">{formatarMoeda(item.total)}</span>
                   </div>
                 ))}
               </div>
@@ -183,10 +165,10 @@ const ReceitasDespesas = ({
               <div className="text-sm text-muted-foreground p-3">Nenhuma despesa neste ciclo</div>
             ) : (
               <div className="space-y-2">
-                {topDespesas.map(([categoria, valor]) => (
-                  <div key={categoria} className="flex justify-between items-center p-3 rounded-lg bg-red-50 border border-red-100">
-                    <span className="text-sm">{categoria}</span>
-                    <span className="font-medium text-red-600">{formatarMoeda(valor)}</span>
+                {topDespesas.map((item) => (
+                  <div key={item.categoria} className="flex justify-between items-center p-3 rounded-lg bg-red-50 border border-red-100">
+                    <span className="text-sm">{item.categoria}</span>
+                    <span className="font-medium text-red-600">{formatarMoeda(item.total)}</span>
                   </div>
                 ))}
               </div>
