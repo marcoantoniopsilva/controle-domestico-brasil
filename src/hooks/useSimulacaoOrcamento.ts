@@ -1,3 +1,4 @@
+// Hook para gerenciamento de simulação de orçamento anual
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
