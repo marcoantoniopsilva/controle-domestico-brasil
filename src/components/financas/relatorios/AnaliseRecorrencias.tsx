@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Transacao } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { valorAbsoluto, filtrarPorTipo, somarTransacoes } from "@/utils/calculosFinanceiros";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RefreshCw, Calendar, TrendingUp, AlertCircle } from "lucide-react";
@@ -50,17 +51,18 @@ const AnaliseRecorrencias = ({ transacoes }: AnaliseRecorrenciasProps) => {
     return acc;
   }, {} as Record<string, { descricao: string; categoria: string; transacoes: Transacao[] }>);
 
-  // Identificar despesas recorrentes (aparecem em pelo menos 3 meses diferentes)
+  // Identificar despesas recorrentes (aparecem em pelo menos 2 meses diferentes)
   const despesasRecorrentes: DespesaRecorrente[] = Object.values(gruposDescricao)
     .filter(grupo => {
       // Verificar quantos meses diferentes aparecem
       const mesesUnicos = new Set(
         grupo.transacoes.map(t => format(new Date(t.data), "yyyy-MM"))
       );
-      return mesesUnicos.size >= 2; // Aparece em pelo menos 2 meses
+      return mesesUnicos.size >= 2;
     })
     .map(grupo => {
-      const valores = grupo.transacoes.map(t => Math.abs(t.valor));
+      // Usar função centralizada para valores absolutos
+      const valores = grupo.transacoes.map(t => valorAbsoluto(t));
       const valorMedio = valores.reduce((a, b) => a + b, 0) / valores.length;
       
       // Calcular meses consecutivos
@@ -90,9 +92,9 @@ const AnaliseRecorrencias = ({ transacoes }: AnaliseRecorrenciasProps) => {
     })
     .sort((a, b) => b.valorMedio - a.valorMedio);
 
-  // Calcular totais
+  // Calcular totais usando função centralizada
   const totalRecorrente = despesasRecorrentes.reduce((acc, d) => acc + d.valorMedio, 0);
-  const totalDespesas = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0) / 6; // Média mensal
+  const totalDespesas = somarTransacoes(despesas) / 6; // Média mensal
   const percentualRecorrente = totalDespesas > 0 ? (totalRecorrente / totalDespesas) * 100 : 0;
 
   // Identificar categorias com mais recorrências

@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Transacao, CicloFinanceiro, Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import {
+  filtrarPorTipo,
+  filtrarPorCategoria,
+  somarTransacoes,
+  calcularEconomiaPorCategoria
+} from "@/utils/calculosFinanceiros";
 import { PiggyBank, TrendingDown, Award, Target, CheckCircle, XCircle } from "lucide-react";
 
 interface RelatorioEconomiaProps {
@@ -28,9 +34,9 @@ const RelatorioEconomia = ({
   cicloAtual,
   orcamentoTotal
 }: RelatorioEconomiaProps) => {
-  // Filtrar apenas despesas do ciclo atual
-  const despesas = transacoes.filter(t => t.tipo === "despesa");
-  const totalGasto = despesas.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  // Usar funções centralizadas
+  const despesas = filtrarPorTipo(transacoes, "despesa");
+  const totalGasto = somarTransacoes(despesas);
   
   // Calcular economia/estouro geral
   const economiaGeral = orcamentoTotal - totalGasto;
@@ -41,9 +47,8 @@ const RelatorioEconomia = ({
   
   const economiasPorCategoria: EconomiaCategoria[] = categoriasDespesa
     .map(cat => {
-      const gasto = despesas
-        .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      const transacoesDaCategoria = despesas.filter(t => t.categoria === cat.nome);
+      const gasto = somarTransacoes(transacoesDaCategoria);
       
       const economia = cat.orcamento - gasto;
       const percentualUsado = cat.orcamento > 0 ? (gasto / cat.orcamento) * 100 : 0;

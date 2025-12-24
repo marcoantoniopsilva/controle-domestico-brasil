@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Transacao } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { valorAbsoluto, valorTotalParcelado, valorParcela } from "@/utils/calculosFinanceiros";
 import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CreditCard, Calendar, TrendingUp, Clock } from "lucide-react";
@@ -45,8 +46,8 @@ const RelatorioParcelamentos = ({ transacoes }: RelatorioParcelamentosProps) => 
         id: t.id,
         descricao: t.descricao || t.categoria,
         categoria: t.categoria,
-        valorTotal: Math.abs(t.valor) * t.parcelas,
-        valorParcela: Math.abs(t.valor),
+        valorTotal: valorTotalParcelado(t),
+        valorParcela: valorParcela(t),
         parcelasTotal: t.parcelas,
         parcelaAtual,
         parcelasRestantes,

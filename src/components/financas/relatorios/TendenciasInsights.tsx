@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Transacao, CicloFinanceiro, Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import {
+  filtrarPorTipo,
+  filtrarPorCiclo,
+  filtrarPorCategoria,
+  somarTransacoes,
+  calcularVariacaoPercentual
+} from "@/utils/calculosFinanceiros";
 import { format, subMonths, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, TrendingDown, Minus, Lightbulb, ArrowUp, ArrowDown } from "lucide-react";
@@ -48,23 +55,19 @@ const TendenciasInsights = ({
     });
   });
 
-  // Calcular tendências por categoria
+  // Calcular tendências por categoria usando funções centralizadas
   const categoriasDespesa = categorias.filter(c => c.tipo === "despesa");
   
   const tendencias: TendenciaCategoria[] = categoriasDespesa
     .map(cat => {
-      const gastoAtual = transacoesCicloAtual
-        .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      const transacoesAtualCategoria = transacoesCicloAtual.filter(t => t.categoria === cat.nome);
+      const transacoesAnteriorCategoria = transacoesCicloAnterior.filter(t => t.categoria === cat.nome);
       
-      const gastoAnterior = transacoesCicloAnterior
-        .filter(t => t.categoria === cat.nome)
-        .reduce((acc, t) => acc + Math.abs(t.valor), 0);
+      const gastoAtual = somarTransacoes(transacoesAtualCategoria);
+      const gastoAnterior = somarTransacoes(transacoesAnteriorCategoria);
       
       const variacao = gastoAtual - gastoAnterior;
-      const variacaoPercentual = gastoAnterior > 0 
-        ? ((gastoAtual - gastoAnterior) / gastoAnterior) * 100 
-        : gastoAtual > 0 ? 100 : 0;
+      const variacaoPercentual = calcularVariacaoPercentual(gastoAtual, gastoAnterior);
       
       let tendencia: "up" | "down" | "stable" = "stable";
       if (variacaoPercentual > 10) tendencia = "up";
@@ -82,13 +85,11 @@ const TendenciasInsights = ({
     .filter(t => t.gastoAtual > 0 || t.gastoAnterior > 0)
     .sort((a, b) => Math.abs(b.variacaoPercentual) - Math.abs(a.variacaoPercentual));
 
-  // Estatísticas gerais
-  const totalAtual = transacoesCicloAtual.reduce((acc, t) => acc + Math.abs(t.valor), 0);
-  const totalAnterior = transacoesCicloAnterior.reduce((acc, t) => acc + Math.abs(t.valor), 0);
+  // Estatísticas gerais usando funções centralizadas
+  const totalAtual = somarTransacoes(transacoesCicloAtual);
+  const totalAnterior = somarTransacoes(transacoesCicloAnterior);
   const variacaoTotal = totalAtual - totalAnterior;
-  const variacaoTotalPercentual = totalAnterior > 0 
-    ? ((totalAtual - totalAnterior) / totalAnterior) * 100 
-    : 0;
+  const variacaoTotalPercentual = calcularVariacaoPercentual(totalAtual, totalAnterior);
 
   // Categorias que mais aumentaram e reduziram
   const maioresAumentos = tendencias.filter(t => t.tendencia === "up").slice(0, 3);
