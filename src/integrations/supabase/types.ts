@@ -93,7 +93,6 @@ export type Database = {
           created_at: string
           fallback_message: string
           id: string
-          openai_api_key: string | null
           updated_at: string
           user_id: string
           welcome_message: string
@@ -104,7 +103,6 @@ export type Database = {
           created_at?: string
           fallback_message?: string
           id?: string
-          openai_api_key?: string | null
           updated_at?: string
           user_id: string
           welcome_message?: string
@@ -115,7 +113,6 @@ export type Database = {
           created_at?: string
           fallback_message?: string
           id?: string
-          openai_api_key?: string | null
           updated_at?: string
           user_id?: string
           welcome_message?: string
