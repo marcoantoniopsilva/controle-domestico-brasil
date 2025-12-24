@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Categoria } from "@/types";
@@ -96,7 +96,7 @@ export function useCategoryBudgets() {
   };
 
   // Obter categorias com orçamentos personalizados aplicados
-  const getCategoriesWithCustomBudgets = (): Categoria[] => {
+  const getCategoriesWithCustomBudgets = useCallback((): Categoria[] => {
     return categoriasDefault.map(categoria => {
       const customBudget = customBudgets.find(
         custom => custom.categoria_nome === categoria.nome && custom.categoria_tipo === categoria.tipo
@@ -107,7 +107,7 @@ export function useCategoryBudgets() {
         orcamento: customBudget ? Number(customBudget.orcamento) : categoria.orcamento
       };
     });
-  };
+  }, [customBudgets]);
 
   useEffect(() => {
     fetchCustomBudgets();

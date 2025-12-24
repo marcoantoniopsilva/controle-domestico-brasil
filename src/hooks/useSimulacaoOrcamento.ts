@@ -325,12 +325,13 @@ export function useSimulacaoOrcamento() {
     };
   }, [simulacao]);
 
-  // Carregar dados iniciais
+  // Carregar dados iniciais - usar ref para evitar loop infinito
   useEffect(() => {
-    if (!loadingBudgets) {
+    if (!loadingBudgets && usuario) {
       carregarSimulacao();
     }
-  }, [loadingBudgets, carregarSimulacao]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingBudgets, usuario?.id]);
 
   return {
     simulacao,
