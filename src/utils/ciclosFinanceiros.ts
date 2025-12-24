@@ -104,6 +104,21 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
   return ciclos;
 };
 
+// Função para obter o ciclo financeiro de um mês/ano específico
+export const getCicloFinanceiro = (mes: number, ano: number): CicloFinanceiroDetalhado => {
+  // O ciclo do mês X começa no dia 25 do mês X-1 e vai até o dia 24 do mês X
+  const inicioCiclo = new Date(ano, mes - 2, 25); // mes - 2 porque meses são 0-indexados e queremos o mês anterior
+  const fimCiclo = new Date(ano, mes - 1, 24);
+
+  return {
+    inicio: inicioCiclo,
+    fim: fimCiclo,
+    nome: formatarNomeCiclo(inicioCiclo, fimCiclo),
+    nomeCompleto: formatarNomeCompletosCiclo(inicioCiclo, fimCiclo),
+    temTransacoes: false // Será atualizado quando filtrar transações
+  };
+};
+
 // Função para formatar o nome do ciclo
 const formatarNomeCiclo = (inicio: Date, fim: Date): string => {
   const mesInicio = format(inicio, 'MMM', { locale: ptBR });

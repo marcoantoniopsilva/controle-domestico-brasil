@@ -376,6 +376,42 @@ export type Database = {
         }
         Relationships: []
       }
+      simulacoes_orcamento: {
+        Row: {
+          ano: number
+          categoria_nome: string
+          categoria_tipo: string
+          created_at: string
+          id: string
+          mes: number
+          updated_at: string
+          usuario_id: string
+          valor_previsto: number
+        }
+        Insert: {
+          ano?: number
+          categoria_nome: string
+          categoria_tipo: string
+          created_at?: string
+          id?: string
+          mes: number
+          updated_at?: string
+          usuario_id: string
+          valor_previsto?: number
+        }
+        Update: {
+          ano?: number
+          categoria_nome?: string
+          categoria_tipo?: string
+          created_at?: string
+          id?: string
+          mes?: number
+          updated_at?: string
+          usuario_id?: string
+          valor_previsto?: number
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
