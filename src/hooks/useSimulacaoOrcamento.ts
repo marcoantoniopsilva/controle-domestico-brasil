@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCategoryBudgets } from "./useCategoryBudgets";
-import { SimulacaoMes, SimulacaoCategoria, TotaisSimulacao } from "@/types/simulacao";
+import { SimulacaoMes, SimulacaoCategoria, TotaisSimulacao, SaldoMensal } from "@/types/simulacao";
 import { toast } from "sonner";
 
 const ANO_SIMULACAO = 2026;
@@ -326,6 +326,29 @@ export function useSimulacaoOrcamento() {
     };
   }, [simulacao]);
 
+  // Calcular saldos mensais com acumulado
+  const calcularSaldosMensais = useCallback((): SaldoMensal[] => {
+    const saldos: SaldoMensal[] = [];
+    let acumulado = 0;
+
+    for (let mes = 1; mes <= 12; mes++) {
+      const totais = calcularTotaisMes(mes);
+      const saldoMes = totais.receitas - totais.despesas - totais.investimentos;
+      acumulado += saldoMes;
+
+      saldos.push({
+        mes,
+        receitas: totais.receitas,
+        despesas: totais.despesas,
+        investimentos: totais.investimentos,
+        saldoMes,
+        saldoAcumulado: acumulado
+      });
+    }
+
+    return saldos;
+  }, [calcularTotaisMes]);
+
   // Carregar dados iniciais - usar ref para evitar loop infinito
   useEffect(() => {
     if (!loadingBudgets && usuario) {
@@ -344,6 +367,7 @@ export function useSimulacaoOrcamento() {
     copiarParaTodosMeses,
     calcularTotais,
     calcularTotaisMes,
+    calcularSaldosMensais,
     recarregar: carregarSimulacao,
     anoSimulacao: ANO_SIMULACAO
   };

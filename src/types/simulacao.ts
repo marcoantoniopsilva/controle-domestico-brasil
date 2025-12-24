@@ -39,6 +39,15 @@ export interface TotaisSimulacao {
   capacidadeInvestimento: number;
 }
 
+export interface SaldoMensal {
+  mes: number;
+  receitas: number;
+  despesas: number;
+  investimentos: number;
+  saldoMes: number;
+  saldoAcumulado: number;
+}
+
 export const MESES_NOMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"

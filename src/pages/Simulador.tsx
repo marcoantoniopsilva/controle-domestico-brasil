@@ -3,6 +3,7 @@ import { useSimulacaoOrcamento } from "@/hooks/useSimulacaoOrcamento";
 import { useComparativoSimulacao } from "@/hooks/useComparativoSimulacao";
 import { SimuladorResumo } from "@/components/simulador/SimuladorResumo";
 import { SimuladorTabela } from "@/components/simulador/SimuladorTabela";
+import { SimuladorSaldoAcumulado } from "@/components/simulador/SimuladorSaldoAcumulado";
 import { ComparativoRealizado } from "@/components/simulador/ComparativoRealizado";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RotateCcw, ArrowLeft } from "lucide-react";
@@ -31,6 +32,7 @@ export default function Simulador() {
     copiarParaTodosMeses,
     calcularTotais,
     calcularTotaisMes,
+    calcularSaldosMensais,
     anoSimulacao
   } = useSimulacaoOrcamento();
 
@@ -54,6 +56,7 @@ export default function Simulador() {
   }
 
   const totais = calcularTotais();
+  const saldosMensais = calcularSaldosMensais();
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,6 +118,9 @@ export default function Simulador() {
           onCopiarParaTodos={copiarParaTodosMeses}
           calcularTotaisMes={calcularTotaisMes}
         />
+
+        {/* Saldo Projetado Acumulado */}
+        <SimuladorSaldoAcumulado saldosMensais={saldosMensais} />
 
         {/* Comparativo Realizado */}
         {!loadingComparativo && (
