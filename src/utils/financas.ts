@@ -58,6 +58,9 @@ export const categorias = [
   { nome: "Outros Investimentos", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
 ];
 
+// Alias para manter compatibilidade
+export const categoriasDefault = categorias;
+
 // Log para verificar o total dos orçamentos de despesa
 const totalOrcamentoDespesas = categorias
   .filter(cat => cat.tipo === "despesa")

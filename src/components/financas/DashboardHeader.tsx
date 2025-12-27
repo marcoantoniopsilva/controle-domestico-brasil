@@ -1,11 +1,11 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import AddTransacaoForm from "./AddTransacaoForm";
 import { EditarOrcamentos } from "./EditarOrcamentos";
+import { ImportarLancamentos } from "./ImportarLancamentos";
 import { Usuario, Transacao } from "@/types";
 import { useState } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Camera } from "lucide-react";
 
 interface DashboardHeaderProps {
   usuario: Usuario;
@@ -15,6 +15,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [budgetsOpen, setBudgetsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const handleAddTransacao = async (transacao: Omit<Transacao, "id">): Promise<boolean> => {
     const success = await onAddTransacao(transacao);
@@ -24,6 +25,17 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
     return success;
   };
 
+  const handleImportarTransacoes = async (transacoes: Array<Omit<Transacao, "id">>): Promise<boolean> => {
+    let allSuccess = true;
+    for (const transacao of transacoes) {
+      const success = await onAddTransacao(transacao);
+      if (!success) {
+        allSuccess = false;
+      }
+    }
+    return allSuccess;
+  };
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
       <div>
@@ -31,7 +43,16 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
         <p className="text-muted-foreground">Bem-vindo ao seu dashboard financeiro</p>
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => setImportOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Camera className="h-4 w-4" />
+          Importar Extrato
+        </Button>
+        
         <Button 
           variant="outline" 
           onClick={() => setBudgetsOpen(true)}
@@ -57,6 +78,12 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
       <EditarOrcamentos 
         isOpen={budgetsOpen} 
         onClose={() => setBudgetsOpen(false)} 
+      />
+
+      <ImportarLancamentos
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImportar={handleImportarTransacoes}
       />
     </div>
   );
