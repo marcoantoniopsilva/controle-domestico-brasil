@@ -36,13 +36,17 @@ export const categorias = [
   { nome: "Saúde", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
   { nome: "Seguro, Carro e Uber", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
   { nome: "Viagens", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Impostos, taxas e multas", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Gastos extraordinários", tipo: "despesa" as const, orcamento: 0, gastosAtuais: 0 },
   
   // Categorias de Receita - Baseadas nos dados reais do banco
   { nome: "⅓ de férias", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Outras receitas", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Pagamento mamãe", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Receita Essence", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Remuneração Bruna", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Salário", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "13º salário", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Gratificações/horas extras", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   
   // Categorias de Investimento
   { nome: "Ações", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
