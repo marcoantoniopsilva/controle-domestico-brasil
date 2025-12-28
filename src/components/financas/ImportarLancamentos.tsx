@@ -147,6 +147,20 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
       
       if (success) {
         toast.success(`${transacoesParaImportar.length} lançamento(s) importado(s) com sucesso!`);
+
+        // Dica para o usuário: se o ciclo atual não inclui as datas importadas, os lançamentos não aparecem.
+        const minDate = transacoesParaImportar.reduce(
+          (min, t) => (t.data < min ? t.data : min),
+          transacoesParaImportar[0].data
+        );
+        const maxDate = transacoesParaImportar.reduce(
+          (max, t) => (t.data > max ? t.data : max),
+          transacoesParaImportar[0].data
+        );
+        toast.info(
+          `Dica: lançamentos salvos entre ${minDate.toLocaleDateString("pt-BR")} e ${maxDate.toLocaleDateString("pt-BR")}. Se não aparecerem, selecione o ciclo desse período.`
+        );
+
         // Limpar estado e fechar
         handleReset();
         onClose();
