@@ -38,6 +38,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
   const [extractedTransactions, setExtractedTransactions] = useState<ExtractedTransaction[]>([]);
   const [showReview, setShowReview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const anoReferencia = new Date().getFullYear();
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,7 +68,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
       console.log('Enviando imagem para processamento...');
       
       const { data, error } = await supabase.functions.invoke('extract-transactions', {
-        body: { imageBase64, categorias }
+        body: { imageBase64, categorias, anoReferencia }
       });
 
       if (error) {
@@ -106,20 +107,24 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
     }
   };
 
-  const handleImport = async (transacoes: ExtractedTransaction[], quemGastou: "Marco" | "Bruna") => {
+  const handleImport = async (
+    transacoes: ExtractedTransaction[],
+    quemGastou: "Marco" | "Bruna",
+    anoImportacao: number
+  ) => {
     const transacoesParaImportar = transacoes
       .filter(t => t.selecionado)
       .map(t => {
-        // Converter data string para Date - formato DD/MM/AAAA
+        // Converter data string para Date - formato DD/MM/AAAA (ano pode ser sobrescrito)
         const partes = t.data.split('/');
         const dia = parseInt(partes[0]) || 1;
         const mes = parseInt(partes[1]) || 1;
-        const ano = parseInt(partes[2]) || new Date().getFullYear();
-        
+        const ano = Number.isFinite(anoImportacao) ? anoImportacao : (parseInt(partes[2]) || anoReferencia);
+
         // Criar data corretamente (mes é 0-indexed no JS)
         const dataCompleta = new Date(ano, mes - 1, dia);
-        
-        console.log(`[ImportarLancamentos] Convertendo data: ${t.data} → ${dataCompleta.toISOString()}`);
+
+        console.log(`[ImportarLancamentos] Convertendo data: ${t.data} (ano usado=${ano}) → ${dataCompleta.toISOString()}`);
 
         return {
           data: dataCompleta,
@@ -260,6 +265,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
             onImportar={handleImport}
             onVoltar={() => setShowReview(false)}
             isLoading={isLoading}
+            anoReferencia={anoReferencia}
           />
         )}
       </DialogContent>

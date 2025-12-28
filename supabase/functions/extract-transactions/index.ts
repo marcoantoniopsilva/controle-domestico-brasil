@@ -21,7 +21,8 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, categorias } = await req.json();
+    const { imageBase64, categorias, anoReferencia } = await req.json();
+    const anoRef = typeof anoReferencia === 'number' ? anoReferencia : new Date().getFullYear();
     
     if (!imageBase64) {
       return new Response(
@@ -47,7 +48,7 @@ serve(async (req) => {
 Analise a imagem fornecida e extraia TODOS os lançamentos financeiros visíveis.
 
 Para cada lançamento, extraia:
-1. DATA: No formato DD/MM/AAAA ou DD/MM (se não tiver ano, use 2024 ou 2025 conforme o contexto)
+1. DATA: No formato DD/MM/AAAA ou DD/MM (se o ano não estiver visível, use ${anoRef})
 2. DESCRIÇÃO: Nome do estabelecimento ou descrição do gasto
 3. VALOR: Valor em reais (número decimal, sem R$)
 4. PARCELAS: Se houver indicação de parcelamento (ex: "2/5" significa parcela 2 de 5), extraia o número total. Se não houver, coloque 1.
