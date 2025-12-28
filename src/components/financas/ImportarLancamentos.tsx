@@ -28,6 +28,7 @@ interface ImportarLancamentosProps {
     quemGastou: "Marco" | "Bruna";
     descricao: string;
     tipo: "despesa";
+    ganhos: number;
   }>) => Promise<boolean>;
 }
 
@@ -109,9 +110,16 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
     const transacoesParaImportar = transacoes
       .filter(t => t.selecionado)
       .map(t => {
-        // Converter data string para Date
-        const [dia, mes, ano] = t.data.split('/').map(Number);
-        const dataCompleta = new Date(ano || 2024, (mes || 1) - 1, dia || 1);
+        // Converter data string para Date - formato DD/MM/AAAA
+        const partes = t.data.split('/');
+        const dia = parseInt(partes[0]) || 1;
+        const mes = parseInt(partes[1]) || 1;
+        const ano = parseInt(partes[2]) || new Date().getFullYear();
+        
+        // Criar data corretamente (mes é 0-indexed no JS)
+        const dataCompleta = new Date(ano, mes - 1, dia);
+        
+        console.log(`[ImportarLancamentos] Convertendo data: ${t.data} → ${dataCompleta.toISOString()}`);
 
         return {
           data: dataCompleta,
@@ -120,7 +128,8 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
           parcelas: t.parcelas || 1,
           quemGastou,
           descricao: t.descricao,
-          tipo: "despesa" as const
+          tipo: "despesa" as const,
+          ganhos: 0 // Campo obrigatório
         };
       });
 
@@ -131,33 +140,23 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
 
     setIsLoading(true);
     try {
-      // Importar cada transação
-      let sucessos = 0;
-      let erros = 0;
-
-      for (const transacao of transacoesParaImportar) {
-        const success = await onImportar([transacao]);
-        if (success) {
-          sucessos++;
-        } else {
-          erros++;
-        }
+      console.log(`[ImportarLancamentos] Importando ${transacoesParaImportar.length} transações...`);
+      
+      // Importar todas as transações de uma vez
+      const success = await onImportar(transacoesParaImportar);
+      
+      if (success) {
+        toast.success(`${transacoesParaImportar.length} lançamento(s) importado(s) com sucesso!`);
+        // Limpar estado e fechar
+        handleReset();
+        onClose();
+      } else {
+        toast.error('Erro ao importar lançamentos');
       }
-
-      if (sucessos > 0) {
-        toast.success(`${sucessos} lançamento(s) importado(s) com sucesso!`);
-      }
-      if (erros > 0) {
-        toast.error(`${erros} lançamento(s) falharam ao importar`);
-      }
-
-      // Limpar estado e fechar
-      handleReset();
-      onClose();
 
     } catch (error: any) {
       console.error('Erro ao importar:', error);
-      toast.error('Erro ao importar lançamentos');
+      toast.error('Erro ao importar lançamentos: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setIsLoading(false);
     }

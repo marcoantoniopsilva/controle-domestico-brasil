@@ -26,13 +26,17 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
   };
 
   const handleImportarTransacoes = async (transacoes: Array<Omit<Transacao, "id">>): Promise<boolean> => {
+    console.log(`[DashboardHeader] Importando ${transacoes.length} transações...`);
     let allSuccess = true;
     for (const transacao of transacoes) {
+      console.log(`[DashboardHeader] Adicionando transação:`, transacao);
       const success = await onAddTransacao(transacao);
       if (!success) {
+        console.error(`[DashboardHeader] Falha ao adicionar transação:`, transacao);
         allSuccess = false;
       }
     }
+    console.log(`[DashboardHeader] Resultado final: ${allSuccess ? 'sucesso' : 'com erros'}`);
     return allSuccess;
   };
 
