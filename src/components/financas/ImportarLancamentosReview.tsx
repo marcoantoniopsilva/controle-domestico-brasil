@@ -21,9 +21,14 @@ interface ExtractedTransaction {
 interface ImportarLancamentosReviewProps {
   transacoes: ExtractedTransaction[];
   onTransacoesChange: (transacoes: ExtractedTransaction[]) => void;
-  onImportar: (transacoes: ExtractedTransaction[], quemGastou: "Marco" | "Bruna") => Promise<void>;
+  onImportar: (
+    transacoes: ExtractedTransaction[],
+    quemGastou: "Marco" | "Bruna",
+    anoImportacao: number
+  ) => Promise<void>;
   onVoltar: () => void;
   isLoading: boolean;
+  anoReferencia: number;
 }
 
 export function ImportarLancamentosReview({
@@ -31,10 +36,13 @@ export function ImportarLancamentosReview({
   onTransacoesChange,
   onImportar,
   onVoltar,
-  isLoading
+  isLoading,
+  anoReferencia
 }: ImportarLancamentosReviewProps) {
   const [quemGastou, setQuemGastou] = useState<"Marco" | "Bruna">("Marco");
+  const [anoImportacao, setAnoImportacao] = useState<number>(anoReferencia);
   const categorias = getCategoriasDisponiveis();
+  const anosDisponiveis = [anoReferencia - 1, anoReferencia, anoReferencia + 1];
 
   const handleToggleSelect = (index: number) => {
     const updated = [...transacoes];
@@ -90,17 +98,38 @@ export function ImportarLancamentosReview({
           </span>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Label className="text-sm">Quem gastou:</Label>
-          <Select value={quemGastou} onValueChange={(v) => setQuemGastou(v as "Marco" | "Bruna")}>
-            <SelectTrigger className="w-28">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Marco">Marco</SelectItem>
-              <SelectItem value="Bruna">Bruna</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Ano:</Label>
+            <Select
+              value={String(anoImportacao)}
+              onValueChange={(v) => setAnoImportacao(parseInt(v, 10) || anoReferencia)}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((a) => (
+                  <SelectItem key={a} value={String(a)}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Quem gastou:</Label>
+            <Select value={quemGastou} onValueChange={(v) => setQuemGastou(v as "Marco" | "Bruna")}> 
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Marco">Marco</SelectItem>
+                <SelectItem value="Bruna">Bruna</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -190,7 +219,7 @@ export function ImportarLancamentosReview({
         </Button>
         
         <Button 
-          onClick={() => onImportar(transacoes, quemGastou)}
+          onClick={() => onImportar(transacoes, quemGastou, anoImportacao)}
           disabled={isLoading || selectedCount === 0}
         >
           {isLoading ? (

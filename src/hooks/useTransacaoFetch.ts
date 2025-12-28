@@ -19,7 +19,9 @@ export function useTransacaoFetch() {
       const { data, error } = await supabase
         .from("lancamentos")
         .select("*")
-        .order('data', { ascending: false });
+        .order('data', { ascending: false })
+        // Importante: por padrão o Supabase retorna até 1000 linhas; aumentamos o range para não “sumir” transações antigas
+        .range(0, 5000);
         
       if (error) {
         console.error("Erro ao carregar lançamentos:", error);
