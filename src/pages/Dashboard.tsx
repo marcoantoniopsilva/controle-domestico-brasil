@@ -132,10 +132,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <NavBar />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <DashboardHeader 
           usuario={usuario} 
           onAddTransacao={handleAdicionarTransacao}

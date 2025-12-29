@@ -47,30 +47,30 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
   console.log("[CicloSelector] Pode ir anterior:", canGoPrevious, "Pode ir próximo:", canGoNext);
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5 md:gap-1">
       {/* Botão para ciclo anterior */}
       <Button
         variant="outline"
         size="icon"
         onClick={onCicloAnterior}
         disabled={!canGoPrevious}
-        className="h-10 w-10"
+        className="h-8 w-8 md:h-10 md:w-10"
       >
-        <ChevronUp className="h-4 w-4" />
+        <ChevronUp className="h-3 w-3 md:h-4 md:w-4" />
       </Button>
 
       {/* Seletor de ciclo principal */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="min-w-[200px] justify-between">
-            {displayText}
-            <ChevronDown className="h-4 w-4 opacity-50" />
+          <Button variant="outline" className="min-w-[120px] md:min-w-[200px] justify-between text-xs md:text-sm px-2 md:px-4 h-8 md:h-10">
+            <span className="truncate max-w-[100px] md:max-w-[180px]">{displayText}</span>
+            <ChevronDown className="h-3 w-3 md:h-4 md:w-4 opacity-50 ml-1 flex-shrink-0" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[300px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 shadow-lg z-50">
+        <DropdownMenuContent className="w-[250px] md:w-[300px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 shadow-lg z-50">
           <DropdownMenuRadioGroup value={cicloSelecionado} onValueChange={onCicloChange}>
             {ciclosDisponiveis.map((ciclo, index) => (
-              <DropdownMenuRadioItem key={index} value={index.toString()} className="cursor-pointer">
+              <DropdownMenuRadioItem key={index} value={index.toString()} className="cursor-pointer text-sm">
                 {ciclo.nome}
               </DropdownMenuRadioItem>
             ))}
@@ -84,9 +84,9 @@ const CicloSelector: React.FC<CicloSelectorProps> = ({
         size="icon"
         onClick={onProximoCiclo}
         disabled={!canGoNext}
-        className="h-10 w-10"
+        className="h-8 w-8 md:h-10 md:w-10"
       >
-        <ChevronDown className="h-4 w-4" />
+        <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />
       </Button>
     </div>
   );
