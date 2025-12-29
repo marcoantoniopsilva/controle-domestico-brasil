@@ -56,7 +56,7 @@ const RelatorioParcelamentos = ({ transacoes }: RelatorioParcelamentosProps) => 
         quemGastou: t.quemGastou
       };
     })
-    .filter(p => p.parcelasRestantes >= 0)
+    .filter(p => p.parcelasRestantes > 0)
     .sort((a, b) => a.parcelasRestantes - b.parcelasRestantes);
 
   // Calcular totais
