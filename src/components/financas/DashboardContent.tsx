@@ -62,6 +62,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         onExcluirTransacao={onExcluirTransacao}
         onEditarTransacao={onEditarTransacao}
         totalDespesasCategoria={totalDespesas}
+        totalReceitas={totalReceitas}
         orcamentoTotal={orcamentoTotal}
         updateKey={updateKey}
         cacheKey={cacheKey}

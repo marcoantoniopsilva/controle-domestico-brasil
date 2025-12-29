@@ -2,37 +2,37 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
-import GraficoCategorias from "./GraficoCategorias";
-import { Button } from "@/components/ui/button";
 import { Wallet, TrendingDown } from "lucide-react";
 
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
   cicloAtual: CicloFinanceiro;
   totalDespesas: number;
+  totalReceitas?: number;
 }
 
 const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({ 
   categorias,
   cicloAtual,
-  totalDespesas
+  totalDespesas,
+  totalReceitas = 0
 }) => {
-  // Filtramos apenas categorias de despesa para o orçamento
-  const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
+  // Orçamento = total de receitas do ciclo
+  const totalOrcamento = totalReceitas;
   
-  // Calculamos o total do orçamento planejado
-  const totalOrcamento = categoriasDespesa.reduce((acc, cat) => acc + cat.orcamento, 0);
+  // Gastos = total de despesas do ciclo
+  const totalGastos = totalDespesas;
   
-  // Calculamos o total de despesas com base nas categorias
-  const totalDespesasCategoria = categoriasDespesa.reduce((acc, cat) => acc + (cat.gastosAtuais || 0), 0);
-  
-  // Calculamos o percentual gasto em relação ao orçamento total (limitado a 100%)
+  // Calculamos o percentual gasto em relação ao orçamento (receitas)
   const percentualGasto = totalOrcamento > 0 
-    ? Math.min(Math.round((totalDespesasCategoria / totalOrcamento) * 100), 100) 
+    ? Math.min(Math.round((totalGastos / totalOrcamento) * 100), 100) 
     : 0;
     
   // Calculamos o valor restante (ou excedido)
-  const restante = totalOrcamento - totalDespesasCategoria;
+  const restante = totalOrcamento - totalGastos;
+
+  // Filtramos categorias de despesa para sugestões
+  const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
 
   // Identificar categorias com maior percentual do orçamento gasto
   const categoriasComMaiorGasto = categoriasDespesa
@@ -45,14 +45,6 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
     ? categoriasComMaiorGasto
     : [];
 
-  // Filtramos para o gráfico apenas categorias que têm gastos reais
-  const dados = categoriasDespesa
-    .filter(cat => (cat.gastosAtuais || 0) > 0)
-    .map(cat => ({
-      name: cat.nome,
-      value: cat.gastosAtuais || 0
-    }));
-
   // Definimos a classe de estilo baseada no percentual gasto
   const statusClass = percentualGasto < 80 
     ? "bg-green-500"
@@ -60,8 +52,8 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
       ? "bg-amber-500" 
       : "bg-red-500";
 
-  console.log("[ResumoOrcamento] Total de despesas (categorias):", totalDespesasCategoria);
-  console.log("[ResumoOrcamento] Total de orçamento:", totalOrcamento);
+  console.log("[ResumoOrcamento] Total de gastos:", totalGastos);
+  console.log("[ResumoOrcamento] Total de receitas (orçamento):", totalOrcamento);
 
   return (
     <Card className="w-full">
@@ -88,9 +80,9 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
-              <span>Gastos: {formatarMoeda(totalDespesasCategoria)}</span>
+              <span>Gastos: {formatarMoeda(totalGastos)}</span>
               <span className="text-muted-foreground">
-                Orçamento: {formatarMoeda(totalOrcamento)}
+                Receitas: {formatarMoeda(totalOrcamento)}
               </span>
             </div>
             <div className="mt-1 text-sm text-right">
@@ -129,8 +121,6 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
               </ul>
             </div>
           )}
-          
-          <GraficoCategorias dados={dados} />
         </div>
       </CardContent>
     </Card>
