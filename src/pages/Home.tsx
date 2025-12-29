@@ -15,9 +15,6 @@ const Home = () => {
   // Get the current financial cycle for the demo display
   const cicloAtual = calcularCicloAtual();
   
-  // Para a página inicial, definimos um valor demo para totalDespesas
-  const totalDespesas = 0; // Valor demonstrativo
-  
   // Use categorias personalizadas se o usuário estiver logado, senão use as padrão
   const categoriasParaExibir = usuario ? getCategoriesWithCustomBudgets() : categorias;
 
@@ -62,7 +59,8 @@ const Home = () => {
                   <ResumoOrcamento 
                     categorias={categoriasParaExibir} 
                     cicloAtual={cicloAtual}
-                    totalDespesas={totalDespesas}
+                    totalDespesas={0}
+                    totalReceitas={0}
                   />
                 </CardContent>
               </Card>

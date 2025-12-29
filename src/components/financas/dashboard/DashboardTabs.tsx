@@ -29,6 +29,7 @@ interface DashboardTabsProps {
   onExcluirTransacao: (id: string) => Promise<void>;
   onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   totalDespesasCategoria: number;
+  totalReceitas: number;
   orcamentoTotal: number;
   cacheKey?: string;
   updateKey?: number;
@@ -42,6 +43,7 @@ const DashboardTabs = ({
   onExcluirTransacao,
   onEditarTransacao,
   totalDespesasCategoria,
+  totalReceitas,
   orcamentoTotal
 }: DashboardTabsProps) => {
   const [activeTab, setActiveTab] = useState("resumo");
@@ -116,6 +118,7 @@ const DashboardTabs = ({
             categorias={categorias} 
             cicloAtual={cicloAtual}
             totalDespesas={totalDespesasCategoria}
+            totalReceitas={totalReceitas}
           />
           
           <RelatorioCartaoCredito
