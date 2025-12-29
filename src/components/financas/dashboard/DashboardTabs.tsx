@@ -101,14 +101,14 @@ const DashboardTabs = ({
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="w-full flex flex-wrap justify-start">
-          <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="despesas">Despesas</TabsTrigger>
-          <TabsTrigger value="receitas">Receitas</TabsTrigger>
-          <TabsTrigger value="investimentos">Investimentos</TabsTrigger>
-          <TabsTrigger value="transacoes">Transações</TabsTrigger>
-          <TabsTrigger value="graficos">Gráficos</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+        <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1 p-1">
+          <TabsTrigger value="resumo" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Resumo</TabsTrigger>
+          <TabsTrigger value="despesas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Despesas</TabsTrigger>
+          <TabsTrigger value="receitas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Receitas</TabsTrigger>
+          <TabsTrigger value="investimentos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Investimentos</TabsTrigger>
+          <TabsTrigger value="transacoes" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Transações</TabsTrigger>
+          <TabsTrigger value="graficos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Gráficos</TabsTrigger>
+          <TabsTrigger value="relatorios" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Relatórios</TabsTrigger>
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-4">

@@ -41,36 +41,38 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-8 gap-3 md:gap-4">
       <div>
-        <h1 className="text-2xl font-bold">Olá, {usuario?.nome || "usuário"}!</h1>
-        <p className="text-muted-foreground">Bem-vindo ao seu dashboard financeiro</p>
+        <h1 className="text-lg md:text-2xl font-bold">Olá, {usuario?.nome || "usuário"}!</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Bem-vindo ao seu dashboard</p>
       </div>
       
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 md:gap-2 w-full md:w-auto">
         <Button 
           variant="outline" 
+          size="sm"
           onClick={() => setImportOpen(true)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4"
         >
-          <Camera className="h-4 w-4" />
-          Importar Extrato
+          <Camera className="h-3 w-3 md:h-4 md:w-4" />
+          <span className="hidden sm:inline">Importar</span> Extrato
         </Button>
         
         <Button 
           variant="outline" 
+          size="sm"
           onClick={() => setBudgetsOpen(true)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4"
         >
-          <Settings className="h-4 w-4" />
-          Editar Orçamentos
+          <Settings className="h-3 w-3 md:h-4 md:w-4" />
+          <span className="hidden sm:inline">Editar</span> Orçamentos
         </Button>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Adicionar Transação</Button>
+            <Button size="sm" className="text-xs md:text-sm px-2 md:px-4">+ Transação</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[95vw] md:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nova Transação</DialogTitle>
             </DialogHeader>

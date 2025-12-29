@@ -20,56 +20,56 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
   orcamentoTotal
 }) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-          <TrendingUp className="h-4 w-4 text-green-600" />
+    <div className="grid gap-2 md:gap-4 grid-cols-2 lg:grid-cols-4">
+      <Card className="p-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium">Receitas</CardTitle>
+          <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">
+        <CardContent className="p-3 md:p-6 pt-0">
+          <div className="text-lg md:text-2xl font-bold text-green-600">
             {formatarMoeda(totalReceitas)}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-          <TrendingDown className="h-4 w-4 text-red-600" />
+      <Card className="p-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium">Despesas</CardTitle>
+          <TrendingDown className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-red-600">
+        <CardContent className="p-3 md:p-6 pt-0">
+          <div className="text-lg md:text-2xl font-bold text-red-600">
             {formatarMoeda(totalDespesas)}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[10px] md:text-xs text-muted-foreground truncate">
             de {formatarMoeda(orcamentoTotal)} orçado
           </p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Investimentos</CardTitle>
-          <PiggyBank className="h-4 w-4 text-blue-600" />
+      <Card className="p-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium">Investimentos</CardTitle>
+          <PiggyBank className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-blue-600">
+        <CardContent className="p-3 md:p-6 pt-0">
+          <div className="text-lg md:text-2xl font-bold text-blue-600">
             {formatarMoeda(totalInvestimentos)}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-          <DollarSign className={`h-4 w-4 ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+      <Card className="p-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium">Saldo</CardTitle>
+          <DollarSign className={`h-3 w-3 md:h-4 md:w-4 ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`} />
         </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <CardContent className="p-3 md:p-6 pt-0">
+          <div className={`text-lg md:text-2xl font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {formatarMoeda(saldo)}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[10px] md:text-xs text-muted-foreground">
             Receitas - Despesas
           </p>
         </CardContent>

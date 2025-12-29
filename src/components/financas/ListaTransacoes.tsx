@@ -131,8 +131,8 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="bg-gray-50 p-2 flex justify-between items-center">
-        <span className="text-sm font-medium">{transacoes.length} transações</span>
-        <span className="text-xs text-gray-400">ID: {renderKey.substring(0, 8)}</span>
+        <span className="text-xs md:text-sm font-medium">{transacoes.length} transações</span>
+        <span className="text-xs text-gray-400 hidden md:inline">ID: {renderKey.substring(0, 8)}</span>
       </div>
 
       {transacoesAgrupadas.length === 0 ? (
@@ -142,59 +142,66 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
       ) : (
         transacoesAgrupadas.map(grupo => (
           <div key={grupo.data} className="mb-4">
-            <div className="bg-slate-100 p-3 font-medium text-slate-800">
-              {format(parseDataLocal(grupo.data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            <div className="bg-slate-100 p-2 md:p-3 font-medium text-slate-800 text-xs md:text-sm">
+              {format(parseDataLocal(grupo.data), "EEE, dd/MM/yy", { locale: ptBR })}
+              <span className="hidden md:inline">
+                {" - "}
+                {format(parseDataLocal(grupo.data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </span>
             </div>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Quem realizou</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Parcelas</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs md:text-sm whitespace-nowrap">Categoria</TableHead>
+                    <TableHead className="text-xs md:text-sm hidden sm:table-cell">Descrição</TableHead>
+                    <TableHead className="text-xs md:text-sm hidden md:table-cell">Quem</TableHead>
+                    <TableHead className="text-xs md:text-sm text-right whitespace-nowrap">Valor</TableHead>
+                    <TableHead className="text-xs md:text-sm hidden sm:table-cell">Parcelas</TableHead>
+                    <TableHead className="text-xs md:text-sm text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {grupo.transacoes.map((transacao) => (
                   <TableRow key={`${transacao.id}-${renderKey}`}>
-                    <TableCell>{transacao.categoria}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">
+                    <TableCell className="text-xs md:text-sm py-2 md:py-4 whitespace-nowrap">{transacao.categoria}</TableCell>
+                    <TableCell className="text-xs md:text-sm py-2 md:py-4 max-w-[120px] md:max-w-[200px] truncate hidden sm:table-cell">
                       {transacao.descricao || '-'}
                       {transacao.isParcela && (
-                        <Badge variant="outline" className="ml-2">Projeção</Badge>
+                        <Badge variant="outline" className="ml-1 text-xs">P</Badge>
                       )}
                     </TableCell>
-                    <TableCell>{transacao.quemGastou}</TableCell>
-                    <TableCell className={`text-right ${transacao.valor < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                    <TableCell className="text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">{transacao.quemGastou}</TableCell>
+                    <TableCell className={`text-xs md:text-sm py-2 md:py-4 text-right whitespace-nowrap ${transacao.valor < 0 ? 'text-destructive' : 'text-green-600'}`}>
                       {formatarMoeda(transacao.valor)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs md:text-sm py-2 md:py-4 hidden sm:table-cell">
                       {transacao.parcelas > 1 
                         ? `${transacao.parcelaAtual || 1}/${transacao.parcelas}`
                         : '-'
                       }
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right py-2 md:py-4">
                       {!transacao.isParcela && (
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-0.5 md:gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 md:h-8 md:w-8"
                             onClick={() => handleEditarClick(transacao)}
                             title="Editar transação"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 md:h-8 md:w-8"
                             onClick={async () => await onExcluir(transacao.id)}
                             title="Excluir transação"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                         </div>
                       )}
@@ -203,6 +210,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         ))
       )}

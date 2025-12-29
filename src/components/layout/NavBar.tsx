@@ -41,32 +41,40 @@ const NavBar = () => {
   };
   
   return (
-    <nav className="bg-white border-b shadow-sm py-4">
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="text-xl font-semibold text-primary">
+    <nav className="bg-white border-b shadow-sm py-3 md:py-4">
+      <div className="container mx-auto px-3 md:px-4 flex justify-between items-center">
+        <Link to="/" className="text-lg md:text-xl font-semibold text-primary truncate">
           ControleFinanceiro
         </Link>
         
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-1 md:gap-4 items-center">
           {isLoggedIn ? (
             <>
               <Link to="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
+                <Button variant="ghost" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
+                  Dashboard
+                </Button>
               </Link>
-              <Link to="/simulador">
-                <Button variant="ghost">Simulador 2026</Button>
+              <Link to="/simulador" className="hidden sm:block">
+                <Button variant="ghost" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
+                  Simulador
+                </Button>
               </Link>
-              <Button onClick={handleLogout} variant="outline">
+              <Button onClick={handleLogout} variant="outline" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
                 Sair
               </Button>
             </>
           ) : (
             <>
               <Link to="/login">
-                <Button variant="outline">Entrar</Button>
+                <Button variant="outline" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
+                  Entrar
+                </Button>
               </Link>
               <Link to="/cadastro">
-                <Button>Cadastrar</Button>
+                <Button size="sm" className="px-2 md:px-4 text-xs md:text-sm">
+                  Cadastrar
+                </Button>
               </Link>
             </>
           )}

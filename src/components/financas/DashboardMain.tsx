@@ -84,7 +84,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
   }, [cicloAtual, transacoes, transacoesFiltradas, totalReceitas, totalDespesas, totalInvestimentos, saldo, orcamentoTotal, categorias]);
 
   return (
-    <main className="flex-1 py-8">
+    <main className="flex-1 py-3 md:py-8">
       <Container>
         <DashboardContent
           transacoes={transacoesFiltradas || []}
