@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 import ResumoOrcamento from "../ResumoOrcamento";
 import ListaTransacoes from "../ListaTransacoes";
@@ -193,38 +194,82 @@ const DashboardTabs = ({
           />
         </TabsContent>
 
-        <TabsContent value="relatorios" className="space-y-6">
-          <PrevisaoFechamentoCiclo
-            transacoes={transacoes}
-            cicloAtual={cicloAtual}
-            orcamentoTotal={orcamentoTotal}
-          />
-          
-          <ReceitasDespesas
-            transacoes={transacoes}
-            cicloAtual={cicloAtual}
-          />
-          
-          <RelatorioEconomia
-            transacoes={transacoes}
-            categorias={categorias}
-            cicloAtual={cicloAtual}
-            orcamentoTotal={orcamentoTotal}
-          />
-          
-          <TendenciasInsights
-            transacoes={transacoesOriginais || transacoes}
-            categorias={categorias}
-            cicloAtual={cicloAtual}
-          />
-          
-          <RelatorioParcelamentos
-            transacoes={transacoesOriginais || transacoes}
-          />
-          
-          <AnaliseRecorrencias
-            transacoes={transacoesOriginais || transacoes}
-          />
+        <TabsContent value="relatorios" className="space-y-4">
+          <Accordion type="single" collapsible className="w-full space-y-2">
+            <AccordionItem value="previsao" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Previsão de Fechamento do Ciclo
+              </AccordionTrigger>
+              <AccordionContent>
+                <PrevisaoFechamentoCiclo
+                  transacoes={transacoes}
+                  cicloAtual={cicloAtual}
+                  orcamentoTotal={orcamentoTotal}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="receitas-despesas" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Receitas vs Despesas
+              </AccordionTrigger>
+              <AccordionContent>
+                <ReceitasDespesas
+                  transacoes={transacoes}
+                  cicloAtual={cicloAtual}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="economia" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Relatório de Economia
+              </AccordionTrigger>
+              <AccordionContent>
+                <RelatorioEconomia
+                  transacoes={transacoes}
+                  categorias={categorias}
+                  cicloAtual={cicloAtual}
+                  orcamentoTotal={orcamentoTotal}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="tendencias" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Tendências e Insights
+              </AccordionTrigger>
+              <AccordionContent>
+                <TendenciasInsights
+                  transacoes={transacoesOriginais || transacoes}
+                  categorias={categorias}
+                  cicloAtual={cicloAtual}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="parcelamentos" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Relatório de Parcelamentos
+              </AccordionTrigger>
+              <AccordionContent>
+                <RelatorioParcelamentos
+                  transacoes={transacoesOriginais || transacoes}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="recorrencias" className="border rounded-lg px-4">
+              <AccordionTrigger className="hover:no-underline">
+                Análise de Recorrências
+              </AccordionTrigger>
+              <AccordionContent>
+                <AnaliseRecorrencias
+                  transacoes={transacoesOriginais || transacoes}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </TabsContent>
       </Tabs>
 
