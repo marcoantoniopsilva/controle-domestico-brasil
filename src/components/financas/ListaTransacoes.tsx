@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EditTransacaoForm from "./EditTransacaoForm";
+import { getCategoryIcon } from "@/utils/categoryIcons";
 
 interface ListaTransacoesProps {
   transacoes: Transacao[];
@@ -163,9 +163,16 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
                   </TableRow>
                 </TableHeader>
               <TableBody>
-                {grupo.transacoes.map((transacao) => (
+                {grupo.transacoes.map((transacao) => {
+                  const CategoryIcon = getCategoryIcon(transacao.categoria);
+                  return (
                   <TableRow key={`${transacao.id}-${renderKey}`}>
-                    <TableCell className="text-xs md:text-sm py-2 md:py-4 whitespace-nowrap">{transacao.categoria}</TableCell>
+                    <TableCell className="text-xs md:text-sm py-2 md:py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>{transacao.categoria}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-xs md:text-sm py-2 md:py-4 max-w-[120px] md:max-w-[200px] truncate hidden sm:table-cell">
                       {transacao.descricao || '-'}
                       {transacao.isParcela && (
@@ -207,7 +214,8 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
             </div>
