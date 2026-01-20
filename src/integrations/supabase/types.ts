@@ -179,21 +179,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "Dados planilha": {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       keywords: {
         Row: {
           created_at: string
