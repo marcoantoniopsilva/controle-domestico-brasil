@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,32 @@ serve(async (req) => {
   }
 
   try {
+    // Authentication check - validate the request has a valid user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated user: ${user.id}`);
+
     const { imageBase64, categorias, anoReferencia } = await req.json();
     const anoRef = typeof anoReferencia === 'number' ? anoReferencia : new Date().getFullYear();
     
@@ -118,7 +145,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
     }
 
     const data = await response.json();
-    console.log('Resposta do Gemini:', JSON.stringify(data, null, 2));
+    console.log('Resposta do Gemini recebida');
 
     // Extrair o texto da resposta
     const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -131,7 +158,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
       );
     }
 
-    console.log('Texto extraído:', textResponse);
+    console.log('Texto extraído do Gemini');
 
     // Tentar parsear o JSON da resposta
     let transacoes: ExtractedTransaction[] = [];
@@ -145,15 +172,13 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
       const parsed = JSON.parse(jsonStr);
       transacoes = parsed.transacoes || [];
       
-      console.log(`Extraídas ${transacoes.length} transações`);
+      console.log(`Extraídas ${transacoes.length} transações para usuário ${user.id}`);
     } catch (parseError) {
       console.error('Erro ao parsear JSON:', parseError);
-      console.error('Texto recebido:', textResponse);
       return new Response(
         JSON.stringify({ 
           error: 'Erro ao processar resposta da IA', 
           transacoes: [],
-          rawResponse: textResponse 
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -167,7 +192,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
   } catch (error) {
     console.error('Erro na função extract-transactions:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro interno do servidor' }),
+      JSON.stringify({ error: 'Erro interno do servidor' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
