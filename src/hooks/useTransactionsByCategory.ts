@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Transacao, CicloFinanceiro } from "@/types";
 
 export const useTransactionsByCategory = (
   transacoes: Transacao[],
   cicloAtual: CicloFinanceiro
 ) => {
-  // Gera parcelas futuras das transações parceladas que caem no ciclo atual
+  // Gera todas as transações (incluindo parcelas futuras) que caem no ciclo atual
   const transacoesComParcelas = useMemo(() => {
     const ciclo = {
       inicio: new Date(cicloAtual.inicio),
@@ -16,7 +16,7 @@ export const useTransactionsByCategory = (
     ciclo.inicio.setHours(0, 0, 0, 0);
     ciclo.fim.setHours(23, 59, 59, 999);
     
-    // Começamos com as transações originais que estão no ciclo
+    // Transações originais no ciclo e parcelas futuras
     const transacoesNoCiclo: Transacao[] = [];
     const parcelasFuturas: Transacao[] = [];
     
@@ -75,7 +75,7 @@ export const useTransactionsByCategory = (
       }
     });
     
-    // Inclui também as parcelas que já vêm marcadas como isParcela (do useParcelasFuturas)
+    // Inclui também as parcelas que já vêm marcadas como isParcela
     const parcelasExistentes = transacoes.filter(t => {
       if (!t.isParcela) return false;
       
@@ -100,21 +100,20 @@ export const useTransactionsByCategory = (
     return [...transacoesNoCiclo, ...parcelasExistentes, ...parcelasNovas];
   }, [transacoes, cicloAtual]);
 
-  const getTransactionsForCategory = useMemo(() => {
-    return (categoria: string): Transacao[] => {
-      console.log(`[useTransactionsByCategory] Buscando transações para ${categoria} no ciclo ${cicloAtual.nome}`);
-      
-      // Filtra por categoria
-      const transacoesFiltradas = transacoesComParcelas.filter(t => {
-        if (!t || t.categoria !== categoria) return false;
-        return true;
-      });
-      
-      console.log(`[useTransactionsByCategory] Encontradas ${transacoesFiltradas.length} transações (incluindo parcelas) para ${categoria} no ciclo ${cicloAtual.nome}`);
-      
-      return transacoesFiltradas;
-    };
-  }, [transacoesComParcelas, cicloAtual]);
+  // Usa useCallback para manter a referência estável da função
+  const getTransactionsForCategory = useCallback((categoria: string): Transacao[] => {
+    console.log(`[useTransactionsByCategory] Buscando transações para ${categoria} no ciclo ${cicloAtual.nome}`);
+    
+    // Filtra por categoria
+    const transacoesFiltradas = transacoesComParcelas.filter(t => {
+      if (!t || t.categoria !== categoria) return false;
+      return true;
+    });
+    
+    console.log(`[useTransactionsByCategory] Encontradas ${transacoesFiltradas.length} transações (incluindo parcelas) para ${categoria} no ciclo ${cicloAtual.nome}`);
+    
+    return transacoesFiltradas;
+  }, [transacoesComParcelas, cicloAtual.nome]);
   
   return { getTransactionsForCategory };
 };
