@@ -1,9 +1,9 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { getCategoryIcon } from "@/utils/categoryIcons";
 
 interface ProgressoCategoriaClickableProps {
   categoria: Categoria;
@@ -64,7 +64,13 @@ const ProgressoCategoriaClickable = ({
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between">
-          <span className="truncate">{categoria.nome}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            {(() => {
+              const CategoryIcon = getCategoryIcon(categoria.nome);
+              return <CategoryIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />;
+            })()}
+            <span className="truncate">{categoria.nome}</span>
+          </div>
           {getIcon()}
         </CardTitle>
       </CardHeader>
