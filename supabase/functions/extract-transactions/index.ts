@@ -15,6 +15,10 @@ interface ExtractedTransaction {
   categoria: string;
 }
 
+// Constants for input validation
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB max image size
+const VALID_IMAGE_PREFIXES = ['data:image/jpeg', 'data:image/png', 'data:image/webp', 'data:image/gif'];
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -57,6 +61,33 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Input validation: Check image format
+    const isValidImageFormat = VALID_IMAGE_PREFIXES.some(prefix => 
+      imageBase64.toLowerCase().startsWith(prefix)
+    );
+    if (!isValidImageFormat) {
+      console.warn(`Invalid image format from user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: 'Formato de imagem inválido. Use JPEG, PNG, WebP ou GIF.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Input validation: Check image size (base64 string length approximates actual size)
+    // Base64 encoding increases size by ~33%, so we check the base64 string length
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    const estimatedSizeBytes = Math.ceil(base64Data.length * 0.75); // Approximate actual size
+    
+    if (estimatedSizeBytes > MAX_IMAGE_SIZE_BYTES) {
+      console.warn(`Image too large from user ${user.id}: ${estimatedSizeBytes} bytes`);
+      return new Response(
+        JSON.stringify({ error: 'Imagem muito grande. O tamanho máximo permitido é 5MB.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Processing image for user ${user.id}, size: ~${Math.round(estimatedSizeBytes / 1024)}KB`);
 
     const GEMINI_API_KEY = Deno.env.get('GOOGLE_GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
