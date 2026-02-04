@@ -112,11 +112,17 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    // Enviar código via WhatsApp (projeto Saúde)
-    const healthWebhookUrl = Deno.env.get('HEALTH_WEBHOOK_URL');
+    // Enviar código via WhatsApp usando Infobip
+    const infobipApiKey = Deno.env.get('INFOBIP_API_KEY');
+    const infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
+    const infobipWhatsAppNumber = Deno.env.get('INFOBIP_WHATSAPP_NUMBER');
     
-    if (!healthWebhookUrl) {
-      console.error('[Verification] HEALTH_WEBHOOK_URL não configurada');
+    if (!infobipApiKey || !infobipBaseUrl || !infobipWhatsAppNumber) {
+      console.error('[Verification] Infobip não configurado:', {
+        hasApiKey: !!infobipApiKey,
+        hasBaseUrl: !!infobipBaseUrl,
+        hasWhatsAppNumber: !!infobipWhatsAppNumber
+      });
       return new Response(
         JSON.stringify({ error: 'Serviço de envio não configurado' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -125,65 +131,102 @@ Deno.serve(async (req) => {
 
     const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Controle Financeiro_`;
 
-    // Payload com múltiplos formatos para compatibilidade
-    const webhookPayload = {
-      // Formato original
-      phone: cleanPhone,
-      message,
-      // Formato Twilio/WhatsApp API
-      to: cleanPhone,
-      body: message,
-      // Formato alternativo
-      recipient: cleanPhone,
-      text: message
+    // Payload Infobip WhatsApp
+    const infobipPayload = {
+      messages: [
+        {
+          from: infobipWhatsAppNumber,
+          to: cleanPhone,
+          content: {
+            templateName: "verification_code",
+            templateData: {
+              body: {
+                placeholders: [code]
+              }
+            },
+            language: "pt_BR"
+          }
+        }
+      ]
     };
 
-    console.log('[Verification] Enviando para webhook:', {
-      url: healthWebhookUrl.substring(0, 50) + '...',
-      phone: cleanPhone,
-      messageLength: message.length,
-      payload: JSON.stringify(webhookPayload).substring(0, 200)
+    // URL completa para envio de mensagem WhatsApp template
+    const infobipUrl = `${infobipBaseUrl}/whatsapp/1/message/template`;
+
+    console.log('[Verification] Enviando via Infobip:', {
+      url: infobipUrl,
+      from: infobipWhatsAppNumber,
+      to: cleanPhone
     });
 
-    const webhookResponse = await fetch(healthWebhookUrl, {
+    const infobipResponse = await fetch(infobipUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(webhookPayload)
+      headers: {
+        'Authorization': `App ${infobipApiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(infobipPayload)
     });
 
-    const responseStatus = webhookResponse.status;
-    const responseText = await webhookResponse.text();
+    const responseStatus = infobipResponse.status;
+    const responseData = await infobipResponse.json().catch(() => ({}));
     
-    console.log('[Verification] Resposta do webhook:', {
+    console.log('[Verification] Resposta Infobip:', {
       status: responseStatus,
-      ok: webhookResponse.ok,
-      body: responseText.substring(0, 500)
+      ok: infobipResponse.ok,
+      data: JSON.stringify(responseData).substring(0, 500)
     });
 
-    // Verificar se a resposta indica sucesso real (não apenas HTTP 200)
-    const isEmptyTwilioResponse = responseText.includes('<Response></Response>') || responseText.includes('<Response/>');
-    const hasSuccessIndicator = responseText.includes('success') || 
-                                 responseText.includes('queued') || 
-                                 responseText.includes('sent') ||
-                                 responseText.includes('sid');
-    
-    if (!webhookResponse.ok) {
-      console.error('[Verification] Erro HTTP ao enviar WhatsApp:', {
+    if (!infobipResponse.ok) {
+      console.error('[Verification] Erro Infobip:', {
         status: responseStatus,
-        body: responseText
+        error: responseData
       });
-      return new Response(
-        JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      
+      // Tentar enviar como texto simples se template falhar
+      console.log('[Verification] Tentando envio como texto simples...');
+      
+      const textPayload = {
+        messages: [
+          {
+            from: infobipWhatsAppNumber,
+            to: cleanPhone,
+            content: {
+              text: message
+            }
+          }
+        ]
+      };
+
+      const textUrl = `${infobipBaseUrl}/whatsapp/1/message/text`;
+      const textResponse = await fetch(textUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `App ${infobipApiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(textPayload)
+      });
+
+      const textData = await textResponse.json().catch(() => ({}));
+      
+      console.log('[Verification] Resposta texto simples:', {
+        status: textResponse.status,
+        ok: textResponse.ok,
+        data: JSON.stringify(textData).substring(0, 500)
+      });
+
+      if (!textResponse.ok) {
+        return new Response(
+          JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    if (isEmptyTwilioResponse && !hasSuccessIndicator) {
-      console.warn('[Verification] ⚠️ Webhook retornou resposta vazia - mensagem pode não ter sido enviada');
-      // Continua mesmo assim, mas loga o warning
-    }
-
-    console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone}`);
+    console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone} via Infobip`);
 
     return new Response(
       JSON.stringify({ 
