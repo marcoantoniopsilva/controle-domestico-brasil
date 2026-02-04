@@ -15,7 +15,6 @@ export function useWhatsAppConfig() {
   const [config, setConfig] = useState<WhatsAppConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
   const fetchConfig = async () => {
@@ -60,7 +59,7 @@ export function useWhatsAppConfig() {
     fetchConfig();
   }, []);
 
-  const saveConfig = async (newConfig: Omit<WhatsAppConfig, "id">) => {
+  const saveConfig = async (newConfig: Omit<WhatsAppConfig, "id" | "is_verified">) => {
     try {
       setIsSaving(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -96,13 +95,14 @@ export function useWhatsAppConfig() {
             is_active: newConfig.is_active,
             report_frequency: newConfig.report_frequency,
             report_hour: newConfig.report_hour,
+            is_verified: true,
             updated_at: new Date().toISOString()
           })
           .eq("id", config.id);
 
         if (error) throw error;
       } else {
-        // Criar novo
+        // Criar novo - já salva como verificado
         const { error } = await supabase
           .from("whatsapp_finance_users")
           .insert({
@@ -110,7 +110,8 @@ export function useWhatsAppConfig() {
             phone_number: cleanPhone,
             is_active: newConfig.is_active,
             report_frequency: newConfig.report_frequency,
-            report_hour: newConfig.report_hour
+            report_hour: newConfig.report_hour,
+            is_verified: true
           });
 
         if (error) throw error;
@@ -176,93 +177,12 @@ export function useWhatsAppConfig() {
     }
   };
 
-  const sendVerificationCode = async (phoneNumber: string) => {
-    try {
-      setIsVerifying(true);
-      const cleanPhone = phoneNumber.replace(/\D/g, "");
-
-      const { data, error } = await supabase.functions.invoke("whatsapp-send-verification", {
-        body: { phone_number: cleanPhone }
-      });
-
-      if (error) throw error;
-
-      if (data.error) {
-        toast({
-          title: "Erro",
-          description: data.error,
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      toast({
-        title: "Código enviado!",
-        description: "Verifique seu WhatsApp para o código de verificação."
-      });
-      return true;
-    } catch (error: any) {
-      console.error("Erro ao enviar código:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar o código. Tente novamente.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const verifyCode = async (phoneNumber: string, code: string) => {
-    try {
-      setIsVerifying(true);
-      const cleanPhone = phoneNumber.replace(/\D/g, "");
-
-      const { data, error } = await supabase.functions.invoke("whatsapp-verify-code", {
-        body: { phone_number: cleanPhone, code }
-      });
-
-      if (error) throw error;
-
-      if (data.error) {
-        toast({
-          title: "Erro",
-          description: data.error,
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      toast({
-        title: "Verificado!",
-        description: "Seu número de WhatsApp foi verificado com sucesso."
-      });
-
-      await fetchConfig();
-      return true;
-    } catch (error: any) {
-      console.error("Erro ao verificar código:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível verificar o código. Tente novamente.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   return {
     config,
     isLoading,
     isSaving,
-    isVerifying,
     saveConfig,
     deleteConfig,
-    sendVerificationCode,
-    verifyCode,
     refetch: fetchConfig
   };
 }

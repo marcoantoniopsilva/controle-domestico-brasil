@@ -7,8 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Bell, Clock, Trash2, Save, Smartphone, CheckCircle, Send, Shield } from "lucide-react";
-import { useWhatsAppConfig, WhatsAppConfig as WhatsAppConfigType } from "@/hooks/useWhatsAppConfig";
+import { MessageSquare, Bell, Clock, Trash2, Save, Smartphone, CheckCircle } from "lucide-react";
+import { useWhatsAppConfig } from "@/hooks/useWhatsAppConfig";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,33 +20,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 
 const WhatsAppConfig = () => {
   const { 
     config, 
     isLoading, 
     isSaving, 
-    isVerifying,
     saveConfig, 
-    deleteConfig,
-    sendVerificationCode,
-    verifyCode 
+    deleteConfig 
   } = useWhatsAppConfig();
   
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [reportFrequency, setReportFrequency] = useState<"daily" | "weekly" | "none">("daily");
   const [reportHour, setReportHour] = useState(20);
-  
-  // Estados para verificação
-  const [showVerification, setShowVerification] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [countdown, setCountdown] = useState(0);
 
   // Sincroniza estado local com dados do servidor
   useEffect(() => {
@@ -57,14 +44,6 @@ const WhatsAppConfig = () => {
       setReportHour(config.report_hour);
     }
   }, [config]);
-
-  // Countdown para reenvio
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
 
   const formatPhoneNumber = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, "");
@@ -91,35 +70,21 @@ const WhatsAppConfig = () => {
     }
   };
 
-  const handleSendCode = async () => {
-    const success = await sendVerificationCode(phoneNumber);
-    if (success) {
-      setShowVerification(true);
-      setCountdown(300); // 5 minutos
-      setVerificationCode("");
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    if (verificationCode.length !== 6) return;
-    
-    const success = await verifyCode(phoneNumber, verificationCode);
-    if (success) {
-      setShowVerification(false);
-      setVerificationCode("");
-      setCountdown(0);
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    if (!config?.is_verified) return;
-    
+  const handleSaveNumber = async () => {
     await saveConfig({
       phone_number: phoneNumber.replace(/\D/g, ""),
       is_active: isActive,
       report_frequency: reportFrequency,
-      report_hour: reportHour,
-      is_verified: true
+      report_hour: reportHour
+    });
+  };
+
+  const handleSaveSettings = async () => {
+    await saveConfig({
+      phone_number: phoneNumber.replace(/\D/g, ""),
+      is_active: isActive,
+      report_frequency: reportFrequency,
+      report_hour: reportHour
     });
   };
 
@@ -129,14 +94,14 @@ const WhatsAppConfig = () => {
     setIsActive(true);
     setReportFrequency("daily");
     setReportHour(20);
-    setShowVerification(false);
-    setVerificationCode("");
   };
 
   const hasSettingsChanges = () => {
     if (!config) return false;
     
+    const cleanCurrentPhone = phoneNumber.replace(/\D/g, "");
     return (
+      cleanCurrentPhone !== config.phone_number ||
       isActive !== config.is_active ||
       reportFrequency !== config.report_frequency ||
       reportHour !== config.report_hour
@@ -146,18 +111,6 @@ const WhatsAppConfig = () => {
   const isPhoneValid = () => {
     const cleaned = phoneNumber.replace(/\D/g, "");
     return /^55\d{10,11}$/.test(cleaned);
-  };
-
-  const isNewPhone = () => {
-    if (!config) return true;
-    const cleaned = phoneNumber.replace(/\D/g, "");
-    return cleaned !== config.phone_number;
-  };
-
-  const formatCountdown = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (isLoading) {
@@ -182,10 +135,10 @@ const WhatsAppConfig = () => {
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
           Configuração WhatsApp
-          {config?.is_verified && (
+          {config && (
             <Badge variant="secondary" className="ml-2">
               <CheckCircle className="h-3 w-3 mr-1" />
-              Verificado
+              Configurado
             </Badge>
           )}
         </CardTitle>
@@ -208,83 +161,24 @@ const WhatsAppConfig = () => {
               value={phoneNumber}
               onChange={(e) => handlePhoneChange(e.target.value)}
               className="font-mono flex-1"
-              disabled={showVerification}
             />
-            {(!config?.is_verified || isNewPhone()) && (
+            {!config && (
               <Button
-                onClick={handleSendCode}
-                disabled={!isPhoneValid() || isVerifying || countdown > 0}
-                variant={config?.is_verified ? "outline" : "default"}
+                onClick={handleSaveNumber}
+                disabled={!isPhoneValid() || isSaving}
               >
-                <Send className="h-4 w-4 mr-2" />
-                {countdown > 0 ? formatCountdown(countdown) : "Verificar"}
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? "Salvando..." : "Salvar"}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {config?.is_verified && !isNewPhone() 
-              ? "✓ Número verificado" 
-              : "Digite seu número com DDD (ex: 5531999999999)"}
+            Digite seu número com DDD (ex: 5531999999999)
           </p>
         </div>
 
-        {/* Verificação de Código */}
-        {showVerification && (
-          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-4">
-            <div className="flex items-center gap-2 text-primary">
-              <Shield className="h-5 w-5" />
-              <span className="font-medium">Verificação de Número</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Digite o código de 6 dígitos enviado para seu WhatsApp
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <InputOTP
-                maxLength={6}
-                value={verificationCode}
-                onChange={setVerificationCode}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              <Button
-                onClick={handleVerifyCode}
-                disabled={verificationCode.length !== 6 || isVerifying}
-              >
-                {isVerifying ? "Verificando..." : "Confirmar"}
-              </Button>
-            </div>
-            <div className="flex justify-between items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowVerification(false);
-                  setVerificationCode("");
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={handleSendCode}
-                disabled={countdown > 0 || isVerifying}
-              >
-                {countdown > 0 ? `Reenviar em ${formatCountdown(countdown)}` : "Reenviar código"}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Configurações (só aparecem se verificado) */}
-        {config?.is_verified && !isNewPhone() && (
+        {/* Configurações (aparecem após salvar o número) */}
+        {config && (
           <>
             {/* Ativar Notificações */}
             <div className="flex items-center justify-between rounded-lg border p-4">
@@ -355,7 +249,7 @@ const WhatsAppConfig = () => {
         </div>
 
         {/* Ações */}
-        {config?.is_verified && !isNewPhone() && (
+        {config && (
           <div className="flex gap-2">
             <Button 
               onClick={handleSaveSettings} 
@@ -363,7 +257,7 @@ const WhatsAppConfig = () => {
               className="flex-1"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Salvando..." : "Salvar Preferências"}
+              {isSaving ? "Salvando..." : "Salvar Alterações"}
             </Button>
 
             <AlertDialog>
