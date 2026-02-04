@@ -160,8 +160,15 @@ Deno.serve(async (req) => {
       body: responseText.substring(0, 500)
     });
 
+    // Verificar se a resposta indica sucesso real (não apenas HTTP 200)
+    const isEmptyTwilioResponse = responseText.includes('<Response></Response>') || responseText.includes('<Response/>');
+    const hasSuccessIndicator = responseText.includes('success') || 
+                                 responseText.includes('queued') || 
+                                 responseText.includes('sent') ||
+                                 responseText.includes('sid');
+    
     if (!webhookResponse.ok) {
-      console.error('[Verification] Erro ao enviar WhatsApp:', {
+      console.error('[Verification] Erro HTTP ao enviar WhatsApp:', {
         status: responseStatus,
         body: responseText
       });
@@ -169,6 +176,11 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (isEmptyTwilioResponse && !hasSuccessIndicator) {
+      console.warn('[Verification] ⚠️ Webhook retornou resposta vazia - mensagem pode não ter sido enviada');
+      // Continua mesmo assim, mas loga o warning
     }
 
     console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone}`);
