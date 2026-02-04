@@ -125,25 +125,44 @@ Deno.serve(async (req) => {
 
     const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Controle Financeiro_`;
 
+    const webhookPayload = {
+      phone: cleanPhone,
+      message
+    };
+
+    console.log('[Verification] Enviando para webhook:', {
+      url: healthWebhookUrl.substring(0, 50) + '...',
+      phone: cleanPhone,
+      messageLength: message.length
+    });
+
     const webhookResponse = await fetch(healthWebhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: cleanPhone,
-        message
-      })
+      body: JSON.stringify(webhookPayload)
+    });
+
+    const responseStatus = webhookResponse.status;
+    const responseText = await webhookResponse.text();
+    
+    console.log('[Verification] Resposta do webhook:', {
+      status: responseStatus,
+      ok: webhookResponse.ok,
+      body: responseText.substring(0, 500)
     });
 
     if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error('[Verification] Erro ao enviar WhatsApp:', errorText);
+      console.error('[Verification] Erro ao enviar WhatsApp:', {
+        status: responseStatus,
+        body: responseText
+      });
       return new Response(
         JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[Verification] Código enviado para ${cleanPhone}`);
+    console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone}`);
 
     return new Response(
       JSON.stringify({ 
