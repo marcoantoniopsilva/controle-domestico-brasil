@@ -3,6 +3,12 @@ project_id = "eepkixxqvelppxzfwoin"
 [functions.extract-transactions]
 verify_jwt = false
 
+[functions.whatsapp-send-verification]
+verify_jwt = false
+
+[functions.whatsapp-verify-code]
+verify_jwt = false
+
 [functions.whatsapp-finance]
 verify_jwt = false
 

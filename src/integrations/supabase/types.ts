@@ -612,6 +612,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          is_verified: boolean
           phone_number: string
           report_frequency: string
           report_hour: number
@@ -622,6 +623,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_verified?: boolean
           phone_number: string
           report_frequency?: string
           report_hour?: number
@@ -632,11 +634,42 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_verified?: boolean
           phone_number?: string
           report_frequency?: string
           report_hour?: number
           updated_at?: string
           usuario_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_verification_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone_number: string
+          usuario_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone_number: string
+          usuario_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          usuario_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
