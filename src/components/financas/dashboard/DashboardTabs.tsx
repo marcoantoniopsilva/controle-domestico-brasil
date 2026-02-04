@@ -19,6 +19,7 @@ import TendenciasInsights from "../relatorios/TendenciasInsights";
 import RelatorioEconomia from "../relatorios/RelatorioEconomia";
 import ReceitasDespesas from "../relatorios/ReceitasDespesas";
 import AnaliseRecorrencias from "../relatorios/AnaliseRecorrencias";
+import WhatsAppConfig from "../WhatsAppConfig";
 import { useTransactionsByCategory } from "@/hooks/useTransactionsByCategory";
 
 interface DashboardTabsProps {
@@ -111,6 +112,7 @@ const DashboardTabs = ({
           <TabsTrigger value="transacoes" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Transações</TabsTrigger>
           <TabsTrigger value="graficos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Gráficos</TabsTrigger>
           <TabsTrigger value="relatorios" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Relatórios</TabsTrigger>
+          <TabsTrigger value="whatsapp" className="text-xs md:text-sm px-2 md:px-3 py-1.5">WhatsApp</TabsTrigger>
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-4">
@@ -273,6 +275,10 @@ const DashboardTabs = ({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+        </TabsContent>
+
+        <TabsContent value="whatsapp">
+          <WhatsAppConfig />
         </TabsContent>
       </Tabs>
 
