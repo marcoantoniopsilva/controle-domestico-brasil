@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verificar rate limiting (máximo 3 tentativas por hora)
+    // Verificar rate limiting (máximo 10 tentativas por hora - aumentado para testes)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await supabase
       .from('whatsapp_verification_codes')
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       .eq('phone_number', cleanPhone)
       .gte('created_at', oneHourAgo);
 
-    if (count && count >= 3) {
+    if (count && count >= 10) {
       return new Response(
         JSON.stringify({ error: 'Muitas tentativas. Aguarde 1 hora.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
