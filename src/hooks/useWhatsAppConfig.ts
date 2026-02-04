@@ -8,12 +8,14 @@ export interface WhatsAppConfig {
   is_active: boolean;
   report_frequency: "daily" | "weekly" | "none";
   report_hour: number;
+  is_verified: boolean;
 }
 
 export function useWhatsAppConfig() {
   const [config, setConfig] = useState<WhatsAppConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
 
   const fetchConfig = async () => {
@@ -43,7 +45,8 @@ export function useWhatsAppConfig() {
           phone_number: data.phone_number,
           is_active: data.is_active,
           report_frequency: data.report_frequency as "daily" | "weekly" | "none",
-          report_hour: data.report_hour
+          report_hour: data.report_hour,
+          is_verified: data.is_verified
         });
       }
     } catch (error) {
@@ -173,12 +176,93 @@ export function useWhatsAppConfig() {
     }
   };
 
+  const sendVerificationCode = async (phoneNumber: string) => {
+    try {
+      setIsVerifying(true);
+      const cleanPhone = phoneNumber.replace(/\D/g, "");
+
+      const { data, error } = await supabase.functions.invoke("whatsapp-send-verification", {
+        body: { phone_number: cleanPhone }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: "Erro",
+          description: data.error,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Código enviado!",
+        description: "Verifique seu WhatsApp para o código de verificação."
+      });
+      return true;
+    } catch (error: any) {
+      console.error("Erro ao enviar código:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o código. Tente novamente.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const verifyCode = async (phoneNumber: string, code: string) => {
+    try {
+      setIsVerifying(true);
+      const cleanPhone = phoneNumber.replace(/\D/g, "");
+
+      const { data, error } = await supabase.functions.invoke("whatsapp-verify-code", {
+        body: { phone_number: cleanPhone, code }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: "Erro",
+          description: data.error,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Verificado!",
+        description: "Seu número de WhatsApp foi verificado com sucesso."
+      });
+
+      await fetchConfig();
+      return true;
+    } catch (error: any) {
+      console.error("Erro ao verificar código:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível verificar o código. Tente novamente.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return {
     config,
     isLoading,
     isSaving,
+    isVerifying,
     saveConfig,
     deleteConfig,
+    sendVerificationCode,
+    verifyCode,
     refetch: fetchConfig
   };
 }
