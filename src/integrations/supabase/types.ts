@@ -607,6 +607,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_finance_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          phone_number: string
+          report_frequency: string
+          report_hour: number
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number: string
+          report_frequency?: string
+          report_hour?: number
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string
+          report_frequency?: string
+          report_hour?: number
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
