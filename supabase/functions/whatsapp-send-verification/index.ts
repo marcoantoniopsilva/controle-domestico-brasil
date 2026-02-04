@@ -114,8 +114,16 @@ Deno.serve(async (req) => {
 
     // Enviar código via WhatsApp usando Infobip
     const infobipApiKey = Deno.env.get('INFOBIP_API_KEY');
-    const infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
+    let infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
     const infobipWhatsAppNumber = Deno.env.get('INFOBIP_WHATSAPP_NUMBER');
+
+    // Normalizar base URL (evita 500 quando o secret é salvo sem https://)
+    if (infobipBaseUrl) {
+      infobipBaseUrl = infobipBaseUrl.trim().replace(/\/+$/, '');
+      if (!/^https?:\/\//i.test(infobipBaseUrl)) {
+        infobipBaseUrl = `https://${infobipBaseUrl}`;
+      }
+    }
     
     if (!infobipApiKey || !infobipBaseUrl || !infobipWhatsAppNumber) {
       console.error('[Verification] Infobip não configurado:', {
