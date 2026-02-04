@@ -152,12 +152,17 @@ Deno.serve(async (req) => {
 
 async function sendWhatsAppResponse(to: string, message: string) {
   const infobipApiKey = Deno.env.get('INFOBIP_API_KEY');
-  const infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
+  let infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
   const infobipWhatsAppNumber = Deno.env.get('INFOBIP_WHATSAPP_NUMBER');
 
   if (!infobipApiKey || !infobipBaseUrl || !infobipWhatsAppNumber) {
     console.error('[Infobip Webhook] Credenciais Infobip não configuradas');
     return;
+  }
+
+  // Garantir que a URL tenha https://
+  if (!infobipBaseUrl.startsWith('http')) {
+    infobipBaseUrl = `https://${infobipBaseUrl}`;
   }
 
   try {
