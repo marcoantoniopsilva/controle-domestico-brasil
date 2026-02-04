@@ -125,15 +125,24 @@ Deno.serve(async (req) => {
 
     const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Controle Financeiro_`;
 
+    // Payload com múltiplos formatos para compatibilidade
     const webhookPayload = {
+      // Formato original
       phone: cleanPhone,
-      message
+      message,
+      // Formato Twilio/WhatsApp API
+      to: cleanPhone,
+      body: message,
+      // Formato alternativo
+      recipient: cleanPhone,
+      text: message
     };
 
     console.log('[Verification] Enviando para webhook:', {
       url: healthWebhookUrl.substring(0, 50) + '...',
       phone: cleanPhone,
-      messageLength: message.length
+      messageLength: message.length,
+      payload: JSON.stringify(webhookPayload).substring(0, 200)
     });
 
     const webhookResponse = await fetch(healthWebhookUrl, {
