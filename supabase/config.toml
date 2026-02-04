@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.whatsapp-finance]
 verify_jwt = false
+
+[functions.whatsapp-daily-report]
+verify_jwt = false
