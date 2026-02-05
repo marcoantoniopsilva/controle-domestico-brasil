@@ -37,6 +37,18 @@ interface FinancialContext {
   }>;
 }
 
+// Categorias prioritárias que devem sempre aparecer nos relatórios
+const categoriasPrioritarias = [
+  "Aplicativos e restaurantes",
+  "Supermercado", 
+  "Casa",
+  "Compras da Bruna",
+  "Compras do Marco",
+  "Estacionamento",
+  "Farmácia",
+  "Presentes/roupas Aurora"
+];
+
 // Categorias padrão com orçamentos default
 const categoriasDefault = [
   { nome: "Supermercado", tipo: "despesa", orcamento: 2300 },
@@ -52,6 +64,12 @@ const categoriasDefault = [
   { nome: "Educação", tipo: "despesa", orcamento: 250 },
   { nome: "Doações", tipo: "despesa", orcamento: 200 },
   { nome: "Outros", tipo: "despesa", orcamento: 200 },
+  { nome: "Aplicativos e restaurantes", tipo: "despesa", orcamento: 500 },
+  { nome: "Compras da Bruna", tipo: "despesa", orcamento: 400 },
+  { nome: "Compras do Marco", tipo: "despesa", orcamento: 400 },
+  { nome: "Estacionamento", tipo: "despesa", orcamento: 200 },
+  { nome: "Farmácia", tipo: "despesa", orcamento: 300 },
+  { nome: "Presentes/roupas Aurora", tipo: "despesa", orcamento: 300 },
   { nome: "Salário Marco", tipo: "receita", orcamento: 10500 },
   { nome: "Salário Bruna", tipo: "receita", orcamento: 5200 },
   { nome: "Renda Extra", tipo: "receita", orcamento: 500 },
@@ -183,26 +201,27 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     console.error('[Twilio Webhook] Erro ao buscar orçamentos:', budgetError);
   }
 
-  // Calcular totais
+  // Calcular totais - IMPORTANTE: usar Math.abs() para todos os valores
   let totalReceitas = 0;
   let totalDespesas = 0;
   let totalInvestimentos = 0;
   const gastosPorCategoria: Record<string, number> = {};
 
   (transacoes || []).forEach((t: Transacao) => {
-    const valor = Math.abs(t.valor);
+    // CRÍTICO: Sempre usar valor absoluto pois despesas podem estar com sinal negativo
+    const valorAbsoluto = Math.abs(Number(t.valor));
     
     if (t.tipo === 'receita') {
-      totalReceitas += valor;
+      totalReceitas += valorAbsoluto;
     } else if (t.tipo === 'despesa') {
-      totalDespesas += valor;
+      totalDespesas += valorAbsoluto;
     } else if (t.tipo === 'investimento') {
-      totalInvestimentos += valor;
+      totalInvestimentos += valorAbsoluto;
     }
 
-    // Agrupar gastos por categoria
+    // Agrupar gastos por categoria usando valor absoluto
     const key = `${t.categoria}|${t.tipo}`;
-    gastosPorCategoria[key] = (gastosPorCategoria[key] || 0) + valor;
+    gastosPorCategoria[key] = (gastosPorCategoria[key] || 0) + valorAbsoluto;
   });
 
   // Montar lista de categorias com orçamentos e gastos
@@ -244,10 +263,21 @@ async function processWithGemini(message: string, userName: string, context: Fin
     return getDefaultResponse(message, userName, context);
   }
 
-  // Montar contexto das categorias
-  const categoriasTexto = context.categorias
-    .filter(c => c.tipo === 'despesa' && c.gasto > 0)
-    .sort((a, b) => b.gasto - a.gasto)
+  // Montar contexto das categorias - priorizar categorias específicas
+  const categoriasPrioritariasComGasto = context.categorias
+    .filter(c => c.tipo === 'despesa' && categoriasPrioritarias.some(p => 
+      c.nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.nome.toLowerCase())
+    ));
+  
+  const outrasCategoriasComGasto = context.categorias
+    .filter(c => c.tipo === 'despesa' && c.gasto > 0 && !categoriasPrioritarias.some(p => 
+      c.nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.nome.toLowerCase())
+    ))
+    .sort((a, b) => b.gasto - a.gasto);
+
+  const todasCategorias = [...categoriasPrioritariasComGasto, ...outrasCategoriasComGasto];
+  
+  const categoriasTexto = todasCategorias
     .map(c => {
       const status = c.percentual > 100 ? '🔴' : c.percentual > 80 ? '🟡' : '🟢';
       return `${status} ${c.nome}: R$ ${c.gasto.toFixed(2)} / R$ ${c.orcamento.toFixed(2)} (${c.percentual}%)`;
