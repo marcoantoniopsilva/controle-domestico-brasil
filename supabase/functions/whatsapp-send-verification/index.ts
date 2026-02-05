@@ -112,24 +112,16 @@ Deno.serve(async (req) => {
       throw insertError;
     }
 
-    // Enviar código via WhatsApp usando Infobip
-    const infobipApiKey = Deno.env.get('INFOBIP_API_KEY');
-    let infobipBaseUrl = Deno.env.get('INFOBIP_BASE_URL');
-    const infobipWhatsAppNumber = Deno.env.get('INFOBIP_WHATSAPP_NUMBER');
-
-    // Normalizar base URL (evita 500 quando o secret é salvo sem https://)
-    if (infobipBaseUrl) {
-      infobipBaseUrl = infobipBaseUrl.trim().replace(/\/+$/, '');
-      if (!/^https?:\/\//i.test(infobipBaseUrl)) {
-        infobipBaseUrl = `https://${infobipBaseUrl}`;
-      }
-    }
+    // Enviar código via WhatsApp usando Twilio
+    const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioWhatsAppNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
     
-    if (!infobipApiKey || !infobipBaseUrl || !infobipWhatsAppNumber) {
-      console.error('[Verification] Infobip não configurado:', {
-        hasApiKey: !!infobipApiKey,
-        hasBaseUrl: !!infobipBaseUrl,
-        hasWhatsAppNumber: !!infobipWhatsAppNumber
+    if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsAppNumber) {
+      console.error('[Verification] Twilio não configurado:', {
+        hasAccountSid: !!twilioAccountSid,
+        hasAuthToken: !!twilioAuthToken,
+        hasWhatsAppNumber: !!twilioWhatsAppNumber
       });
       return new Response(
         JSON.stringify({ error: 'Serviço de envio não configurado' }),
@@ -139,102 +131,51 @@ Deno.serve(async (req) => {
 
     const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Controle Financeiro_`;
 
-    // Payload Infobip WhatsApp
-    const infobipPayload = {
-      messages: [
-        {
-          from: infobipWhatsAppNumber,
-          to: cleanPhone,
-          content: {
-            templateName: "verification_code",
-            templateData: {
-              body: {
-                placeholders: [code]
-              }
-            },
-            language: "pt_BR"
-          }
-        }
-      ]
-    };
+    // Formatar números para Twilio
+    const fromNumber = `whatsapp:+${twilioWhatsAppNumber.replace(/\D/g, '')}`;
+    const toNumber = `whatsapp:+${cleanPhone}`;
 
-    // URL completa para envio de mensagem WhatsApp template
-    const infobipUrl = `${infobipBaseUrl}/whatsapp/1/message/template`;
-
-    console.log('[Verification] Enviando via Infobip:', {
-      url: infobipUrl,
-      from: infobipWhatsAppNumber,
-      to: cleanPhone
+    console.log('[Verification] Enviando via Twilio:', {
+      from: fromNumber,
+      to: toNumber
     });
 
-    const infobipResponse = await fetch(infobipUrl, {
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+    
+    const formData = new URLSearchParams();
+    formData.append('From', fromNumber);
+    formData.append('To', toNumber);
+    formData.append('Body', message);
+
+    const twilioResponse = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `App ${infobipApiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Authorization': 'Basic ' + btoa(`${twilioAccountSid}:${twilioAuthToken}`),
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify(infobipPayload)
+      body: formData.toString()
     });
 
-    const responseStatus = infobipResponse.status;
-    const responseData = await infobipResponse.json().catch(() => ({}));
+    const responseData = await twilioResponse.json().catch(() => ({}));
     
-    console.log('[Verification] Resposta Infobip:', {
-      status: responseStatus,
-      ok: infobipResponse.ok,
+    console.log('[Verification] Resposta Twilio:', {
+      status: twilioResponse.status,
+      ok: twilioResponse.ok,
       data: JSON.stringify(responseData).substring(0, 500)
     });
 
-    if (!infobipResponse.ok) {
-      console.error('[Verification] Erro Infobip:', {
-        status: responseStatus,
+    if (!twilioResponse.ok) {
+      console.error('[Verification] Erro Twilio:', {
+        status: twilioResponse.status,
         error: responseData
       });
-      
-      // Tentar enviar como texto simples se template falhar
-      console.log('[Verification] Tentando envio como texto simples...');
-      
-      const textPayload = {
-        messages: [
-          {
-            from: infobipWhatsAppNumber,
-            to: cleanPhone,
-            content: {
-              text: message
-            }
-          }
-        ]
-      };
-
-      const textUrl = `${infobipBaseUrl}/whatsapp/1/message/text`;
-      const textResponse = await fetch(textUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `App ${infobipApiKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(textPayload)
-      });
-
-      const textData = await textResponse.json().catch(() => ({}));
-      
-      console.log('[Verification] Resposta texto simples:', {
-        status: textResponse.status,
-        ok: textResponse.ok,
-        data: JSON.stringify(textData).substring(0, 500)
-      });
-
-      if (!textResponse.ok) {
-        return new Response(
-          JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      return new Response(
+        JSON.stringify({ error: 'Falha ao enviar código. Tente novamente.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone} via Infobip`);
+    console.log(`[Verification] ✅ Código enviado com sucesso para ${cleanPhone} via Twilio`);
 
     return new Response(
       JSON.stringify({ 
