@@ -156,18 +156,20 @@ function escapeXml(text: string): string {
     .replace(/'/g, '&apos;');
 }
 
-// Calcula o ciclo financeiro atual (dia 7 a dia 6 do próximo mês)
+// Calcula o ciclo financeiro atual (dia 25 a dia 24 do próximo mês)
 function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
   const hoje = new Date();
   let inicio: Date;
   let fim: Date;
 
-  if (hoje.getDate() >= 7) {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 6);
+  if (hoje.getDate() >= 25) {
+    // Se estamos no dia 25 ou depois, o ciclo começou neste mês
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 25);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
   } else {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 6);
+    // Se estamos antes do dia 25, o ciclo começou no mês anterior
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 25);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
   }
 
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
