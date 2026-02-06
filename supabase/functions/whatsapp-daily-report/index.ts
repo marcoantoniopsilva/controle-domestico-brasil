@@ -20,6 +20,7 @@ interface Transacao {
   tipo: string;
   descricao: string | null;
   quem_gastou: string;
+  parcelas: number;
 }
 
 interface CategoryBudget {
@@ -28,25 +29,16 @@ interface CategoryBudget {
   orcamento: number;
 }
 
-// Categorias padrão com orçamentos default
-const categoriasDefault = [
-  { nome: "Supermercado", tipo: "despesa", orcamento: 2300 },
-  { nome: "Pets", tipo: "despesa", orcamento: 450 },
-  { nome: "Casa", tipo: "despesa", orcamento: 900 },
-  { nome: "Transporte", tipo: "despesa", orcamento: 600 },
-  { nome: "Lazer", tipo: "despesa", orcamento: 200 },
-  { nome: "Saúde", tipo: "despesa", orcamento: 300 },
-  { nome: "Presentes", tipo: "despesa", orcamento: 200 },
-  { nome: "Delivery", tipo: "despesa", orcamento: 400 },
-  { nome: "Cartão de Crédito Marco", tipo: "despesa", orcamento: 600 },
-  { nome: "Cartão de Crédito Bruna", tipo: "despesa", orcamento: 500 },
-  { nome: "Educação", tipo: "despesa", orcamento: 250 },
-  { nome: "Doações", tipo: "despesa", orcamento: 200 },
-  { nome: "Outros", tipo: "despesa", orcamento: 200 },
-  { nome: "Salário Marco", tipo: "receita", orcamento: 10500 },
-  { nome: "Salário Bruna", tipo: "receita", orcamento: 5200 },
-  { nome: "Renda Extra", tipo: "receita", orcamento: 500 },
-  { nome: "Investimentos", tipo: "investimento", orcamento: 5000 },
+// Categorias prioritárias que devem sempre aparecer nos relatórios
+const categoriasPrioritarias = [
+  "Aplicativos e restaurantes",
+  "Supermercado", 
+  "Casa",
+  "Compras da Bruna",
+  "Compras do Marco",
+  "Estacionamento",
+  "Farmácia",
+  "Presentes/roupas Aurora"
 ];
 
 Deno.serve(async (req) => {
@@ -55,7 +47,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('[DailyReport] Iniciando envio de relatórios...');
+    // Verificar se é um teste manual (parâmetro force=true ou sendNow=true)
+    const url = new URL(req.url);
+    const forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
+
+    console.log('[DailyReport] Iniciando envio de relatórios...', forceTest ? '(TESTE MANUAL)' : '');
 
     // Inicializar Supabase client com service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -69,17 +65,30 @@ Deno.serve(async (req) => {
 
     console.log(`[DailyReport] Hora de Brasília: ${brasiliaHour}h, Dia da semana: ${dayOfWeek}`);
 
-    // Buscar usuários que devem receber relatório agora
-    const { data: users, error: usersError } = await supabase
-      .from('whatsapp_finance_users')
-      .select('usuario_id, phone_number, report_frequency, report_hour')
-      .eq('is_active', true)
-      .eq('report_hour', brasiliaHour)
-      .neq('report_frequency', 'none');
+    let users: WhatsAppUser[] = [];
 
-    if (usersError) {
-      console.error('[DailyReport] Erro ao buscar usuários:', usersError);
-      throw usersError;
+    if (forceTest) {
+      // Buscar todos os usuários ativos para teste
+      const { data, error } = await supabase
+        .from('whatsapp_finance_users')
+        .select('usuario_id, phone_number, report_frequency, report_hour')
+        .eq('is_active', true)
+        .neq('report_frequency', 'none');
+      
+      if (error) throw error;
+      users = data || [];
+      console.log(`[DailyReport] TESTE MANUAL: ${users.length} usuários encontrados`);
+    } else {
+      // Buscar usuários que devem receber relatório agora
+      const { data, error } = await supabase
+        .from('whatsapp_finance_users')
+        .select('usuario_id, phone_number, report_frequency, report_hour')
+        .eq('is_active', true)
+        .eq('report_hour', brasiliaHour)
+        .neq('report_frequency', 'none');
+
+      if (error) throw error;
+      users = data || [];
     }
 
     if (!users || users.length === 0) {
@@ -90,8 +99,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Filtrar por frequência
-    const usersToNotify = users.filter((user: WhatsAppUser) => {
+    // Filtrar por frequência (skip se for teste manual)
+    const usersToNotify = forceTest ? users : users.filter((user: WhatsAppUser) => {
       if (user.report_frequency === 'daily') return true;
       if (user.report_frequency === 'weekly' && dayOfWeek === 1) return true; // Segunda-feira
       return false;
@@ -99,10 +108,14 @@ Deno.serve(async (req) => {
 
     console.log(`[DailyReport] ${usersToNotify.length} usuários para notificar`);
 
-    const healthWebhookUrl = Deno.env.get('HEALTH_WEBHOOK_URL');
-    if (!healthWebhookUrl) {
-      console.error('[DailyReport] HEALTH_WEBHOOK_URL não configurada');
-      throw new Error('HEALTH_WEBHOOK_URL não configurada');
+    // Configuração Twilio
+    const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
+
+    if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
+      console.error('[DailyReport] Credenciais Twilio não configuradas');
+      throw new Error('Credenciais Twilio não configuradas');
     }
 
     let successCount = 0;
@@ -113,25 +126,29 @@ Deno.serve(async (req) => {
       try {
         const report = await generateReport(supabase, user.usuario_id);
         
-        // Enviar para o webhook do projeto Saúde
-        const webhookResponse = await fetch(healthWebhookUrl, {
+        // Enviar via Twilio
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+        const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+        
+        const formData = new URLSearchParams();
+        formData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+        formData.append('To', `whatsapp:+${user.phone_number}`);
+        formData.append('Body', report);
+
+        const response = await fetch(twilioUrl, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': Deno.env.get('FINANCE_API_KEY') || ''
+            'Authorization': `Basic ${authHeader}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify({
-            phone: user.phone_number,
-            message: report,
-            source: 'finance-daily-report'
-          })
+          body: formData.toString()
         });
 
-        if (webhookResponse.ok) {
+        if (response.ok) {
           console.log(`[DailyReport] Relatório enviado para ${user.phone_number}`);
           successCount++;
         } else {
-          const errorText = await webhookResponse.text();
+          const errorText = await response.text();
           console.error(`[DailyReport] Erro ao enviar para ${user.phone_number}:`, errorText);
           errorCount++;
         }
@@ -162,18 +179,18 @@ Deno.serve(async (req) => {
   }
 });
 
-// Calcula o ciclo financeiro atual (dia 7 a dia 6 do próximo mês)
+// Calcula o ciclo financeiro atual (dia 25 a dia 24 do próximo mês)
 function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
   const hoje = new Date();
   let inicio: Date;
   let fim: Date;
 
-  if (hoje.getDate() >= 7) {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 6);
+  if (hoje.getDate() >= 25) {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 25);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
   } else {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 6);
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 25);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
   }
 
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -186,12 +203,50 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
   const ciclo = getCurrentCycle();
 
   // Buscar transações do ciclo atual
-  const { data: transacoes } = await supabase
+  const { data: transacoesCiclo } = await supabase
     .from('lancamentos')
     .select('*')
     .eq('usuario_id', usuarioId)
     .gte('data', ciclo.inicio.toISOString().split('T')[0])
     .lte('data', ciclo.fim.toISOString().split('T')[0]);
+
+  // Buscar transações parceladas de ciclos anteriores (até 12 meses atrás)
+  const dataLimiteAnterior = new Date(ciclo.inicio);
+  dataLimiteAnterior.setMonth(dataLimiteAnterior.getMonth() - 12);
+  
+  const { data: transacoesParceladas } = await supabase
+    .from('lancamentos')
+    .select('*')
+    .eq('usuario_id', usuarioId)
+    .gt('parcelas', 1)
+    .lt('data', ciclo.inicio.toISOString().split('T')[0])
+    .gte('data', dataLimiteAnterior.toISOString().split('T')[0]);
+
+  // Calcular parcelas que devem aparecer no ciclo atual
+  const parcelasDoCiclo: Array<{ categoria: string; tipo: string; valor: number }> = [];
+  
+  (transacoesParceladas || []).forEach((t: Transacao) => {
+    const dataTransacao = new Date(t.data);
+    const valorAbsoluto = Math.abs(Number(t.valor));
+    
+    for (let i = 2; i <= t.parcelas; i++) {
+      const dataParcela = new Date(dataTransacao);
+      dataParcela.setMonth(dataTransacao.getMonth() + (i - 1));
+      
+      const ultimoDiaDoMes = new Date(dataParcela.getFullYear(), dataParcela.getMonth() + 1, 0).getDate();
+      if (dataParcela.getDate() > ultimoDiaDoMes) {
+        dataParcela.setDate(ultimoDiaDoMes);
+      }
+      
+      if (dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim) {
+        parcelasDoCiclo.push({
+          categoria: t.categoria,
+          tipo: t.tipo,
+          valor: valorAbsoluto
+        });
+      }
+    }
+  });
 
   // Buscar orçamentos personalizados
   const { data: customBudgets } = await supabase
@@ -199,65 +254,83 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     .select('categoria_nome, categoria_tipo, orcamento')
     .eq('usuario_id', usuarioId);
 
+  // Criar mapa de orçamentos
+  const orcamentosMap: Record<string, number> = {};
+  (customBudgets || []).forEach((cb: CategoryBudget) => {
+    orcamentosMap[cb.categoria_nome] = Number(cb.orcamento);
+  });
+
   // Calcular totais
   let totalReceitas = 0;
   let totalDespesas = 0;
   const gastosPorCategoria: Record<string, number> = {};
 
-  (transacoes || []).forEach((t: Transacao) => {
-    const valor = Math.abs(t.valor);
+  // Processar transações do ciclo
+  (transacoesCiclo || []).forEach((t: Transacao) => {
+    const valor = Math.abs(Number(t.valor));
     
     if (t.tipo === 'receita') {
       totalReceitas += valor;
     } else if (t.tipo === 'despesa') {
       totalDespesas += valor;
-    }
-
-    if (t.tipo === 'despesa') {
       gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + valor;
+    }
+  });
+
+  // Adicionar parcelas de ciclos anteriores
+  parcelasDoCiclo.forEach(parcela => {
+    if (parcela.tipo === 'receita') {
+      totalReceitas += parcela.valor;
+    } else if (parcela.tipo === 'despesa') {
+      totalDespesas += parcela.valor;
+      gastosPorCategoria[parcela.categoria] = (gastosPorCategoria[parcela.categoria] || 0) + parcela.valor;
     }
   });
 
   const saldo = totalReceitas - totalDespesas;
 
-  // Montar status das categorias de despesa
-  const categoriasDespesa = categoriasDefault
-    .filter(c => c.tipo === 'despesa')
-    .map(cat => {
-      const customBudget = (customBudgets || []).find(
-        (cb: CategoryBudget) => cb.categoria_nome === cat.nome && cb.categoria_tipo === cat.tipo
-      );
-      
-      const orcamento = customBudget ? Number(customBudget.orcamento) : cat.orcamento;
-      const gasto = gastosPorCategoria[cat.nome] || 0;
-      const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
+  // Montar categorias priorizando as definidas
+  const todasCategorias = new Set<string>();
+  Object.keys(gastosPorCategoria).forEach(cat => todasCategorias.add(cat));
+  Object.keys(orcamentosMap).forEach(cat => todasCategorias.add(cat));
 
-      return { nome: cat.nome, orcamento, gasto, percentual };
-    })
-    .filter(c => c.gasto > 0 || c.orcamento > 0)
-    .sort((a, b) => b.percentual - a.percentual);
+  const categoriasData = Array.from(todasCategorias).map(nome => {
+    const gasto = gastosPorCategoria[nome] || 0;
+    const orcamento = orcamentosMap[nome] || 0;
+    const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
+    const isPrioritaria = categoriasPrioritarias.some(p => 
+      nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(nome.toLowerCase())
+    );
+    return { nome, orcamento, gasto, percentual, isPrioritaria };
+  }).filter(c => c.gasto > 0 || c.orcamento > 0);
+
+  // Ordenar: prioritárias primeiro, depois por percentual
+  categoriasData.sort((a, b) => {
+    if (a.isPrioritaria && !b.isPrioritaria) return -1;
+    if (!a.isPrioritaria && b.isPrioritaria) return 1;
+    return b.percentual - a.percentual;
+  });
 
   // Formatar mensagem
-  const categoriasTexto = categoriasDespesa
-    .slice(0, 10)
+  const categoriasTexto = categoriasData
+    .slice(0, 12)
     .map(c => {
       const status = c.percentual > 100 ? '🔴' : c.percentual > 80 ? '🟡' : '🟢';
-      return `${status} *${c.nome}*: R$ ${c.gasto.toFixed(0)} / R$ ${c.orcamento.toFixed(0)} (${c.percentual}%)`;
+      return `${status} *${c.nome}*: R$ ${c.gasto.toFixed(2)} / R$ ${c.orcamento.toFixed(2)} (${c.percentual}%)`;
     })
     .join('\n');
 
   const saldoEmoji = saldo >= 0 ? '✅' : '⚠️';
   const dataRelatorio = new Date().toLocaleDateString('pt-BR');
 
-  return `📊 *Relatório Financeiro*\n` +
+  return `📊 *Relatório Financeiro Diário*\n` +
     `📅 ${dataRelatorio}\n` +
-    `Ciclo: ${ciclo.nome}\n\n` +
+    `Ciclo: ${ciclo.inicio.toLocaleDateString('pt-BR')} a ${ciclo.fim.toLocaleDateString('pt-BR')}\n\n` +
     `💰 *Resumo Geral*\n` +
     `Receitas: R$ ${totalReceitas.toFixed(2)}\n` +
     `Despesas: R$ ${totalDespesas.toFixed(2)}\n` +
     `${saldoEmoji} Saldo: R$ ${saldo.toFixed(2)}\n\n` +
     `📋 *Status das Categorias*\n\n` +
     `${categoriasTexto}\n\n` +
-    `_🟢 OK | 🟡 Atenção | 🔴 Estourado_\n\n` +
-    `Digite *ajuda* para ver comandos.`;
+    `_🟢 OK | 🟡 Atenção | 🔴 Estourado_`;
 }
