@@ -49,33 +49,6 @@ const categoriasPrioritarias = [
   "Presentes/roupas Aurora"
 ];
 
-// Categorias padrão com orçamentos default
-const categoriasDefault = [
-  { nome: "Supermercado", tipo: "despesa", orcamento: 2300 },
-  { nome: "Pets", tipo: "despesa", orcamento: 450 },
-  { nome: "Casa", tipo: "despesa", orcamento: 900 },
-  { nome: "Transporte", tipo: "despesa", orcamento: 600 },
-  { nome: "Lazer", tipo: "despesa", orcamento: 200 },
-  { nome: "Saúde", tipo: "despesa", orcamento: 300 },
-  { nome: "Presentes", tipo: "despesa", orcamento: 200 },
-  { nome: "Delivery", tipo: "despesa", orcamento: 400 },
-  { nome: "Cartão de Crédito Marco", tipo: "despesa", orcamento: 600 },
-  { nome: "Cartão de Crédito Bruna", tipo: "despesa", orcamento: 500 },
-  { nome: "Educação", tipo: "despesa", orcamento: 250 },
-  { nome: "Doações", tipo: "despesa", orcamento: 200 },
-  { nome: "Outros", tipo: "despesa", orcamento: 200 },
-  { nome: "Aplicativos e restaurantes", tipo: "despesa", orcamento: 500 },
-  { nome: "Compras da Bruna", tipo: "despesa", orcamento: 400 },
-  { nome: "Compras do Marco", tipo: "despesa", orcamento: 400 },
-  { nome: "Estacionamento", tipo: "despesa", orcamento: 200 },
-  { nome: "Farmácia", tipo: "despesa", orcamento: 300 },
-  { nome: "Presentes/roupas Aurora", tipo: "despesa", orcamento: 300 },
-  { nome: "Salário Marco", tipo: "receita", orcamento: 10500 },
-  { nome: "Salário Bruna", tipo: "receita", orcamento: 5200 },
-  { nome: "Renda Extra", tipo: "receita", orcamento: 500 },
-  { nome: "Investimentos", tipo: "investimento", orcamento: 5000 },
-];
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -193,7 +166,7 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     console.error('[Twilio Webhook] Erro ao buscar transações:', transError);
   }
 
-  // Buscar orçamentos personalizados
+  // Buscar orçamentos personalizados do usuário
   const { data: customBudgets, error: budgetError } = await supabase
     .from('category_budgets')
     .select('categoria_nome, categoria_tipo, orcamento')
@@ -203,11 +176,18 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     console.error('[Twilio Webhook] Erro ao buscar orçamentos:', budgetError);
   }
 
+  // Criar mapa de orçamentos do usuário
+  const orcamentosMap: Record<string, number> = {};
+  (customBudgets || []).forEach((cb: CategoryBudget) => {
+    const key = `${cb.categoria_nome}|${cb.categoria_tipo}`;
+    orcamentosMap[key] = Number(cb.orcamento);
+  });
+
   // Calcular totais - IMPORTANTE: usar Math.abs() para todos os valores
   let totalReceitas = 0;
   let totalDespesas = 0;
   let totalInvestimentos = 0;
-  const gastosPorCategoria: Record<string, number> = {};
+  const gastosPorCategoria: Record<string, { gasto: number; tipo: string }> = {};
 
   (transacoes || []).forEach((t: Transacao) => {
     // CRÍTICO: Sempre usar valor absoluto pois despesas podem estar com sinal negativo
@@ -223,23 +203,30 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
 
     // Agrupar gastos por categoria usando valor absoluto
     const key = `${t.categoria}|${t.tipo}`;
-    gastosPorCategoria[key] = (gastosPorCategoria[key] || 0) + valorAbsoluto;
+    if (!gastosPorCategoria[key]) {
+      gastosPorCategoria[key] = { gasto: 0, tipo: t.tipo };
+    }
+    gastosPorCategoria[key].gasto += valorAbsoluto;
   });
 
-  // Montar lista de categorias com orçamentos e gastos
-  const categorias = categoriasDefault.map(cat => {
-    const customBudget = (customBudgets || []).find(
-      (cb: CategoryBudget) => cb.categoria_nome === cat.nome && cb.categoria_tipo === cat.tipo
-    );
-    
-    const orcamento = customBudget ? Number(customBudget.orcamento) : cat.orcamento;
-    const key = `${cat.nome}|${cat.tipo}`;
-    const gasto = gastosPorCategoria[key] || 0;
+  // Montar lista de categorias baseado nos gastos reais e orçamentos do banco
+  const categoriasSet = new Set<string>();
+  
+  // Adicionar categorias com gastos
+  Object.keys(gastosPorCategoria).forEach(key => categoriasSet.add(key));
+  
+  // Adicionar categorias com orçamentos
+  Object.keys(orcamentosMap).forEach(key => categoriasSet.add(key));
+
+  const categorias = Array.from(categoriasSet).map(key => {
+    const [nome, tipo] = key.split('|');
+    const gasto = gastosPorCategoria[key]?.gasto || 0;
+    const orcamento = orcamentosMap[key] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
 
     return {
-      nome: cat.nome,
-      tipo: cat.tipo,
+      nome,
+      tipo,
       orcamento,
       gasto,
       percentual
