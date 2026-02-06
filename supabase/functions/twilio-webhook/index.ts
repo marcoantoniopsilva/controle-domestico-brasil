@@ -13,6 +13,7 @@ interface Transacao {
   tipo: string;
   descricao: string | null;
   quem_gastou: string;
+  parcelas: number;
 }
 
 interface CategoryBudget {
@@ -155,7 +156,7 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
   const ciclo = getCurrentCycle();
   
   // Buscar transações do ciclo atual
-  const { data: transacoes, error: transError } = await supabase
+  const { data: transacoesCiclo, error: transError } = await supabase
     .from('lancamentos')
     .select('*')
     .eq('usuario_id', usuarioId)
@@ -163,8 +164,56 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     .lte('data', ciclo.fim.toISOString().split('T')[0]);
 
   if (transError) {
-    console.error('[Twilio Webhook] Erro ao buscar transações:', transError);
+    console.error('[Twilio Webhook] Erro ao buscar transações do ciclo:', transError);
   }
+
+  // Buscar transações parceladas de ciclos anteriores (até 12 meses atrás)
+  const dataLimiteAnterior = new Date(ciclo.inicio);
+  dataLimiteAnterior.setMonth(dataLimiteAnterior.getMonth() - 12);
+  
+  const { data: transacoesParceladas, error: parcelasError } = await supabase
+    .from('lancamentos')
+    .select('*')
+    .eq('usuario_id', usuarioId)
+    .gt('parcelas', 1)
+    .lt('data', ciclo.inicio.toISOString().split('T')[0])
+    .gte('data', dataLimiteAnterior.toISOString().split('T')[0]);
+
+  if (parcelasError) {
+    console.error('[Twilio Webhook] Erro ao buscar transações parceladas:', parcelasError);
+  }
+
+  // Calcular parcelas que devem aparecer no ciclo atual
+  const parcelasDoCiclo: Array<{ categoria: string; tipo: string; valor: number }> = [];
+  
+  (transacoesParceladas || []).forEach((t: Transacao) => {
+    const dataTransacao = new Date(t.data);
+    const valorAbsoluto = Math.abs(Number(t.valor));
+    
+    // Para cada parcela (começando da 2ª, pois a 1ª já foi contada no ciclo original)
+    for (let i = 2; i <= t.parcelas; i++) {
+      const dataParcela = new Date(dataTransacao);
+      dataParcela.setMonth(dataTransacao.getMonth() + (i - 1));
+      
+      // Ajustar o dia se necessário para evitar problemas com meses diferentes
+      const ultimoDiaDoMes = new Date(dataParcela.getFullYear(), dataParcela.getMonth() + 1, 0).getDate();
+      if (dataParcela.getDate() > ultimoDiaDoMes) {
+        dataParcela.setDate(ultimoDiaDoMes);
+      }
+      
+      // Verificar se esta parcela está dentro do ciclo atual
+      if (dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim) {
+        console.log(`[Twilio Webhook] Parcela ${i}/${t.parcelas} de ${t.categoria} incluída no ciclo: R$ ${valorAbsoluto.toFixed(2)}`);
+        parcelasDoCiclo.push({
+          categoria: t.categoria,
+          tipo: t.tipo,
+          valor: valorAbsoluto
+        });
+      }
+    }
+  });
+
+  console.log(`[Twilio Webhook] Total de parcelas de ciclos anteriores: ${parcelasDoCiclo.length}`);
 
   // Buscar orçamentos personalizados do usuário
   const { data: customBudgets, error: budgetError } = await supabase
@@ -189,8 +238,8 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
   let totalInvestimentos = 0;
   const gastosPorCategoria: Record<string, { gasto: number; tipo: string }> = {};
 
-  (transacoes || []).forEach((t: Transacao) => {
-    // CRÍTICO: Sempre usar valor absoluto pois despesas podem estar com sinal negativo
+  // Processar transações do ciclo atual
+  (transacoesCiclo || []).forEach((t: Transacao) => {
     const valorAbsoluto = Math.abs(Number(t.valor));
     
     if (t.tipo === 'receita') {
@@ -201,7 +250,6 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
       totalInvestimentos += valorAbsoluto;
     }
 
-    // Agrupar gastos por categoria usando valor absoluto
     const key = `${t.categoria}|${t.tipo}`;
     if (!gastosPorCategoria[key]) {
       gastosPorCategoria[key] = { gasto: 0, tipo: t.tipo };
@@ -209,13 +257,27 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     gastosPorCategoria[key].gasto += valorAbsoluto;
   });
 
+  // Adicionar parcelas de ciclos anteriores aos totais
+  parcelasDoCiclo.forEach(parcela => {
+    if (parcela.tipo === 'receita') {
+      totalReceitas += parcela.valor;
+    } else if (parcela.tipo === 'despesa') {
+      totalDespesas += parcela.valor;
+    } else if (parcela.tipo === 'investimento') {
+      totalInvestimentos += parcela.valor;
+    }
+
+    const key = `${parcela.categoria}|${parcela.tipo}`;
+    if (!gastosPorCategoria[key]) {
+      gastosPorCategoria[key] = { gasto: 0, tipo: parcela.tipo };
+    }
+    gastosPorCategoria[key].gasto += parcela.valor;
+  });
+
   // Montar lista de categorias baseado nos gastos reais e orçamentos do banco
   const categoriasSet = new Set<string>();
   
-  // Adicionar categorias com gastos
   Object.keys(gastosPorCategoria).forEach(key => categoriasSet.add(key));
-  
-  // Adicionar categorias com orçamentos
   Object.keys(orcamentosMap).forEach(key => categoriasSet.add(key));
 
   const categorias = Array.from(categoriasSet).map(key => {
