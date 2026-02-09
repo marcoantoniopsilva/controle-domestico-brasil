@@ -49,7 +49,17 @@ Deno.serve(async (req) => {
   try {
     // Verificar se é um teste manual (parâmetro force=true ou sendNow=true)
     const url = new URL(req.url);
-    const forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
+    let forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
+    
+    // Também verificar no body JSON
+    if (!forceTest && req.method === 'POST') {
+      try {
+        const body = await req.json();
+        if (body?.force === true || body?.sendNow === true) {
+          forceTest = true;
+        }
+      } catch { /* body não é JSON, ignorar */ }
+    }
 
     console.log('[DailyReport] Iniciando envio de relatórios...', forceTest ? '(TESTE MANUAL)' : '');
 
