@@ -160,13 +160,16 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        console.log(`[DailyReport] Template enviado para ${user.phone_number}`);
+        const templateBody = await templateResponse.text();
+        console.log(`[DailyReport] Template enviado para ${user.phone_number}, status: ${templateResponse.status}, response: ${templateBody.substring(0, 200)}`);
 
-        // Pequeno delay (500ms) para garantir que a janela de 72h foi aberta
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Delay de 3s para garantir que a janela de conversa foi aberta pelo Twilio
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // 2. Enviar relatório detalhado (session message dentro da janela aberta)
+        console.log(`[DailyReport] Gerando relatório para ${user.phone_number}...`);
         const report = await generateReport(supabase, user.usuario_id);
+        console.log(`[DailyReport] Relatório gerado, enviando para ${user.phone_number}...`);
         
         const reportFormData = new URLSearchParams();
         reportFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
@@ -182,12 +185,12 @@ Deno.serve(async (req) => {
           body: reportFormData.toString()
         });
 
+        const reportBody = await reportResponse.text();
         if (reportResponse.ok) {
-          console.log(`[DailyReport] Relatório enviado para ${user.phone_number}`);
+          console.log(`[DailyReport] Relatório enviado para ${user.phone_number}, status: ${reportResponse.status}`);
           successCount++;
         } else {
-          const errorText = await reportResponse.text();
-          console.error(`[DailyReport] Erro ao enviar relatório para ${user.phone_number}:`, errorText);
+          console.error(`[DailyReport] FALHA ao enviar relatório para ${user.phone_number}, status: ${reportResponse.status}, response: ${reportBody.substring(0, 300)}`);
           errorCount++;
         }
 
