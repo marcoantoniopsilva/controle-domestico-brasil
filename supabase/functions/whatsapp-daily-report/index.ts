@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
+    const templateContentSid = 'HXc1eae1d4aa2b65949a272d3e1d266170'; // Content SID do template aprovado
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
       console.error('[DailyReport] Credenciais Twilio não configuradas');
@@ -134,32 +135,59 @@ Deno.serve(async (req) => {
     // Processar cada usuário
     for (const user of usersToNotify) {
       try {
-        const report = await generateReport(supabase, user.usuario_id);
-        
-        // Enviar via Twilio
+        // 1. Enviar template message primeiro (abre janela de 72h)
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
         const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
         
-        const formData = new URLSearchParams();
-        formData.append('From', `whatsapp:${twilioWhatsappNumber}`);
-        formData.append('To', `whatsapp:+${user.phone_number}`);
-        formData.append('Body', report);
+        const templateFormData = new URLSearchParams();
+        templateFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+        templateFormData.append('To', `whatsapp:+${user.phone_number}`);
+        templateFormData.append('ContentSid', templateContentSid);
 
-        const response = await fetch(twilioUrl, {
+        const templateResponse = await fetch(twilioUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Basic ${authHeader}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: formData.toString()
+          body: templateFormData.toString()
         });
 
-        if (response.ok) {
+        if (!templateResponse.ok) {
+          const errorText = await templateResponse.text();
+          console.error(`[DailyReport] Erro ao enviar template para ${user.phone_number}:`, errorText);
+          errorCount++;
+          continue;
+        }
+
+        console.log(`[DailyReport] Template enviado para ${user.phone_number}`);
+
+        // Pequeno delay (500ms) para garantir que a janela de 72h foi aberta
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 2. Enviar relatório detalhado (session message dentro da janela aberta)
+        const report = await generateReport(supabase, user.usuario_id);
+        
+        const reportFormData = new URLSearchParams();
+        reportFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+        reportFormData.append('To', `whatsapp:+${user.phone_number}`);
+        reportFormData.append('Body', report);
+
+        const reportResponse = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${authHeader}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: reportFormData.toString()
+        });
+
+        if (reportResponse.ok) {
           console.log(`[DailyReport] Relatório enviado para ${user.phone_number}`);
           successCount++;
         } else {
-          const errorText = await response.text();
-          console.error(`[DailyReport] Erro ao enviar para ${user.phone_number}:`, errorText);
+          const errorText = await reportResponse.text();
+          console.error(`[DailyReport] Erro ao enviar relatório para ${user.phone_number}:`, errorText);
           errorCount++;
         }
 
