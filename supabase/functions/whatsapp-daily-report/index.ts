@@ -331,13 +331,8 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     const gasto = gastosPorCategoria[nome] || 0;
     const orcamento = orcamentosMap[nome] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
-    const status = percentual > 100 ? '🔴' : percentual > 80 ? '🟡' : '🟢';
-    return `${status} *${nome}*: R$${gasto.toFixed(0)}/${orcamento.toFixed(0)} (${percentual}%)`;
+    return `${nome}: R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
   }).join('\n');
 
-  const saldoEmoji = saldo >= 0 ? '✅' : '⚠️';
-
-  return `📊 *Resumo do Ciclo*\n` +
-    `${saldoEmoji} Saldo: R$${saldo.toFixed(2)}\n\n` +
-    `${categoriasTexto}`;
+  return `Resumo do Ciclo\nSaldo: R$${saldo.toFixed(2)}\n\n${categoriasTexto}`;
 }
