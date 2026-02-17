@@ -29,15 +29,12 @@ interface CategoryBudget {
   orcamento: number;
 }
 
-const categoriasPrioritarias = [
+// Categorias que devem aparecer no relatório WhatsApp
+const categoriasRelatorio = [
   "Aplicativos e restaurantes",
-  "Supermercado", 
   "Casa",
   "Compras da Bruna",
   "Compras do Marco",
-  "Estacionamento",
-  "Farmácia",
-  "Presentes/roupas Aurora"
 ];
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
@@ -329,45 +326,18 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
 
   const saldo = totalReceitas - totalDespesas;
 
-  const todasCategorias = new Set<string>();
-  Object.keys(gastosPorCategoria).forEach(cat => todasCategorias.add(cat));
-  Object.keys(orcamentosMap).forEach(cat => todasCategorias.add(cat));
-
-  const categoriasData = Array.from(todasCategorias).map(nome => {
+  // Filtrar apenas categorias selecionadas
+  const categoriasTexto = categoriasRelatorio.map(nome => {
     const gasto = gastosPorCategoria[nome] || 0;
     const orcamento = orcamentosMap[nome] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
-    const isPrioritaria = categoriasPrioritarias.some(p => 
-      nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(nome.toLowerCase())
-    );
-    return { nome, orcamento, gasto, percentual, isPrioritaria };
-  }).filter(c => c.gasto > 0 || c.orcamento > 0);
-
-  categoriasData.sort((a, b) => {
-    if (a.isPrioritaria && !b.isPrioritaria) return -1;
-    if (!a.isPrioritaria && b.isPrioritaria) return 1;
-    return b.percentual - a.percentual;
-  });
-
-  const categoriasTexto = categoriasData
-    .slice(0, 12)
-    .map(c => {
-      const status = c.percentual > 100 ? '🔴' : c.percentual > 80 ? '🟡' : '🟢';
-      return `${status} *${c.nome}*: R$ ${c.gasto.toFixed(2)} / R$ ${c.orcamento.toFixed(2)} (${c.percentual}%)`;
-    })
-    .join('\n');
+    const status = percentual > 100 ? '🔴' : percentual > 80 ? '🟡' : '🟢';
+    return `${status} *${nome}*: R$${gasto.toFixed(0)}/${orcamento.toFixed(0)} (${percentual}%)`;
+  }).join('\n');
 
   const saldoEmoji = saldo >= 0 ? '✅' : '⚠️';
-  const dataRelatorio = new Date().toLocaleDateString('pt-BR');
 
-  return `📊 *Relatório Financeiro Diário*\n` +
-    `📅 ${dataRelatorio}\n` +
-    `Ciclo: ${ciclo.inicio.toLocaleDateString('pt-BR')} a ${ciclo.fim.toLocaleDateString('pt-BR')}\n\n` +
-    `💰 *Resumo Geral*\n` +
-    `Receitas: R$ ${totalReceitas.toFixed(2)}\n` +
-    `Despesas: R$ ${totalDespesas.toFixed(2)}\n` +
-    `${saldoEmoji} Saldo: R$ ${saldo.toFixed(2)}\n\n` +
-    `📋 *Status das Categorias*\n\n` +
-    `${categoriasTexto}\n\n` +
-    `_🟢 OK | 🟡 Atenção | 🔴 Estourado_`;
+  return `📊 *Resumo do Ciclo*\n` +
+    `${saldoEmoji} Saldo: R$${saldo.toFixed(2)}\n\n` +
+    `${categoriasTexto}`;
 }
