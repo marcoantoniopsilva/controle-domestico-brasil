@@ -29,7 +29,6 @@ interface CategoryBudget {
   orcamento: number;
 }
 
-// Categorias prioritárias que devem sempre aparecer nos relatórios
 const categoriasPrioritarias = [
   "Aplicativos e restaurantes",
   "Supermercado", 
@@ -41,17 +40,17 @@ const categoriasPrioritarias = [
   "Presentes/roupas Aurora"
 ];
 
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verificar se é um teste manual (parâmetro force=true ou sendNow=true)
     const url = new URL(req.url);
     let forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
     
-    // Também verificar no body JSON
     if (!forceTest && req.method === 'POST') {
       try {
         const body = await req.json();
@@ -63,22 +62,19 @@ Deno.serve(async (req) => {
 
     console.log('[DailyReport] Iniciando envio de relatórios...', forceTest ? '(TESTE MANUAL)' : '');
 
-    // Inicializar Supabase client com service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Obter hora atual (UTC-3 para Brasília)
     const now = new Date();
     const brasiliaHour = (now.getUTCHours() - 3 + 24) % 24;
-    const dayOfWeek = now.getDay(); // 0 = Domingo
+    const dayOfWeek = now.getDay();
 
     console.log(`[DailyReport] Hora de Brasília: ${brasiliaHour}h, Dia da semana: ${dayOfWeek}`);
 
     let users: WhatsAppUser[] = [];
 
     if (forceTest) {
-      // Buscar todos os usuários ativos para teste
       const { data, error } = await supabase
         .from('whatsapp_finance_users')
         .select('usuario_id, phone_number, report_frequency, report_hour')
@@ -89,7 +85,6 @@ Deno.serve(async (req) => {
       users = data || [];
       console.log(`[DailyReport] TESTE MANUAL: ${users.length} usuários encontrados`);
     } else {
-      // Buscar usuários que devem receber relatório agora
       const { data, error } = await supabase
         .from('whatsapp_finance_users')
         .select('usuario_id, phone_number, report_frequency, report_hour')
@@ -109,104 +104,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Filtrar por frequência (skip se for teste manual)
     const usersToNotify = forceTest ? users : users.filter((user: WhatsAppUser) => {
       if (user.report_frequency === 'daily') return true;
-      if (user.report_frequency === 'weekly' && dayOfWeek === 1) return true; // Segunda-feira
+      if (user.report_frequency === 'weekly' && dayOfWeek === 1) return true;
       return false;
     });
 
     console.log(`[DailyReport] ${usersToNotify.length} usuários para notificar`);
 
-    // Configuração Twilio
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
-    const templateContentSid = 'HXc1eae1d4aa2b65949a272d3e1d266170'; // Content SID do template aprovado
+    const templateContentSid = 'HXc1eae1d4aa2b65949a272d3e1d266170';
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
       console.error('[DailyReport] Credenciais Twilio não configuradas');
       throw new Error('Credenciais Twilio não configuradas');
     }
 
-    let successCount = 0;
-    let errorCount = 0;
+    // Processar em background usando EdgeRuntime.waitUntil
+    const backgroundProcess = processAllUsers(
+      supabase, usersToNotify, twilioAccountSid, twilioAuthToken, twilioWhatsappNumber, templateContentSid
+    );
 
-    // Processar cada usuário
-    for (const user of usersToNotify) {
-      try {
-        // 1. Enviar template message primeiro (abre janela de 72h)
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
-        const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
-        
-        const templateFormData = new URLSearchParams();
-        templateFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
-        templateFormData.append('To', `whatsapp:+${user.phone_number}`);
-        templateFormData.append('ContentSid', templateContentSid);
+    EdgeRuntime.waitUntil(backgroundProcess);
 
-        const templateResponse = await fetch(twilioUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${authHeader}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: templateFormData.toString()
-        });
-
-        if (!templateResponse.ok) {
-          const errorText = await templateResponse.text();
-          console.error(`[DailyReport] Erro ao enviar template para ${user.phone_number}:`, errorText);
-          errorCount++;
-          continue;
-        }
-
-        const templateBody = await templateResponse.text();
-        console.log(`[DailyReport] Template enviado para ${user.phone_number}, status: ${templateResponse.status}, response: ${templateBody.substring(0, 200)}`);
-
-        // Delay de 3s para garantir que a janela de conversa foi aberta pelo Twilio
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-        // 2. Enviar relatório detalhado (session message dentro da janela aberta)
-        console.log(`[DailyReport] Gerando relatório para ${user.phone_number}...`);
-        const report = await generateReport(supabase, user.usuario_id);
-        console.log(`[DailyReport] Relatório gerado, enviando para ${user.phone_number}...`);
-        
-        const reportFormData = new URLSearchParams();
-        reportFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
-        reportFormData.append('To', `whatsapp:+${user.phone_number}`);
-        reportFormData.append('Body', report);
-
-        const reportResponse = await fetch(twilioUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${authHeader}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: reportFormData.toString()
-        });
-
-        const reportBody = await reportResponse.text();
-        if (reportResponse.ok) {
-          console.log(`[DailyReport] Relatório enviado para ${user.phone_number}, status: ${reportResponse.status}`);
-          successCount++;
-        } else {
-          console.error(`[DailyReport] FALHA ao enviar relatório para ${user.phone_number}, status: ${reportResponse.status}, response: ${reportBody.substring(0, 300)}`);
-          errorCount++;
-        }
-
-      } catch (error) {
-        console.error(`[DailyReport] Erro ao processar usuário ${user.phone_number}:`, error);
-        errorCount++;
-      }
-    }
-
-    console.log(`[DailyReport] Concluído: ${successCount} sucesso, ${errorCount} erros`);
-
+    // Retornar imediatamente
     return new Response(
       JSON.stringify({ 
-        message: 'Relatórios processados',
-        success: successCount,
-        errors: errorCount
+        message: 'Relatórios iniciados em background',
+        users: usersToNotify.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -219,6 +146,86 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function processAllUsers(
+  supabase: any,
+  usersToNotify: WhatsAppUser[],
+  twilioAccountSid: string,
+  twilioAuthToken: string,
+  twilioWhatsappNumber: string,
+  templateContentSid: string
+) {
+  let successCount = 0;
+  let errorCount = 0;
+  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+  const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+
+  for (const user of usersToNotify) {
+    try {
+      // 1. Enviar template (abre janela de 72h)
+      const templateFormData = new URLSearchParams();
+      templateFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+      templateFormData.append('To', `whatsapp:+${user.phone_number}`);
+      templateFormData.append('ContentSid', templateContentSid);
+
+      const templateResponse = await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: templateFormData.toString()
+      });
+
+      if (!templateResponse.ok) {
+        const errorText = await templateResponse.text();
+        console.error(`[DailyReport] Erro ao enviar template para ${user.phone_number}:`, errorText);
+        errorCount++;
+        continue;
+      }
+
+      const templateBody = await templateResponse.text();
+      console.log(`[DailyReport] Template enviado para ${user.phone_number}, status: ${templateResponse.status}`);
+
+      // Delay de 3s para garantir que a janela foi aberta
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // 2. Gerar e enviar relatório
+      console.log(`[DailyReport] Gerando relatório para ${user.phone_number}...`);
+      const report = await generateReport(supabase, user.usuario_id);
+      console.log(`[DailyReport] Relatório gerado, enviando para ${user.phone_number}...`);
+      
+      const reportFormData = new URLSearchParams();
+      reportFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+      reportFormData.append('To', `whatsapp:+${user.phone_number}`);
+      reportFormData.append('Body', report);
+
+      const reportResponse = await fetch(twilioUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: reportFormData.toString()
+      });
+
+      const reportBody = await reportResponse.text();
+      if (reportResponse.ok) {
+        console.log(`[DailyReport] Relatório enviado para ${user.phone_number}, status: ${reportResponse.status}`);
+        successCount++;
+      } else {
+        console.error(`[DailyReport] FALHA ao enviar relatório para ${user.phone_number}, status: ${reportResponse.status}, response: ${reportBody.substring(0, 300)}`);
+        errorCount++;
+      }
+
+    } catch (error) {
+      console.error(`[DailyReport] Erro ao processar usuário ${user.phone_number}:`, error);
+      errorCount++;
+    }
+  }
+
+  console.log(`[DailyReport] Background concluído: ${successCount} sucesso, ${errorCount} erros`);
+}
 
 // Calcula o ciclo financeiro atual (dia 25 a dia 24 do próximo mês)
 function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
@@ -243,7 +250,6 @@ function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
 async function generateReport(supabase: any, usuarioId: string): Promise<string> {
   const ciclo = getCurrentCycle();
 
-  // Buscar transações do ciclo atual
   const { data: transacoesCiclo } = await supabase
     .from('lancamentos')
     .select('*')
@@ -251,7 +257,6 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     .gte('data', ciclo.inicio.toISOString().split('T')[0])
     .lte('data', ciclo.fim.toISOString().split('T')[0]);
 
-  // Buscar transações parceladas de ciclos anteriores (até 12 meses atrás)
   const dataLimiteAnterior = new Date(ciclo.inicio);
   dataLimiteAnterior.setMonth(dataLimiteAnterior.getMonth() - 12);
   
@@ -263,7 +268,6 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     .lt('data', ciclo.inicio.toISOString().split('T')[0])
     .gte('data', dataLimiteAnterior.toISOString().split('T')[0]);
 
-  // Calcular parcelas que devem aparecer no ciclo atual
   const parcelasDoCiclo: Array<{ categoria: string; tipo: string; valor: number }> = [];
   
   (transacoesParceladas || []).forEach((t: Transacao) => {
@@ -289,24 +293,20 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     }
   });
 
-  // Buscar orçamentos personalizados
   const { data: customBudgets } = await supabase
     .from('category_budgets')
     .select('categoria_nome, categoria_tipo, orcamento')
     .eq('usuario_id', usuarioId);
 
-  // Criar mapa de orçamentos
   const orcamentosMap: Record<string, number> = {};
   (customBudgets || []).forEach((cb: CategoryBudget) => {
     orcamentosMap[cb.categoria_nome] = Number(cb.orcamento);
   });
 
-  // Calcular totais
   let totalReceitas = 0;
   let totalDespesas = 0;
   const gastosPorCategoria: Record<string, number> = {};
 
-  // Processar transações do ciclo
   (transacoesCiclo || []).forEach((t: Transacao) => {
     const valor = Math.abs(Number(t.valor));
     
@@ -318,7 +318,6 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     }
   });
 
-  // Adicionar parcelas de ciclos anteriores
   parcelasDoCiclo.forEach(parcela => {
     if (parcela.tipo === 'receita') {
       totalReceitas += parcela.valor;
@@ -330,7 +329,6 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
 
   const saldo = totalReceitas - totalDespesas;
 
-  // Montar categorias priorizando as definidas
   const todasCategorias = new Set<string>();
   Object.keys(gastosPorCategoria).forEach(cat => todasCategorias.add(cat));
   Object.keys(orcamentosMap).forEach(cat => todasCategorias.add(cat));
@@ -345,14 +343,12 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
     return { nome, orcamento, gasto, percentual, isPrioritaria };
   }).filter(c => c.gasto > 0 || c.orcamento > 0);
 
-  // Ordenar: prioritárias primeiro, depois por percentual
   categoriasData.sort((a, b) => {
     if (a.isPrioritaria && !b.isPrioritaria) return -1;
     if (!a.isPrioritaria && b.isPrioritaria) return 1;
     return b.percentual - a.percentual;
   });
 
-  // Formatar mensagem
   const categoriasTexto = categoriasData
     .slice(0, 12)
     .map(c => {
