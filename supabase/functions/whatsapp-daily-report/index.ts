@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
-    const templateContentSid = 'HXc1eae1d4aa2b65949a272d3e1d266170';
+    const templateContentSid = 'HXd79884b96043b7c218b8462251c7f264';
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
       console.error('[DailyReport] Credenciais Twilio não configuradas');
@@ -159,59 +159,37 @@ async function processAllUsers(
 
   for (const user of usersToNotify) {
     try {
-      // 1. Enviar template (abre janela de 72h)
-      const templateFormData = new URLSearchParams();
-      templateFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
-      templateFormData.append('To', `whatsapp:+${user.phone_number}`);
-      templateFormData.append('ContentSid', templateContentSid);
-
-      const templateResponse = await fetch(twilioUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${authHeader}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: templateFormData.toString()
-      });
-
-      if (!templateResponse.ok) {
-        const errorText = await templateResponse.text();
-        console.error(`[DailyReport] Erro ao enviar template para ${user.phone_number}:`, errorText);
-        errorCount++;
-        continue;
-      }
-
-      const templateBody = await templateResponse.text();
-      console.log(`[DailyReport] Template enviado para ${user.phone_number}, status: ${templateResponse.status}`);
-
-      // Delay de 3s para garantir que a janela foi aberta
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // 2. Gerar e enviar relatório
       console.log(`[DailyReport] Gerando relatório para ${user.phone_number}...`);
-      const report = await generateReport(supabase, user.usuario_id);
-      console.log(`[DailyReport] Relatório gerado, enviando para ${user.phone_number}...`);
-      
-      const reportFormData = new URLSearchParams();
-      reportFormData.append('From', `whatsapp:${twilioWhatsappNumber}`);
-      reportFormData.append('To', `whatsapp:+${user.phone_number}`);
-      reportFormData.append('Body', report);
+      const reportData = await generateReportData(supabase, user.usuario_id);
+      console.log(`[DailyReport] Dados gerados, enviando template para ${user.phone_number}...`);
 
-      const reportResponse = await fetch(twilioUrl, {
+      const formData = new URLSearchParams();
+      formData.append('From', `whatsapp:${twilioWhatsappNumber}`);
+      formData.append('To', `whatsapp:+${user.phone_number}`);
+      formData.append('ContentSid', templateContentSid);
+      formData.append('ContentVariables', JSON.stringify({
+        "1": reportData.saldo,
+        "2": reportData.comprasMarco,
+        "3": reportData.comprasBruna,
+        "4": reportData.appsRestaurantes,
+        "5": reportData.casa
+      }));
+
+      const response = await fetch(twilioUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${authHeader}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: reportFormData.toString()
+        body: formData.toString()
       });
 
-      const reportBody = await reportResponse.text();
-      if (reportResponse.ok) {
-        console.log(`[DailyReport] Relatório enviado para ${user.phone_number}, status: ${reportResponse.status}`);
+      if (response.ok) {
+        console.log(`[DailyReport] Relatório enviado para ${user.phone_number}, status: ${response.status}`);
         successCount++;
       } else {
-        console.error(`[DailyReport] FALHA ao enviar relatório para ${user.phone_number}, status: ${reportResponse.status}, response: ${reportBody.substring(0, 300)}`);
+        const errorText = await response.text();
+        console.error(`[DailyReport] FALHA para ${user.phone_number}, status: ${response.status}, response: ${errorText.substring(0, 300)}`);
         errorCount++;
       }
 
@@ -244,7 +222,15 @@ function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
   return { inicio, fim, nome };
 }
 
-async function generateReport(supabase: any, usuarioId: string): Promise<string> {
+interface ReportData {
+  saldo: string;
+  comprasMarco: string;
+  comprasBruna: string;
+  appsRestaurantes: string;
+  casa: string;
+}
+
+async function generateReportData(supabase: any, usuarioId: string): Promise<ReportData> {
   const ciclo = getCurrentCycle();
 
   const { data: transacoesCiclo } = await supabase
@@ -281,11 +267,7 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
       }
       
       if (dataParcela >= ciclo.inicio && dataParcela <= ciclo.fim) {
-        parcelasDoCiclo.push({
-          categoria: t.categoria,
-          tipo: t.tipo,
-          valor: valorAbsoluto
-        });
+        parcelasDoCiclo.push({ categoria: t.categoria, tipo: t.tipo, valor: valorAbsoluto });
       }
     }
   });
@@ -306,7 +288,6 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
 
   (transacoesCiclo || []).forEach((t: Transacao) => {
     const valor = Math.abs(Number(t.valor));
-    
     if (t.tipo === 'receita') {
       totalReceitas += valor;
     } else if (t.tipo === 'despesa') {
@@ -326,13 +307,18 @@ async function generateReport(supabase: any, usuarioId: string): Promise<string>
 
   const saldo = totalReceitas - totalDespesas;
 
-  // Filtrar apenas categorias selecionadas
-  const categoriasTexto = categoriasRelatorio.map(nome => {
+  const formatCategory = (nome: string) => {
     const gasto = gastosPorCategoria[nome] || 0;
     const orcamento = orcamentosMap[nome] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
-    return `${nome}: R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
-  }).join('\n');
+    return `R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
+  };
 
-  return `Resumo do Ciclo\nSaldo: R$${saldo.toFixed(2)}\n\n${categoriasTexto}`;
+  return {
+    saldo: `R$${saldo.toFixed(2)}`,
+    comprasMarco: formatCategory("Compras do Marco"),
+    comprasBruna: formatCategory("Compras da Bruna"),
+    appsRestaurantes: formatCategory("Aplicativos e restaurantes"),
+    casa: formatCategory("Casa")
+  };
 }
