@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
-    const templateContentSid = 'HXd79884b96043b7c218b8462251c7f264';
+    const templateContentSid = 'HXe114dce7a30e14b0aa6e97f680549e78';
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
       console.error('[DailyReport] Credenciais Twilio não configuradas');
@@ -172,7 +172,10 @@ async function processAllUsers(
         "2": reportData.comprasMarco,
         "3": reportData.comprasBruna,
         "4": reportData.appsRestaurantes,
-        "5": reportData.casa
+        "5": reportData.casa,
+        "6": reportData.presentesAurora,
+        "7": reportData.supermercado,
+        "8": reportData.diasRestantes
       }));
 
       const response = await fetch(twilioUrl, {
@@ -228,6 +231,9 @@ interface ReportData {
   comprasBruna: string;
   appsRestaurantes: string;
   casa: string;
+  presentesAurora: string;
+  supermercado: string;
+  diasRestantes: string;
 }
 
 async function generateReportData(supabase: any, usuarioId: string): Promise<ReportData> {
@@ -314,11 +320,25 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     return `R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
   };
 
+  // Calcular dias restantes até o dia 24
+  const hoje = new Date();
+  let diaFechamento: Date;
+  if (hoje.getDate() <= 24) {
+    diaFechamento = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
+  } else {
+    diaFechamento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
+  }
+  const diffMs = diaFechamento.getTime() - hoje.getTime();
+  const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
   return {
     saldo: `R$${saldo.toFixed(2)}`,
     comprasMarco: formatCategory("Compras do Marco"),
     comprasBruna: formatCategory("Compras da Bruna"),
     appsRestaurantes: formatCategory("Aplicativos e restaurantes"),
-    casa: formatCategory("Casa")
+    casa: formatCategory("Casa"),
+    presentesAurora: formatCategory("Presentes/roupas Aurora"),
+    supermercado: formatCategory("Supermercado"),
+    diasRestantes: `${diasRestantes}`
   };
 }
