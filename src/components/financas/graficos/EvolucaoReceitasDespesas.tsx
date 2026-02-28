@@ -11,10 +11,11 @@ interface EvolucaoReceitasDespesasProps {
 }
 
 const EvolucaoReceitasDespesas = ({ transacoes }: EvolucaoReceitasDespesasProps) => {
+  const hoje = new Date();
   const ciclos = gerarCiclosFinanceiros(transacoes)
-    .filter(c => c.temTransacoes)
+    .filter(c => c.temTransacoes && c.fim < hoje) // apenas ciclos já encerrados
     .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
-    .slice(-8); // últimos 8 ciclos
+    .slice(-8);
 
   if (ciclos.length < 2) return null;
 
