@@ -5,7 +5,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Categoria, CicloFinanceiro, Transacao } from "@/types";
 import ResumoOrcamento from "../ResumoOrcamento";
 import ListaTransacoes from "../ListaTransacoes";
-import GraficoGastosDiarios from "../GraficoGastosDiarios";
+import GastosPorPessoa from "../graficos/GastosPorPessoa";
+import DistribuicaoCategorias from "../graficos/DistribuicaoCategorias";
+import CalendarioGastos from "../graficos/CalendarioGastos";
 import ProgressoCategoriaClickable from "../ProgressoCategoriaClickable";
 import RelatorioCartaoCredito from "../RelatorioCartaoCredito";
 import GraficoComparativoMensal from "../GraficoComparativo/GraficoComparativoMensal";
@@ -186,16 +188,17 @@ const DashboardTabs = ({
             categorias={categorias}
             cicloAtual={cicloAtual}
           />
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <GastosPorPessoa transacoes={transacoes} />
+            <DistribuicaoCategorias transacoes={transacoes} categorias={categorias} />
+          </div>
+
+          <CalendarioGastos transacoes={transacoes} ciclo={cicloAtual} />
           
           <GraficoComparativoMensal
             transacoes={transacoesOriginais || transacoes}
             categorias={categorias}
-          />
-          
-          <GraficoGastosDiarios 
-            transacoes={transacoes} 
-            ciclo={cicloAtual} 
-            orcamentoTotal={orcamentoTotal}
           />
         </TabsContent>
 
