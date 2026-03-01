@@ -37,13 +37,14 @@ export const categoryIcons: Record<string, LucideIcon> = {
   "Despesas fixas no dinheiro": Banknote,
   "Estacionamento": Car,
   "Farmácia": Pill,
-  "Fraldas Aurora": Baby,
+  "Recarga carro": Car,
   "Gato": Cat,
   "Lazer": Gamepad2,
   "Outros": HelpCircle,
   "Serviços de internet": Wifi,
   "Supermercado": ShoppingCart,
-  "Veterinário": Stethoscope,
+  "Seguro e manutenção": Car,
+  "Uber": Car,
   
   // Receitas
   "Salário": Briefcase,
