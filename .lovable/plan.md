@@ -1,53 +1,46 @@
 
-# Simplificar Cadastro WhatsApp - Remover Verificação OTP
 
-## Resumo
-Modificar o fluxo de configuração do WhatsApp para salvar o número diretamente como verificado, eliminando a necessidade do template de verificação no Infobip.
+## Plan: Category Groups ("Grupos de Categorias") Feature
 
-## Mudanças
+### Overview
+Create a new dashboard tab called **"Grupos"** that aggregates individual expense categories into macro groups, showing both current cycle status and a 6-month historical evolution chart.
 
-### 1. Hook useWhatsAppConfig.ts
-- Modificar a função `saveConfig` para definir `is_verified: true` automaticamente ao inserir/atualizar
-- Remover as funções `sendVerificationCode` e `verifyCode` (não serão mais necessárias)
-- Remover o estado `isVerifying`
+### Category Groups Definition
+Define groups as a constant mapping in a new file `src/utils/categoryGroups.ts`:
 
-### 2. Componente WhatsAppConfig.tsx
-- Substituir o botão "Verificar" por um botão "Salvar" simples
-- Remover toda a seção de verificação OTP (InputOTP, countdown, etc)
-- Mostrar as configurações (frequência, horário) imediatamente após salvar o número
-- Simplificar a lógica de estado removendo `showVerification`, `verificationCode`, `countdown`
+| Group | Categories |
+|-------|-----------|
+| Alimentação | Aplicativos e restaurantes, Supermercado |
+| Deslocamento | Seguro e manutenção, Uber, Recarga carro, Estacionamento |
+| Saúde | Farmácia, Saúde |
+| Aurora | Atividades Aurora, Fórmula e leite Aurora, Presentes/roupas Aurora |
+| Pessoais | Lazer, Compras da Bruna, Compras do Marco, Compras parceladas Bruna, Compras parceladas Marco |
+| Essenciais | Casa, Serviços de internet, Academia, Gato |
+| Extraordinários | Gastos extraordinários, Viagens, Impostos taxas e multas, Outros |
 
-### 3. Edge Functions (Opcional - Limpeza)
-As Edge Functions `whatsapp-send-verification` e `whatsapp-verify-code` podem ser mantidas para uso futuro, mas não serão mais chamadas pelo frontend.
+Each group will derive its budget (sum of member category budgets) and current spending (sum of member category `gastosAtuais`) dynamically from the existing `categoriasAtualizadas` data.
 
----
+### New Components
 
-## Detalhes Técnicos
+1. **`src/utils/categoryGroups.ts`** — Group definitions with name, icon, and member category names.
 
-### useWhatsAppConfig.ts
-```text
-Alterações:
-- Linha 18: Remover estado isVerifying
-- Linhas 179-255: Remover funções sendVerificationCode e verifyCode
-- Linha 106-114: Adicionar is_verified: true no insert
-- Retorno: Remover isVerifying, sendVerificationCode, verifyCode
-```
+2. **`src/components/financas/grupos/GrupoCategoriasCard.tsx`** — A card component (similar to `ProgressoCategoriaClickable`) showing group name, total spent, total budget, progress bar, and remaining/exceeded amount. Clicking expands to show individual category breakdown.
 
-### WhatsAppConfig.tsx
-```text
-Alterações:
-- Linhas 34-38: Remover sendVerificationCode, verifyCode, isVerifying do destructuring
-- Linhas 46-49: Remover estados showVerification, verificationCode, countdown
-- Linhas 61-67: Remover useEffect do countdown
-- Linhas 94-111: Remover handleSendCode e handleVerifyCode
-- Linhas 213-221: Substituir botão "Verificar" por "Salvar Número"
-- Linhas 231-284: Remover toda a seção de verificação OTP
-- Linhas 286-344: Mostrar configurações sempre que houver config (não só quando is_verified)
-- Linha 115: Remover check de is_verified no handleSaveSettings
-```
+3. **`src/components/financas/grupos/EvolucaoGrupos.tsx`** — A stacked area or line chart (recharts) showing each group's spending over the last 6 completed cycles. Reuses the same installment projection logic from `EvolucaoReceitasDespesas.tsx`.
 
-### Novo Fluxo
-1. Usuário digita o número do WhatsApp
-2. Clica em "Salvar Número"
-3. Número é salvo diretamente com `is_verified: true`
-4. Configurações de frequência e horário ficam disponíveis imediatamente
+### Tab Integration
+Add a **"Grupos"** tab to `DashboardTabs.tsx` between "Despesas" and "Receitas". Content:
+- Grid of `GrupoCategoriasCard` components (one per group) showing current cycle data
+- Below the grid, the `EvolucaoGrupos` chart with 6-month history
+
+### Data Flow
+- Groups compute from the already-processed `categoriasAtualizadas` array (which includes custom budgets and current spending) — no new database queries needed for current cycle
+- The evolution chart receives `transacoesOriginais` and processes historical cycles the same way `EvolucaoReceitasDespesas` does, but aggregating by group instead of receita/despesa
+
+### Files to Create/Modify
+- **Create**: `src/utils/categoryGroups.ts`
+- **Create**: `src/components/financas/grupos/GrupoCategoriasCard.tsx`
+- **Create**: `src/components/financas/grupos/EvolucaoGrupos.tsx`
+- **Modify**: `src/components/financas/dashboard/DashboardTabs.tsx` — add "Grupos" tab
+- **Modify**: `src/utils/categoryIcons.ts` — add icons for group names (Utensils for Alimentação, Car for Deslocamento, Heart for Saúde, Baby for Aurora, User for Pessoais, Home for Essenciais, AlertTriangle for Extraordinários)
+
