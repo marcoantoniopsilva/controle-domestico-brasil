@@ -5,15 +5,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { CategoryGroup } from "@/utils/categoryGroups";
-import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { getCategoryIcon } from "@/utils/categoryIcons";
 
 interface GrupoCategoriasCardProps {
   group: CategoryGroup;
   categorias: Categoria[];
+  onCategoryClick?: (categoria: string, ciclo: string, valor: number) => void;
+  cicloNome?: string;
 }
 
-const GrupoCategoriasCard = ({ group, categorias }: GrupoCategoriasCardProps) => {
+const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: GrupoCategoriasCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const categoriasDoGrupo = categorias.filter(
@@ -33,6 +35,13 @@ const GrupoCategoriasCard = ({ group, categorias }: GrupoCategoriasCardProps) =>
   };
 
   const GroupIcon = group.icon;
+
+  const handleCategoryClick = (cat: Categoria, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (cat.gastosAtuais > 0 && onCategoryClick && cicloNome) {
+      onCategoryClick(cat.nome, cicloNome, cat.gastosAtuais);
+    }
+  };
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -95,13 +104,26 @@ const GrupoCategoriasCard = ({ group, categorias }: GrupoCategoriasCardProps) =>
                   ? Math.min((cat.gastosAtuais / cat.orcamento) * 100, 100)
                   : 0;
                 const CatIcon = getCategoryIcon(cat.nome);
+                const isClickable = cat.gastosAtuais > 0 && onCategoryClick;
 
                 return (
-                  <div key={cat.nome} className="space-y-1">
+                  <div
+                    key={cat.nome}
+                    className={`space-y-1 rounded-md p-1.5 -mx-1.5 ${
+                      isClickable
+                        ? "cursor-pointer hover:bg-accent/50 transition-colors"
+                        : ""
+                    }`}
+                    onClick={(e) => handleCategoryClick(cat, e)}
+                    title={isClickable ? "Clique para ver as transações" : undefined}
+                  >
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
                         <CatIcon className="h-3 w-3 text-muted-foreground" />
                         <span className="text-muted-foreground">{cat.nome}</span>
+                        {isClickable && (
+                          <ExternalLink className="h-2.5 w-2.5 text-muted-foreground/50" />
+                        )}
                       </div>
                       <span className="font-medium">
                         {formatarMoeda(cat.gastosAtuais)} / {formatarMoeda(cat.orcamento)}

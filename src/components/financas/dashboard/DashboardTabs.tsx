@@ -161,6 +161,8 @@ const DashboardTabs = ({
                 key={group.nome}
                 group={group}
                 categorias={categorias}
+                onCategoryClick={handleCategoryClick}
+                cicloNome={cicloAtual.nome}
               />
             ))}
           </div>
