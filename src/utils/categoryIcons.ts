@@ -21,6 +21,9 @@ import {
   PiggyBank,
   Landmark,
   Bitcoin,
+  Heart,
+  User,
+  AlertTriangle,
   LucideIcon,
 } from "lucide-react";
 
@@ -58,9 +61,16 @@ export const categoryIcons: Record<string, LucideIcon> = {
   "Tesouro Direto": Landmark,
   "Poupança": PiggyBank,
   "Crypto": Bitcoin,
+  
+  // Grupos
+  "Alimentação": Utensils,
+  "Deslocamento": Car,
+  "Saúde": Heart,
+  "Aurora": Baby,
+  "Pessoais": User,
+  "Essenciais": Home,
+  "Extraordinários": AlertTriangle,
 };
-
-// Função para obter o ícone de uma categoria
 export const getCategoryIcon = (categoryName: string): LucideIcon => {
   return categoryIcons[categoryName] || HelpCircle;
 };

@@ -21,6 +21,9 @@ import RelatorioEconomia from "../relatorios/RelatorioEconomia";
 import ReceitasDespesas from "../relatorios/ReceitasDespesas";
 import AnaliseRecorrencias from "../relatorios/AnaliseRecorrencias";
 import WhatsAppConfig from "../WhatsAppConfig";
+import GrupoCategoriasCard from "../grupos/GrupoCategoriasCard";
+import EvolucaoGrupos from "../grupos/EvolucaoGrupos";
+import { categoryGroups } from "@/utils/categoryGroups";
 import { useTransactionsByCategory } from "@/hooks/useTransactionsByCategory";
 
 interface DashboardTabsProps {
@@ -108,6 +111,7 @@ const DashboardTabs = ({
         <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1 p-1">
           <TabsTrigger value="resumo" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Resumo</TabsTrigger>
           <TabsTrigger value="despesas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Despesas</TabsTrigger>
+          <TabsTrigger value="grupos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Grupos</TabsTrigger>
           <TabsTrigger value="receitas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Receitas</TabsTrigger>
           <TabsTrigger value="investimentos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Investimentos</TabsTrigger>
           <TabsTrigger value="transacoes" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Transações</TabsTrigger>
@@ -150,6 +154,19 @@ const DashboardTabs = ({
           </div>
         </TabsContent>
         
+        <TabsContent value="grupos" className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {categoryGroups.map((group) => (
+              <GrupoCategoriasCard
+                key={group.nome}
+                group={group}
+                categorias={categorias}
+              />
+            ))}
+          </div>
+          <EvolucaoGrupos transacoes={transacoesOriginais || transacoes} />
+        </TabsContent>
+
         <TabsContent value="receitas">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {categoriasReceita.map((categoria) => (
