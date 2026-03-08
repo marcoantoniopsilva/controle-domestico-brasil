@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { Wallet, TrendingDown } from "lucide-react";
+import { getBudgetProgressColor } from "@/utils/budgetColors";
 
 interface ResumoOrcamentoProps {
   categorias: Categoria[];
