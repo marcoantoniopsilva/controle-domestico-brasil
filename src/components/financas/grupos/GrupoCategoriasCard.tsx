@@ -100,9 +100,11 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
           <CardContent className="pt-0 border-t">
             <div className="space-y-3 pt-3">
               {categoriasDoGrupo.map((cat) => {
-                const catPercent = cat.orcamento > 0
-                  ? Math.min((cat.gastosAtuais / cat.orcamento) * 100, 100)
+                const catPercentReal = cat.orcamento > 0
+                  ? Math.round((cat.gastosAtuais / cat.orcamento) * 100)
                   : 0;
+                const catPercent = Math.min(catPercentReal, 100);
+                const catOverBudget = catPercentReal >= 100;
                 const CatIcon = getCategoryIcon(cat.nome);
                 const isClickable = cat.gastosAtuais > 0 && onCategoryClick;
 
@@ -120,12 +122,15 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
                         <CatIcon className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">{cat.nome}</span>
+                        <span className={catOverBudget ? "text-red-500 font-medium" : "text-muted-foreground"}>
+                          {cat.nome}
+                        </span>
+                        {catOverBudget && <AlertTriangle className="h-3 w-3 text-red-500" />}
                         {isClickable && (
                           <ExternalLink className="h-2.5 w-2.5 text-muted-foreground/50" />
                         )}
                       </div>
-                      <span className="font-medium">
+                      <span className={`font-medium ${catOverBudget ? 'text-red-500' : ''}`}>
                         {formatarMoeda(cat.gastosAtuais)} / {formatarMoeda(cat.orcamento)}
                       </span>
                     </div>
@@ -133,7 +138,7 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
                       value={catPercent}
                       className="h-1.5"
                       style={{
-                        ["--progress-color" as string]: getBudgetProgressColor(catPercent),
+                        ["--progress-color" as string]: getBudgetProgressColor(catPercentReal),
                       }}
                     />
                   </div>
