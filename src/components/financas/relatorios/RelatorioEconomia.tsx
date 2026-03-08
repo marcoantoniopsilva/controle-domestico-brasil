@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Transacao, CicloFinanceiro, Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { getBudgetProgressClass } from "@/utils/budgetColors";
 import {
   filtrarPorTipo,
   filtrarPorCategoria,
