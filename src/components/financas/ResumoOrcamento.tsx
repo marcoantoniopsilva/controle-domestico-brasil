@@ -26,8 +26,9 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   
   // Calculamos o percentual gasto em relação ao orçamento (receitas)
   const percentualGasto = totalOrcamento > 0 
-    ? Math.min(Math.round((totalGastos / totalOrcamento) * 100), 100) 
+    ? Math.round((totalGastos / totalOrcamento) * 100) 
     : 0;
+  const percentualBarra = Math.min(percentualGasto, 100);
     
   // Calculamos o valor restante (ou excedido)
   const restante = totalOrcamento - totalGastos;
