@@ -30,7 +30,7 @@ const ProgressoCategoriaClickable = ({
     if (categoria.tipo === "receita") {
       return "bg-green-500";
     }
-    return getBudgetProgressColor(percentual);
+    return getBudgetProgressColor(percentualReal);
   };
   
   const getIcon = () => {
