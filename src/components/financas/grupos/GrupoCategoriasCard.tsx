@@ -7,6 +7,7 @@ import { formatarMoeda } from "@/utils/financas";
 import { CategoryGroup } from "@/utils/categoryGroups";
 import { ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { getCategoryIcon } from "@/utils/categoryIcons";
+import { getBudgetProgressColor } from "@/utils/budgetColors";
 
 interface GrupoCategoriasCardProps {
   group: CategoryGroup;
