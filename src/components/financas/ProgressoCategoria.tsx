@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { getBudgetProgressColor } from "@/utils/budgetColors";
+import { AlertTriangle } from "lucide-react";
 
 interface ProgressoCategoriaProps {
   categoria: Categoria;
