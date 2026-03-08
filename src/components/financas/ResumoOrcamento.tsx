@@ -26,8 +26,9 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
   
   // Calculamos o percentual gasto em relação ao orçamento (receitas)
   const percentualGasto = totalOrcamento > 0 
-    ? Math.min(Math.round((totalGastos / totalOrcamento) * 100), 100) 
+    ? Math.round((totalGastos / totalOrcamento) * 100) 
     : 0;
+  const percentualBarra = Math.min(percentualGasto, 100);
     
   // Calculamos o valor restante (ou excedido)
   const restante = totalOrcamento - totalGastos;
@@ -68,12 +69,12 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
           <div>
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">Progresso Geral do Orçamento</span>
-              <span className="text-sm font-medium">{percentualGasto}%</span>
+              <span className={`text-sm font-medium ${percentualGasto >= 100 ? 'text-red-500' : ''}`}>{percentualGasto}%</span>
             </div>
             <div className="h-2 w-full rounded-full bg-slate-200">
               <div
                 className={`h-2 rounded-full transition-all ${statusClass}`}
-                style={{ width: `${percentualGasto}%` }}
+                style={{ width: `${percentualBarra}%` }}
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">

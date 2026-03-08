@@ -17,9 +17,10 @@ const ProgressoCategoriaClickable = ({
   cicloAtual,
   onClick 
 }: ProgressoCategoriaClickableProps) => {
-  const percentual = categoria.orcamento > 0 
-    ? Math.min((categoria.gastosAtuais / categoria.orcamento) * 100, 100)
+  const percentualReal = categoria.orcamento > 0 
+    ? Math.round((categoria.gastosAtuais / categoria.orcamento) * 100)
     : 0;
+  const percentual = Math.min(percentualReal, 100);
     
   const restante = categoria.orcamento - categoria.gastosAtuais;
   const isOverBudget = categoria.gastosAtuais > categoria.orcamento;
@@ -29,7 +30,7 @@ const ProgressoCategoriaClickable = ({
     if (categoria.tipo === "receita") {
       return "bg-green-500";
     }
-    return getBudgetProgressColor(percentual);
+    return getBudgetProgressColor(percentualReal);
   };
   
   const getIcon = () => {
