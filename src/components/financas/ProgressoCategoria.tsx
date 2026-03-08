@@ -48,7 +48,7 @@ const ProgressoCategoria: React.FC<ProgressoCategoriaProps> = ({ categoria }) =>
             <div className="h-2 w-full rounded-full bg-slate-200">
               <div
                 className={`h-2 rounded-full transition-all ${barColor}`}
-                style={{ width: `${percentual}%` }}
+                style={{ width: `${percentualBarra}%` }}
               />
             </div>
             <div className="flex justify-between mt-2 text-sm">
