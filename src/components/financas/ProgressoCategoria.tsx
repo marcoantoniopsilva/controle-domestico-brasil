@@ -14,12 +14,14 @@ const ProgressoCategoria: React.FC<ProgressoCategoriaProps> = ({ categoria }) =>
   const ehReceita = categoria.tipo === "receita";
   
   // Para despesas, calculamos o percentual gasto do orçamento
-  const percentual = !ehReceita && categoria.orcamento > 0 
-    ? Math.min(Math.round((categoria.gastosAtuais / categoria.orcamento) * 100), 100) 
+  const percentualReal = !ehReceita && categoria.orcamento > 0 
+    ? Math.round((categoria.gastosAtuais / categoria.orcamento) * 100) 
     : 0;
+  const percentualBarra = Math.min(percentualReal, 100);
+  const isOverBudget = percentualReal >= 100;
   
   // Cores dinâmicas baseadas no percentual gasto
-  const barColor = getBudgetProgressColor(percentual);
+  const barColor = getBudgetProgressColor(percentualReal);
   
   // Para despesas, calculamos o restante do orçamento
   const restante = !ehReceita ? categoria.orcamento - categoria.gastosAtuais : 0;
@@ -28,8 +30,15 @@ const ProgressoCategoria: React.FC<ProgressoCategoriaProps> = ({ categoria }) =>
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium flex justify-between items-center">
-          <span className="truncate">{categoria.nome}</span>
-          {!ehReceita && <span className="font-normal text-muted-foreground text-xs">{percentual}%</span>}
+          <span className="truncate flex items-center gap-1">
+            {categoria.nome}
+            {!ehReceita && isOverBudget && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+          </span>
+          {!ehReceita && (
+            <span className={`font-normal text-xs ${isOverBudget ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+              {percentualReal}%
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
