@@ -4,6 +4,7 @@ import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { getCategoryIcon } from "@/utils/categoryIcons";
+import { getBudgetProgressColor } from "@/utils/budgetColors";
 
 interface ProgressoCategoriaClickableProps {
   categoria: Categoria;
@@ -28,10 +29,7 @@ const ProgressoCategoriaClickable = ({
     if (categoria.tipo === "receita") {
       return "bg-green-500";
     }
-    
-    if (isOverBudget) return "bg-red-500";
-    if (percentual >= 80) return "bg-amber-500";
-    return "bg-primary";
+    return getBudgetProgressColor(percentual);
   };
   
   const getIcon = () => {

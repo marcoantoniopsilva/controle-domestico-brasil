@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Transacao, CicloFinanceiro, Categoria } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { getBudgetProgressClass } from "@/utils/budgetColors";
 import {
   filtrarPorTipo,
   filtrarPorCategoria,
@@ -122,7 +123,7 @@ const RelatorioEconomia = ({
           
           <Progress 
             value={Math.min(percentualGeral, 100)} 
-            className={`h-3 ${percentualGeral > 100 ? '[&>div]:bg-red-500' : ''}`}
+            className={`h-3 ${getBudgetProgressClass(percentualGeral)}`}
           />
           
           <div className="flex justify-between mt-2 text-sm">
@@ -188,7 +189,7 @@ const RelatorioEconomia = ({
                 
                 <Progress 
                   value={Math.min(e.percentualUsado, 100)} 
-                  className={`h-2 ${e.percentualUsado > 100 ? '[&>div]:bg-red-500' : e.percentualUsado < 80 ? '[&>div]:bg-green-500' : ''}`}
+                  className={`h-2 ${getBudgetProgressClass(e.percentualUsado)}`}
                 />
                 
                 <div className="flex justify-between mt-2 text-sm">

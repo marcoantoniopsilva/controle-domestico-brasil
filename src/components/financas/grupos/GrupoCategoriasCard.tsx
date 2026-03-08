@@ -7,6 +7,7 @@ import { formatarMoeda } from "@/utils/financas";
 import { CategoryGroup } from "@/utils/categoryGroups";
 import { ChevronDown, ChevronUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { getCategoryIcon } from "@/utils/categoryIcons";
+import { getBudgetProgressColor } from "@/utils/budgetColors";
 
 interface GrupoCategoriasCardProps {
   group: CategoryGroup;
@@ -29,9 +30,7 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
   const percentual = totalOrcamento > 0 ? Math.min((totalGasto / totalOrcamento) * 100, 100) : 0;
 
   const getProgressColor = () => {
-    if (isOverBudget) return "bg-red-500";
-    if (percentual >= 80) return "bg-amber-500";
-    return "bg-primary";
+    return getBudgetProgressColor(percentual);
   };
 
   const GroupIcon = group.icon;
@@ -133,12 +132,7 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
                       value={catPercent}
                       className="h-1.5"
                       style={{
-                        ["--progress-color" as string]:
-                          cat.gastosAtuais > cat.orcamento
-                            ? "bg-red-500"
-                            : catPercent >= 80
-                            ? "bg-amber-500"
-                            : "bg-primary",
+                        ["--progress-color" as string]: getBudgetProgressColor(catPercent),
                       }}
                     />
                   </div>
