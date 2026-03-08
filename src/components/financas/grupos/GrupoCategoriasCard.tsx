@@ -132,12 +132,7 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
                       value={catPercent}
                       className="h-1.5"
                       style={{
-                        ["--progress-color" as string]:
-                          cat.gastosAtuais > cat.orcamento
-                            ? "bg-red-500"
-                            : catPercent >= 80
-                            ? "bg-amber-500"
-                            : "bg-primary",
+                        ["--progress-color" as string]: getBudgetProgressColor(catPercent),
                       }}
                     />
                   </div>
