@@ -30,9 +30,7 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
   const percentual = totalOrcamento > 0 ? Math.min((totalGasto / totalOrcamento) * 100, 100) : 0;
 
   const getProgressColor = () => {
-    if (isOverBudget) return "bg-red-500";
-    if (percentual >= 80) return "bg-amber-500";
-    return "bg-primary";
+    return getBudgetProgressColor(percentual);
   };
 
   const GroupIcon = group.icon;

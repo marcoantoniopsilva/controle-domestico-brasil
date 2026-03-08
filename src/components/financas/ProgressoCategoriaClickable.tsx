@@ -29,10 +29,7 @@ const ProgressoCategoriaClickable = ({
     if (categoria.tipo === "receita") {
       return "bg-green-500";
     }
-    
-    if (isOverBudget) return "bg-red-500";
-    if (percentual >= 80) return "bg-amber-500";
-    return "bg-primary";
+    return getBudgetProgressColor(percentual);
   };
   
   const getIcon = () => {

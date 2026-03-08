@@ -47,11 +47,7 @@ const ResumoOrcamento: React.FC<ResumoOrcamentoProps> = ({
     : [];
 
   // Definimos a classe de estilo baseada no percentual gasto
-  const statusClass = percentualGasto < 80 
-    ? "bg-green-500"
-    : percentualGasto < 100 
-      ? "bg-amber-500" 
-      : "bg-red-500";
+  const statusClass = getBudgetProgressColor(percentualGasto);
 
   console.log("[ResumoOrcamento] Total de gastos:", totalGastos);
   console.log("[ResumoOrcamento] Total de receitas (orçamento):", totalOrcamento);
