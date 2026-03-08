@@ -4,6 +4,7 @@ import { Categoria, CicloFinanceiro } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
 import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { getCategoryIcon } from "@/utils/categoryIcons";
+import { getBudgetProgressColor } from "@/utils/budgetColors";
 
 interface ProgressoCategoriaClickableProps {
   categoria: Categoria;
