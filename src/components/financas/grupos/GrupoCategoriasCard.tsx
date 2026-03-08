@@ -27,10 +27,11 @@ const GrupoCategoriasCard = ({ group, categorias, onCategoryClick, cicloNome }: 
   const totalOrcamento = categoriasDoGrupo.reduce((sum, cat) => sum + (cat.orcamento || 0), 0);
   const restante = totalOrcamento - totalGasto;
   const isOverBudget = totalGasto > totalOrcamento;
-  const percentual = totalOrcamento > 0 ? Math.min((totalGasto / totalOrcamento) * 100, 100) : 0;
+  const percentualReal = totalOrcamento > 0 ? Math.round((totalGasto / totalOrcamento) * 100) : 0;
+  const percentual = Math.min(percentualReal, 100);
 
   const getProgressColor = () => {
-    return getBudgetProgressColor(percentual);
+    return getBudgetProgressColor(percentualReal);
   };
 
   const GroupIcon = group.icon;
