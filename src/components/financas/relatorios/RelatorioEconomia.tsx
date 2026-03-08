@@ -123,7 +123,7 @@ const RelatorioEconomia = ({
           
           <Progress 
             value={Math.min(percentualGeral, 100)} 
-            className={`h-3 ${percentualGeral > 100 ? '[&>div]:bg-red-500' : ''}`}
+            className={`h-3 ${getBudgetProgressClass(percentualGeral)}`}
           />
           
           <div className="flex justify-between mt-2 text-sm">
