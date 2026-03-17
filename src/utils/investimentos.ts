@@ -8,6 +8,11 @@ export const categoriasInvestimentos: Categoria[] = [
   { nome: "Dólar", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
   { nome: "Tesouro Direto", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
   { nome: "Ações", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "CDB", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "LCI/LCA", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Criptomoedas", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Previdência Privada", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Outros Investimentos", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
 ];
 
 // Função para calcular a evolução dos investimentos
@@ -71,5 +76,10 @@ export const coresInvestimentos = {
   "FII": "#3b82f6", 
   "Dólar": "#eab308",
   "Tesouro Direto": "#8b5cf6",
-  "Ações": "#ef4444"
+  "Ações": "#ef4444",
+  "CDB": "#06b6d4",
+  "LCI/LCA": "#14b8a6",
+  "Criptomoedas": "#f97316",
+  "Previdência Privada": "#a855f7",
+  "Outros Investimentos": "#6b7280"
 };
