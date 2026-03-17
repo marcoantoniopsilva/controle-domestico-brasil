@@ -76,5 +76,10 @@ export const coresInvestimentos = {
   "FII": "#3b82f6", 
   "Dólar": "#eab308",
   "Tesouro Direto": "#8b5cf6",
-  "Ações": "#ef4444"
+  "Ações": "#ef4444",
+  "CDB": "#06b6d4",
+  "LCI/LCA": "#14b8a6",
+  "Criptomoedas": "#f97316",
+  "Previdência Privada": "#a855f7",
+  "Outros Investimentos": "#6b7280"
 };
