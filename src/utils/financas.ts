@@ -51,10 +51,12 @@ export const categorias = [
   { nome: "Gratificações/horas extras", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   
   // Categorias de Investimento
+  { nome: "Renda Fixa", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Ações", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Fundos de Investimento", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Tesouro Direto", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "CDB/LCI/LCA", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "CDB", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "LCI/LCA", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Criptomoedas", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Previdência Privada", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Outros Investimentos", tipo: "investimento" as const, orcamento: 0, gastosAtuais: 0 },

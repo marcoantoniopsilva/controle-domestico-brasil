@@ -8,6 +8,11 @@ export const categoriasInvestimentos: Categoria[] = [
   { nome: "Dólar", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
   { nome: "Tesouro Direto", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
   { nome: "Ações", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "CDB", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "LCI/LCA", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Criptomoedas", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Previdência Privada", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
+  { nome: "Outros Investimentos", orcamento: 0, gastosAtuais: 0, tipo: "investimento" },
 ];
 
 // Função para calcular a evolução dos investimentos
