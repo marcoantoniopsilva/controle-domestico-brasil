@@ -48,9 +48,14 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     categoriasAtualizadas: categorias,
     totalReceitas,
     totalDespesas,
-    totalInvestimentos,
+    totalInvestimentos: totalInvestimentosCiclo,
     saldo
   } = useDashboardData(todasTransacoes, cicloAtual);
+  
+  // Investimentos: saldo atual = soma de TODAS as transações de investimento (sem filtro de ciclo)
+  const totalInvestimentos = transacoes
+    .filter(t => t.tipo === 'investimento')
+    .reduce((acc, t) => acc + Math.abs(t.valor), 0);
   
   // Calcular orçamento total corretamente - CORRIGINDO O PROBLEMA DO ORÇAMENTO
   const orcamentoTotal = categorias ? categorias
