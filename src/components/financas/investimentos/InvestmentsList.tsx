@@ -32,6 +32,7 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
           <div className="text-center py-8 text-muted-foreground">
             <p>Nenhum investimento registrado ainda.</p>
             <p className="text-sm">Comece adicionando seu primeiro investimento!</p>
+            <p className="text-xs mt-2">Dica: para atualizar o valor de um investimento, edite o lançamento existente ao invés de criar um novo.</p>
           </div>
         </CardContent>
       </Card>
@@ -42,6 +43,9 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Seus Investimentos ({investimentos.length})</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Para atualizar ganhos ou perdas, edite o valor do investimento existente.
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -63,22 +67,10 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
                     <p className="text-sm font-medium">{investimento.descricao}</p>
                   )}
                   
-                  <div className="flex items-center space-x-4 text-sm">
-                    <span>
-                      <strong>Investido:</strong> {formatarMoedaInvestimento(Math.abs(investimento.valor))}
+                  <div className="text-sm">
+                    <span className="font-semibold text-blue-600">
+                      Valor atual: {formatarMoedaInvestimento(Math.abs(investimento.valor))}
                     </span>
-                    
-                    {investimento.ganhos !== undefined && investimento.ganhos !== 0 && (
-                      <span className={investimento.ganhos >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        <strong>Ganhos:</strong> {formatarMoedaInvestimento(investimento.ganhos)}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="text-sm text-muted-foreground">
-                    <strong>Saldo Total:</strong> {formatarMoedaInvestimento(
-                      Math.abs(investimento.valor) + (investimento.ganhos || 0)
-                    )}
                   </div>
                 </div>
               </div>
@@ -89,11 +81,10 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      if (onEditar) {
-                        const { id, ...transacaoSemId } = investimento;
-                        onEditar(id, transacaoSemId);
-                      }
+                      const { id, ...transacaoSemId } = investimento;
+                      onEditar(id, transacaoSemId);
                     }}
+                    title="Editar valor atual"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

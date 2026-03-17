@@ -57,6 +57,9 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
           <div className="text-lg md:text-2xl font-bold text-blue-600">
             {formatarMoeda(totalInvestimentos)}
           </div>
+          <p className="text-[10px] md:text-xs text-muted-foreground">
+            Saldo atual
+          </p>
         </CardContent>
       </Card>
 
