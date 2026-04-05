@@ -32,12 +32,15 @@ const InvestmentEvolutionChart: React.FC<InvestmentEvolutionChartProps> = ({ tra
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Distribuição dos Investimentos</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-64">
+      <CardContent className="overflow-hidden">
+        <ChartContainer
+          config={chartConfig}
+          className="h-64 overflow-hidden [&_.recharts-pie-label-line]:pointer-events-none [&_.recharts-pie-label-text]:pointer-events-none"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
