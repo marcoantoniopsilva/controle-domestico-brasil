@@ -98,9 +98,10 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 relative z-10">
                   {onEditar && (
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditarClick(investimento)}
@@ -111,10 +112,11 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
                   )}
                   
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => onExcluir(investimento.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
