@@ -139,6 +139,7 @@ const Dashboard = () => {
         <DashboardHeader 
           usuario={usuario} 
           onAddTransacao={handleAdicionarTransacao}
+          cicloAtual={cicloAtual}
         />
       </div>
       

@@ -3,16 +3,17 @@ import { Button } from "@/components/ui/button";
 import AddTransacaoForm from "./AddTransacaoForm";
 import { EditarOrcamentos } from "./EditarOrcamentos";
 import { ImportarLancamentos } from "./ImportarLancamentos";
-import { Usuario, Transacao } from "@/types";
+import { Usuario, Transacao, CicloFinanceiro } from "@/types";
 import { useState } from "react";
 import { Settings, Camera } from "lucide-react";
 
 interface DashboardHeaderProps {
   usuario: Usuario;
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean>;
+  cicloAtual: CicloFinanceiro;
 }
 
-export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProps) {
+export function DashboardHeader({ usuario, onAddTransacao, cicloAtual }: DashboardHeaderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [budgetsOpen, setBudgetsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -83,7 +84,8 @@ export function DashboardHeader({ usuario, onAddTransacao }: DashboardHeaderProp
       
       <EditarOrcamentos 
         isOpen={budgetsOpen} 
-        onClose={() => setBudgetsOpen(false)} 
+        onClose={() => setBudgetsOpen(false)}
+        cicloAtual={cicloAtual}
       />
 
       <ImportarLancamentos

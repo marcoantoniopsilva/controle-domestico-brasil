@@ -13,8 +13,9 @@ export function useDashboardData(transacoes: Transacao[], cicloAtual: CicloFinan
   const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
   
   const dadosProcessados = useMemo(() => {
-    // Obter categorias com orçamentos personalizados
-    const categoriasComOrcamento = getCategoriesWithCustomBudgets();
+    // Obter categorias com orçamentos personalizados para o ciclo atual
+    const cicloId = cicloAtual ? format(new Date(cicloAtual.inicio), 'yyyy-MM-dd') : null;
+    const categoriasComOrcamento = getCategoriesWithCustomBudgets(cicloId);
     
     if (!cicloAtual || !transacoes) {
       return {
