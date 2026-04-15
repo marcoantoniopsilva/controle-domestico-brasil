@@ -9,6 +9,7 @@ interface CategoryBudget {
   categoria_nome: string;
   categoria_tipo: string;
   orcamento: number;
+  ciclo_id: string | null;
 }
 
 export function useCategoryBudgets() {
@@ -16,7 +17,6 @@ export function useCategoryBudgets() {
   const [customBudgets, setCustomBudgets] = useState<CategoryBudget[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Carregar orçamentos personalizados do banco
   const fetchCustomBudgets = async () => {
     if (!usuario) return;
     
@@ -31,7 +31,10 @@ export function useCategoryBudgets() {
         return;
       }
 
-      setCustomBudgets(data || []);
+      setCustomBudgets((data || []).map(d => ({
+        ...d,
+        ciclo_id: (d as any).ciclo_id ?? null
+      })));
     } catch (error) {
       console.error('Erro ao carregar orçamentos:', error);
     } finally {
@@ -39,28 +42,53 @@ export function useCategoryBudgets() {
     }
   };
 
-  // Salvar orçamento personalizado
-  const saveBudget = async (categoryName: string, categoryType: string, budget: number) => {
+  const saveBudget = async (categoryName: string, categoryType: string, budget: number, cicloId?: string | null) => {
     if (!usuario) return false;
 
     try {
-      const { error } = await supabase
+      const insertData: any = {
+        usuario_id: usuario.id,
+        categoria_nome: categoryName,
+        categoria_tipo: categoryType,
+        orcamento: budget,
+        ciclo_id: cicloId ?? null
+      };
+
+      // Find existing record
+      const { data: existing } = await supabase
         .from('category_budgets')
-        .upsert({
-          usuario_id: usuario.id,
-          categoria_nome: categoryName,
-          categoria_tipo: categoryType,
-          orcamento: budget
-        }, {
-          onConflict: 'usuario_id,categoria_nome,categoria_tipo'
+        .select('id')
+        .eq('usuario_id', usuario.id)
+        .eq('categoria_nome', categoryName)
+        .eq('categoria_tipo', categoryType)
+        .then(async (res) => {
+          if (res.error) return res;
+          // Filter by ciclo_id in JS to avoid deep type issues
+          const filtered = (res.data || []).filter((row: any) => 
+            cicloId ? row.ciclo_id === cicloId : row.ciclo_id === null
+          );
+          return { ...res, data: filtered };
         });
+
+      let error;
+      if (existing && existing.length > 0) {
+        const result = await supabase
+          .from('category_budgets')
+          .update({ orcamento: budget })
+          .eq('id', existing[0].id);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('category_budgets')
+          .insert(insertData);
+        error = result.error;
+      }
 
       if (error) {
         console.error('Erro ao salvar orçamento:', error);
         return false;
       }
 
-      // Recarregar dados
       await fetchCustomBudgets();
       return true;
     } catch (error) {
@@ -69,24 +97,34 @@ export function useCategoryBudgets() {
     }
   };
 
-  // Resetar orçamento para o padrão
-  const resetBudget = async (categoryName: string, categoryType: string) => {
+  const resetBudget = async (categoryName: string, categoryType: string, cicloId?: string | null) => {
     if (!usuario) return false;
 
     try {
-      const { error } = await supabase
+      // First find the record to delete
+      const { data: records } = await supabase
         .from('category_budgets')
-        .delete()
+        .select('id, ciclo_id')
         .eq('usuario_id', usuario.id)
         .eq('categoria_nome', categoryName)
         .eq('categoria_tipo', categoryType);
+
+      const target = (records || []).find((r: any) =>
+        cicloId ? r.ciclo_id === cicloId : r.ciclo_id === null
+      );
+
+      if (!target) return true;
+
+      const { error } = await supabase
+        .from('category_budgets')
+        .delete()
+        .eq('id', target.id);
 
       if (error) {
         console.error('Erro ao resetar orçamento:', error);
         return false;
       }
 
-      // Recarregar dados
       await fetchCustomBudgets();
       return true;
     } catch (error) {
@@ -95,17 +133,31 @@ export function useCategoryBudgets() {
     }
   };
 
-  // Obter categorias com orçamentos personalizados aplicados
-  const getCategoriesWithCustomBudgets = useCallback((): Categoria[] => {
+  // Hierarchy: cycle-specific > global custom > code default
+  const getCategoriesWithCustomBudgets = useCallback((cicloId?: string | null): Categoria[] => {
     return categoriasDefault.map(categoria => {
-      const customBudget = customBudgets.find(
-        custom => custom.categoria_nome === categoria.nome && custom.categoria_tipo === categoria.tipo
+      // 1. Check cycle-specific budget
+      const cycleBudget = cicloId
+        ? customBudgets.find(
+            custom => custom.categoria_nome === categoria.nome && custom.categoria_tipo === categoria.tipo && custom.ciclo_id === cicloId
+          )
+        : null;
+
+      if (cycleBudget) {
+        return { ...categoria, orcamento: Number(cycleBudget.orcamento) };
+      }
+
+      // 2. Check global custom budget (ciclo_id is null)
+      const globalBudget = customBudgets.find(
+        custom => custom.categoria_nome === categoria.nome && custom.categoria_tipo === categoria.tipo && custom.ciclo_id === null
       );
 
-      return {
-        ...categoria,
-        orcamento: customBudget ? Number(customBudget.orcamento) : categoria.orcamento
-      };
+      if (globalBudget) {
+        return { ...categoria, orcamento: Number(globalBudget.orcamento) };
+      }
+
+      // 3. Code default
+      return categoria;
     });
   }, [customBudgets]);
 

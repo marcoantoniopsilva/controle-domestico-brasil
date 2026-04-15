@@ -123,6 +123,7 @@ export type Database = {
         Row: {
           categoria_nome: string
           categoria_tipo: string
+          ciclo_id: string | null
           created_at: string
           id: string
           orcamento: number
@@ -132,6 +133,7 @@ export type Database = {
         Insert: {
           categoria_nome: string
           categoria_tipo: string
+          ciclo_id?: string | null
           created_at?: string
           id?: string
           orcamento?: number
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           categoria_nome?: string
           categoria_tipo?: string
+          ciclo_id?: string | null
           created_at?: string
           id?: string
           orcamento?: number
@@ -297,6 +300,7 @@ export type Database = {
           id: string
           images: string[] | null
           iptu: number
+          is_favorite: boolean
           location_summary: string | null
           other_fees: number
           parking_spaces: number
@@ -321,6 +325,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           iptu?: number
+          is_favorite?: boolean
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number
@@ -345,6 +350,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           iptu?: number
+          is_favorite?: boolean
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number

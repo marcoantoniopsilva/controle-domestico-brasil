@@ -5,109 +5,97 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, RotateCcw, Save, Calculator } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { RotateCcw, Save, Calculator } from "lucide-react";
 import { formatarMoeda } from "@/utils/financas";
 import { useCategoryBudgets } from "@/hooks/useCategoryBudgets";
 import { categorias as categoriasDefault } from "@/utils/financas";
 import { useToast } from "@/hooks/use-toast";
+import { CicloFinanceiro } from "@/types";
+import { format } from "date-fns";
 
 interface EditarOrcamentosProps {
   isOpen: boolean;
   onClose: () => void;
+  cicloAtual: CicloFinanceiro;
 }
 
-export function EditarOrcamentos({ isOpen, onClose }: EditarOrcamentosProps) {
-  const { getCategoriesWithCustomBudgets, saveBudget, resetBudget, loading } = useCategoryBudgets();
+export function EditarOrcamentos({ isOpen, onClose, cicloAtual }: EditarOrcamentosProps) {
+  const { getCategoriesWithCustomBudgets, saveBudget, resetBudget, loading, customBudgets } = useCategoryBudgets();
   const { toast } = useToast();
   const [editingBudgets, setEditingBudgets] = useState<{ [key: string]: string }>({});
+  const [editForCycle, setEditForCycle] = useState(true);
 
   if (!isOpen) return null;
 
-  const categorias = getCategoriesWithCustomBudgets();
+  const cicloId = format(new Date(cicloAtual.inicio), 'yyyy-MM-dd');
+  const activeCicloId = editForCycle ? cicloId : null;
+
+  const categorias = getCategoriesWithCustomBudgets(cicloId);
   
   const categoriasDespesa = categorias.filter(cat => cat.tipo === "despesa");
   const categoriasReceita = categorias.filter(cat => cat.tipo === "receita");
   const categoriasInvestimento = categorias.filter(cat => cat.tipo === "investimento");
 
   const handleBudgetChange = (categoryName: string, value: string) => {
-    setEditingBudgets(prev => ({
-      ...prev,
-      [categoryName]: value
-    }));
+    setEditingBudgets(prev => ({ ...prev, [categoryName]: value }));
   };
 
   const handleSaveBudget = async (categoria: any) => {
     const key = categoria.nome;
     const newBudget = editingBudgets[key];
-    
     if (newBudget === undefined || newBudget === "") return;
     
     const budgetValue = parseFloat(newBudget.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    
     if (isNaN(budgetValue) || budgetValue < 0) {
-      toast({
-        title: "Valor inválido",
-        description: "Por favor, insira um valor válido.",
-        variant: "destructive"
-      });
+      toast({ title: "Valor inválido", description: "Por favor, insira um valor válido.", variant: "destructive" });
       return;
     }
 
-    const success = await saveBudget(categoria.nome, categoria.tipo, budgetValue);
-    
+    const success = await saveBudget(categoria.nome, categoria.tipo, budgetValue, activeCicloId);
     if (success) {
       toast({
         title: "Orçamento salvo",
-        description: `Orçamento da categoria "${categoria.nome}" atualizado com sucesso.`,
+        description: `Orçamento da categoria "${categoria.nome}" ${editForCycle ? `para ${cicloAtual.nome}` : '(padrão global)'} atualizado.`,
       });
-      setEditingBudgets(prev => {
-        const newState = { ...prev };
-        delete newState[key];
-        return newState;
-      });
+      setEditingBudgets(prev => { const s = { ...prev }; delete s[key]; return s; });
     } else {
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o orçamento.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro ao salvar", description: "Não foi possível salvar o orçamento.", variant: "destructive" });
     }
   };
 
   const handleResetBudget = async (categoria: any) => {
-    const defaultCategory = categoriasDefault.find(cat => cat.nome === categoria.nome && cat.tipo === categoria.tipo);
-    
-    if (!defaultCategory) return;
-
-    const success = await resetBudget(categoria.nome, categoria.tipo);
-    
+    const success = await resetBudget(categoria.nome, categoria.tipo, activeCicloId);
     if (success) {
       toast({
         title: "Orçamento resetado",
-        description: `Orçamento da categoria "${categoria.nome}" voltou ao valor padrão.`,
+        description: `Orçamento da categoria "${categoria.nome}" ${editForCycle ? `para ${cicloAtual.nome}` : '(padrão global)'} foi resetado.`,
       });
-      setEditingBudgets(prev => {
-        const newState = { ...prev };
-        delete newState[categoria.nome];
-        return newState;
-      });
+      setEditingBudgets(prev => { const s = { ...prev }; delete s[categoria.nome]; return s; });
     } else {
-      toast({
-        title: "Erro ao resetar",
-        description: "Não foi possível resetar o orçamento.",
-        variant: "destructive"
-      });
+      toast({ title: "Erro ao resetar", description: "Não foi possível resetar o orçamento.", variant: "destructive" });
     }
   };
 
   const getDefaultBudget = (categoria: any) => {
-    const defaultCategory = categoriasDefault.find(cat => cat.nome === categoria.nome && cat.tipo === categoria.tipo);
-    return defaultCategory ? defaultCategory.orcamento : 0;
+    const d = categoriasDefault.find(cat => cat.nome === categoria.nome && cat.tipo === categoria.tipo);
+    return d ? d.orcamento : 0;
+  };
+
+  const hasCycleOverride = (categoria: any) => {
+    return customBudgets.some(
+      cb => cb.categoria_nome === categoria.nome && cb.categoria_tipo === categoria.tipo && (cb as any).ciclo_id === cicloId
+    );
+  };
+
+  const hasGlobalOverride = (categoria: any) => {
+    return customBudgets.some(
+      cb => cb.categoria_nome === categoria.nome && cb.categoria_tipo === categoria.tipo && (cb as any).ciclo_id === null
+    );
   };
 
   const isCustomBudget = (categoria: any) => {
-    const defaultBudget = getDefaultBudget(categoria);
-    return categoria.orcamento !== defaultBudget;
+    return categoria.orcamento !== getDefaultBudget(categoria);
   };
 
   const renderCategoryList = (categoriesList: any[], title: string) => (
@@ -118,57 +106,38 @@ export function EditarOrcamentos({ isOpen, onClose }: EditarOrcamentosProps) {
           <Card key={categoria.nome} className="p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="font-medium">{categoria.nome}</span>
-                  {isCustomBudget(categoria) && (
-                    <Badge variant="secondary" className="text-xs">
-                      Personalizado
-                    </Badge>
+                  {hasCycleOverride(categoria) && (
+                    <Badge variant="default" className="text-xs">Neste ciclo</Badge>
+                  )}
+                  {hasGlobalOverride(categoria) && !hasCycleOverride(categoria) && (
+                    <Badge variant="secondary" className="text-xs">Padrão personalizado</Badge>
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Atual: {formatarMoeda(categoria.orcamento)}
                   {isCustomBudget(categoria) && (
-                    <span className="ml-2">
-                      (Padrão: {formatarMoeda(getDefaultBudget(categoria))})
-                    </span>
+                    <span className="ml-2">(Padrão código: {formatarMoeda(getDefaultBudget(categoria))})</span>
                   )}
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`budget-${categoria.nome}`} className="sr-only">
-                    Orçamento para {categoria.nome}
-                  </Label>
-                  <Input
-                    id={`budget-${categoria.nome}`}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="w-32"
-                    placeholder={categoria.orcamento.toString()}
-                    value={editingBudgets[categoria.nome] || ""}
-                    onChange={(e) => handleBudgetChange(categoria.nome, e.target.value)}
-                  />
-                </div>
-                
-                <Button
-                  size="sm"
-                  onClick={() => handleSaveBudget(categoria)}
-                  disabled={!editingBudgets[categoria.nome] || loading}
-                >
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-32"
+                  placeholder={categoria.orcamento.toString()}
+                  value={editingBudgets[categoria.nome] || ""}
+                  onChange={(e) => handleBudgetChange(categoria.nome, e.target.value)}
+                />
+                <Button size="sm" onClick={() => handleSaveBudget(categoria)} disabled={!editingBudgets[categoria.nome] || loading}>
                   <Save className="h-4 w-4" />
                 </Button>
-                
-                {isCustomBudget(categoria) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleResetBudget(categoria)}
-                    disabled={loading}
-                    title="Resetar para valor padrão"
-                  >
+                {((editForCycle && hasCycleOverride(categoria)) || (!editForCycle && hasGlobalOverride(categoria))) && (
+                  <Button size="sm" variant="outline" onClick={() => handleResetBudget(categoria)} disabled={loading} title="Resetar">
                     <RotateCcw className="h-4 w-4" />
                   </Button>
                 )}
@@ -192,26 +161,32 @@ export function EditarOrcamentos({ isOpen, onClose }: EditarOrcamentosProps) {
               Editar Orçamentos
             </CardTitle>
             <CardDescription>
-              Configure os orçamentos personalizados para cada categoria
+              {editForCycle 
+                ? `Orçamentos para o ciclo: ${cicloAtual.nome}` 
+                : "Orçamentos padrão (todos os ciclos)"}
             </CardDescription>
           </div>
-          <Button variant="outline" onClick={onClose}>
-            Fechar
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="cycle-toggle" className="text-sm whitespace-nowrap">
+                {editForCycle ? "Este ciclo" : "Padrão global"}
+              </Label>
+              <Switch
+                id="cycle-toggle"
+                checked={editForCycle}
+                onCheckedChange={setEditForCycle}
+              />
+            </div>
+            <Button variant="outline" onClick={onClose}>Fechar</Button>
+          </div>
         </CardHeader>
         
         <CardContent className="overflow-y-auto max-h-[calc(90vh-120px)]">
           <Tabs defaultValue="despesas" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="despesas">
-                Despesas ({categoriasDespesa.length})
-              </TabsTrigger>
-              <TabsTrigger value="receitas">
-                Receitas ({categoriasReceita.length})
-              </TabsTrigger>
-              <TabsTrigger value="investimentos">
-                Investimentos ({categoriasInvestimento.length})
-              </TabsTrigger>
+              <TabsTrigger value="despesas">Despesas ({categoriasDespesa.length})</TabsTrigger>
+              <TabsTrigger value="receitas">Receitas ({categoriasReceita.length})</TabsTrigger>
+              <TabsTrigger value="investimentos">Investimentos ({categoriasInvestimento.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="despesas">
