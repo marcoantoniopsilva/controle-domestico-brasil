@@ -101,20 +101,24 @@ export function useCategoryBudgets() {
     if (!usuario) return false;
 
     try {
-      let query = supabase
+      // First find the record to delete
+      const { data: records } = await supabase
         .from('category_budgets')
-        .delete()
+        .select('id, ciclo_id')
         .eq('usuario_id', usuario.id)
         .eq('categoria_nome', categoryName)
         .eq('categoria_tipo', categoryType);
 
-      if (cicloId) {
-        query = query.eq('ciclo_id' as any, cicloId);
-      } else {
-        query = query.is('ciclo_id' as any, null);
-      }
+      const target = (records || []).find((r: any) =>
+        cicloId ? r.ciclo_id === cicloId : r.ciclo_id === null
+      );
 
-      const { error } = await query;
+      if (!target) return true;
+
+      const { error } = await supabase
+        .from('category_budgets')
+        .delete()
+        .eq('id', target.id);
 
       if (error) {
         console.error('Erro ao resetar orçamento:', error);
