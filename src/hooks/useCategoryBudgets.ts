@@ -54,22 +54,21 @@ export function useCategoryBudgets() {
         ciclo_id: cicloId ?? null
       };
 
-      // Use raw query approach for upsert with COALESCE-based unique index
-      // First try to find existing record
-      let query = supabase
+      // Find existing record
+      const { data: existing } = await supabase
         .from('category_budgets')
         .select('id')
         .eq('usuario_id', usuario.id)
         .eq('categoria_nome', categoryName)
-        .eq('categoria_tipo', categoryType);
-
-      if (cicloId) {
-        query = query.eq('ciclo_id' as any, cicloId);
-      } else {
-        query = query.is('ciclo_id' as any, null);
-      }
-
-      const { data: existing } = await query;
+        .eq('categoria_tipo', categoryType)
+        .then(async (res) => {
+          if (res.error) return res;
+          // Filter by ciclo_id in JS to avoid deep type issues
+          const filtered = (res.data || []).filter((row: any) => 
+            cicloId ? row.ciclo_id === cicloId : row.ciclo_id === null
+          );
+          return { ...res, data: filtered };
+        });
 
       let error;
       if (existing && existing.length > 0) {
