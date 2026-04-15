@@ -1,46 +1,45 @@
 
 
-## Plan: Category Groups ("Grupos de Categorias") Feature
+## Orçamentos por Ciclo
 
-### Overview
-Create a new dashboard tab called **"Grupos"** that aggregates individual expense categories into macro groups, showing both current cycle status and a 6-month historical evolution chart.
+### Problema atual
+A tabela `category_budgets` armazena um orçamento global por categoria/usuário, sem distinção de ciclo. Qualquer edição afeta todos os ciclos.
 
-### Category Groups Definition
-Define groups as a constant mapping in a new file `src/utils/categoryGroups.ts`:
+### Solução
+Adicionar uma coluna `ciclo_id` (texto no formato "YYYY-MM-DD", representando a data de início do ciclo) à tabela `category_budgets`. Registros sem `ciclo_id` (ou NULL) continuam sendo o **orçamento padrão**. Registros com `ciclo_id` são **sobrescritas específicas** daquele ciclo.
 
-| Group | Categories |
-|-------|-----------|
-| Alimentação | Aplicativos e restaurantes, Supermercado |
-| Deslocamento | Seguro e manutenção, Uber, Recarga carro, Estacionamento |
-| Saúde | Farmácia, Saúde |
-| Aurora | Atividades Aurora, Fórmula e leite Aurora, Presentes/roupas Aurora |
-| Pessoais | Lazer, Compras da Bruna, Compras do Marco, Compras parceladas Bruna, Compras parceladas Marco |
-| Essenciais | Casa, Serviços de internet, Academia, Gato |
-| Extraordinários | Gastos extraordinários, Viagens, Impostos taxas e multas, Outros |
+### Hierarquia de resolução
+1. Orçamento específico do ciclo (se existir)
+2. Orçamento padrão personalizado pelo usuário (sem ciclo)
+3. Orçamento padrão do código (`financas.ts`)
 
-Each group will derive its budget (sum of member category budgets) and current spending (sum of member category `gastosAtuais`) dynamically from the existing `categoriasAtualizadas` data.
+### Mudanças
 
-### New Components
+**1. Migration: adicionar coluna `ciclo_id`**
+- `ALTER TABLE category_budgets ADD COLUMN ciclo_id text DEFAULT NULL`
+- Atualizar a constraint unique para `(usuario_id, categoria_nome, categoria_tipo, ciclo_id)` — usar um índice único parcial ou COALESCE para lidar com NULLs
 
-1. **`src/utils/categoryGroups.ts`** — Group definitions with name, icon, and member category names.
+**2. Hook `useCategoryBudgets.ts`**
+- `saveBudget` e `resetBudget` passam a aceitar um parâmetro opcional `cicloId?: string`
+- `fetchCustomBudgets` carrega todos os budgets do usuário (padrão + ciclo-específicos)
+- `getCategoriesWithCustomBudgets` recebe um `cicloId` opcional e aplica a hierarquia: ciclo > padrão > código
 
-2. **`src/components/financas/grupos/GrupoCategoriasCard.tsx`** — A card component (similar to `ProgressoCategoriaClickable`) showing group name, total spent, total budget, progress bar, and remaining/exceeded amount. Clicking expands to show individual category breakdown.
+**3. Componente `EditarOrcamentos.tsx`**
+- Recebe o `cicloAtual` como prop
+- Mostra o nome do ciclo no header ("Orçamentos para Mar/Abr 2026")
+- Adiciona um toggle/switch: "Editar apenas para este ciclo" vs "Editar padrão global"
+- Quando editando para o ciclo, salva com `ciclo_id`; quando editando padrão, salva com `ciclo_id = null`
+- Badge "Personalizado neste ciclo" quando há override de ciclo
 
-3. **`src/components/financas/grupos/EvolucaoGrupos.tsx`** — A stacked area or line chart (recharts) showing each group's spending over the last 6 completed cycles. Reuses the same installment projection logic from `EvolucaoReceitasDespesas.tsx`.
+**4. `DashboardHeader.tsx`**
+- Passa `cicloAtual` para `EditarOrcamentos`
 
-### Tab Integration
-Add a **"Grupos"** tab to `DashboardTabs.tsx` between "Despesas" and "Receitas". Content:
-- Grid of `GrupoCategoriasCard` components (one per group) showing current cycle data
-- Below the grid, the `EvolucaoGrupos` chart with 6-month history
+**5. `Dashboard.tsx`**
+- Passa `cicloAtual` para `DashboardHeader`
 
-### Data Flow
-- Groups compute from the already-processed `categoriasAtualizadas` array (which includes custom budgets and current spending) — no new database queries needed for current cycle
-- The evolution chart receives `transacoesOriginais` and processes historical cycles the same way `EvolucaoReceitasDespesas` does, but aggregating by group instead of receita/despesa
+**6. Consumidores (`useDashboardData`, etc.)**
+- Passa o `cicloId` derivado do `cicloAtual.inicio` para `getCategoriesWithCustomBudgets` para que os orçamentos reflitam o ciclo selecionado
 
-### Files to Create/Modify
-- **Create**: `src/utils/categoryGroups.ts`
-- **Create**: `src/components/financas/grupos/GrupoCategoriasCard.tsx`
-- **Create**: `src/components/financas/grupos/EvolucaoGrupos.tsx`
-- **Modify**: `src/components/financas/dashboard/DashboardTabs.tsx` — add "Grupos" tab
-- **Modify**: `src/utils/categoryIcons.ts` — add icons for group names (Utensils for Alimentação, Car for Deslocamento, Heart for Saúde, Baby for Aurora, User for Pessoais, Home for Essenciais, AlertTriangle for Extraordinários)
+### Formato do ciclo_id
+Usar `format(cicloAtual.inicio, 'yyyy-MM-dd')` — ex: `"2026-03-25"`. Simples e determinístico.
 
