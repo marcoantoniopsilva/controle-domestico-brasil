@@ -297,6 +297,7 @@ export type Database = {
           id: string
           images: string[] | null
           iptu: number
+          is_favorite: boolean
           location_summary: string | null
           other_fees: number
           parking_spaces: number
@@ -321,6 +322,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           iptu?: number
+          is_favorite?: boolean
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number
@@ -345,6 +347,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           iptu?: number
+          is_favorite?: boolean
           location_summary?: string | null
           other_fees?: number
           parking_spaces?: number
