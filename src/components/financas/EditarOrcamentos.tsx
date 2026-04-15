@@ -26,7 +26,7 @@ export function EditarOrcamentos({ isOpen, onClose, cicloAtual }: EditarOrcament
   const [editingBudgets, setEditingBudgets] = useState<{ [key: string]: string }>({});
   const [editForCycle, setEditForCycle] = useState(true);
 
-  if (!isOpen) return null;
+  if (!isOpen || !cicloAtual) return null;
 
   const cicloId = format(new Date(cicloAtual.inicio), 'yyyy-MM-dd');
   const activeCicloId = editForCycle ? cicloId : null;
