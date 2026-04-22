@@ -15,6 +15,8 @@ export const categorias = [
   { nome: "Aplicativos e restaurantes", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
   { nome: "Atividades Aurora", tipo: "despesa" as const, orcamento: 421, gastosAtuais: 0 },
   { nome: "Casa", tipo: "despesa" as const, orcamento: 1000, gastosAtuais: 0 },
+  { nome: "Condomínio e aluguel", tipo: "despesa" as const, orcamento: 6500, gastosAtuais: 0 },
+  { nome: "Contas e convênios", tipo: "despesa" as const, orcamento: 550, gastosAtuais: 0 },
   { nome: "Compras da Bruna", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
   { nome: "Compras do Marco", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
   { nome: "Compras parceladas Bruna", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },

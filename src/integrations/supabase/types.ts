@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       auto_search_results: {
         Row: {
           address: string
@@ -27,6 +63,7 @@ export type Database = {
           images: string[] | null
           iptu: number
           is_extracted: boolean
+          is_furnished: string
           other_fees: number
           parking_spaces: number
           rent: number
@@ -50,6 +87,7 @@ export type Database = {
           images?: string[] | null
           iptu?: number
           is_extracted?: boolean
+          is_furnished?: string
           other_fees?: number
           parking_spaces?: number
           rent: number
@@ -73,6 +111,7 @@ export type Database = {
           images?: string[] | null
           iptu?: number
           is_extracted?: boolean
+          is_furnished?: string
           other_fees?: number
           parking_spaces?: number
           rent?: number
@@ -301,7 +340,9 @@ export type Database = {
           images: string[] | null
           iptu: number
           is_favorite: boolean
+          is_furnished: string
           location_summary: string | null
+          notes: string | null
           other_fees: number
           parking_spaces: number
           rent: number
@@ -326,7 +367,9 @@ export type Database = {
           images?: string[] | null
           iptu?: number
           is_favorite?: boolean
+          is_furnished?: string
           location_summary?: string | null
+          notes?: string | null
           other_fees?: number
           parking_spaces?: number
           rent: number
@@ -351,7 +394,9 @@ export type Database = {
           images?: string[] | null
           iptu?: number
           is_favorite?: boolean
+          is_furnished?: string
           location_summary?: string | null
+          notes?: string | null
           other_fees?: number
           parking_spaces?: number
           rent?: number
@@ -509,6 +554,7 @@ export type Database = {
         Row: {
           created_at: string
           faixa_preco: string | null
+          furnished_bonus: boolean
           id: string
           intencao: string | null
           objetivo_principal: string
@@ -526,6 +572,7 @@ export type Database = {
         Insert: {
           created_at?: string
           faixa_preco?: string | null
+          furnished_bonus?: boolean
           id?: string
           intencao?: string | null
           objetivo_principal: string
@@ -543,6 +590,7 @@ export type Database = {
         Update: {
           created_at?: string
           faixa_preco?: string | null
+          furnished_bonus?: boolean
           id?: string
           intencao?: string | null
           objetivo_principal?: string
