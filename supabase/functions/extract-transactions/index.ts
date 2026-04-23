@@ -89,16 +89,16 @@ serve(async (req) => {
 
     console.log(`Processing image for user ${user.id}, size: ~${Math.round(estimatedSizeBytes / 1024)}KB`);
 
-    const GEMINI_API_KEY = Deno.env.get('GOOGLE_GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      console.error('GOOGLE_GEMINI_API_KEY não configurada');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY não configurada');
       return new Response(
-        JSON.stringify({ error: 'API Key do Gemini não configurada' }),
+        JSON.stringify({ error: 'API Key do Lovable AI Gateway não configurada' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processando imagem com Gemini Vision...');
+    console.log('Processando imagem com Lovable AI Gateway (gemini-2.5-flash)...');
     console.log('Categorias disponíveis:', categorias);
 
     const prompt = `Você é um especialista em extrair dados de extratos de cartão de crédito e faturas.
@@ -136,50 +136,53 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
   ]
 }`;
 
-    // Chamar API do Gemini
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: 'image/jpeg',
-                    data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 8192,
+    // Chamar Lovable AI Gateway (formato OpenAI-compatível)
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: imageBase64 } },
+            ],
           },
-        }),
-      }
-    );
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erro na API do Gemini:', response.status, errorText);
+      console.error('Erro no Lovable AI Gateway:', response.status, errorText);
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Limite de uso atingido. Tente novamente em alguns instantes.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Créditos do Lovable AI esgotados. Adicione créditos no workspace.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
-        JSON.stringify({ error: `Erro na API do Gemini: ${response.status}` }),
+        JSON.stringify({ error: `Erro no AI Gateway: ${response.status}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    console.log('Resposta do Gemini recebida');
+    console.log('Resposta do AI Gateway recebida');
 
-    // Extrair o texto da resposta
-    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    // Extrair o texto da resposta (formato OpenAI)
+    const textResponse = data.choices?.[0]?.message?.content;
     
     if (!textResponse) {
       console.error('Resposta vazia do Gemini');
