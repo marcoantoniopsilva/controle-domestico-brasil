@@ -54,6 +54,8 @@ serve(async (req) => {
 
     const { imageBase64, categorias, anoReferencia } = await req.json();
     const anoRef = typeof anoReferencia === 'number' ? anoReferencia : new Date().getFullYear();
+    const hoje = new Date();
+    const dataHojeStr = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
     
     if (!imageBase64) {
       return new Response(
@@ -106,7 +108,7 @@ serve(async (req) => {
 Analise a imagem fornecida e extraia TODOS os lançamentos financeiros visíveis.
 
 Para cada lançamento, extraia:
-1. DATA: No formato DD/MM/AAAA ou DD/MM (se o ano não estiver visível, use ${anoRef})
+1. DATA: No formato DD/MM/AAAA. Se a data não estiver visível na imagem, ou estiver imprecisa/incompleta/ilegível, use a data de hoje: ${dataHojeStr}. Se apenas o ano não estiver visível, use ${anoRef}.
 2. DESCRIÇÃO: Nome do estabelecimento ou descrição do gasto
 3. VALOR: Valor em reais (número decimal, sem R$)
 4. PARCELAS: Se houver indicação de parcelamento (ex: "2/5" significa parcela 2 de 5), extraia o número total. Se não houver, coloque 1.
@@ -120,7 +122,7 @@ IMPORTANTE:
 - Extraia TODOS os lançamentos visíveis na imagem
 - Ignore linhas de total, subtotal ou informações que não sejam lançamentos
 - Valores devem ser números positivos
-- Datas incompletas devem ser completadas com o ano provável
+- Datas ausentes ou imprecisas devem ser preenchidas com a data de hoje (${dataHojeStr})
 
 Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adicional):
 {
