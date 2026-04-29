@@ -100,7 +100,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processando imagem com Google Gemini (gemini-2.0-flash)...');
+    console.log('Processando imagem com Google Gemini (gemini-2.5-flash)...');
     console.log('Categorias disponíveis:', categorias);
 
     const prompt = `Você é um especialista em extrair dados de extratos de cartão de crédito e faturas.
@@ -144,7 +144,7 @@ Retorne APENAS um JSON válido no seguinte formato (sem markdown, sem texto adic
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
