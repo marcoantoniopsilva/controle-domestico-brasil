@@ -6,6 +6,7 @@ import { BarChart3 } from "lucide-react";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
 import { filtrarPorCiclo, filtrarPorTipo } from "@/utils/calculosFinanceiros";
 import { categoryGroups } from "@/utils/categoryGroups";
+import { useCycleStartDay } from "@/hooks/useCycleStartDay";
 
 interface EvolucaoGruposProps {
   transacoes: Transacao[];
@@ -59,8 +60,9 @@ const GROUP_COLORS: Record<string, string> = {
 };
 
 const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
+  const cycleStartDay = useCycleStartDay();
   const hoje = new Date();
-  const ciclos = gerarCiclosFinanceiros(transacoes)
+  const ciclos = gerarCiclosFinanceiros(transacoes, cycleStartDay)
     .filter(c => c.temTransacoes && c.fim < hoje)
     .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
     .slice(-6);

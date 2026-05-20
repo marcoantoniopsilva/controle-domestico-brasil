@@ -5,6 +5,7 @@ import { formatarMoeda } from "@/utils/financas";
 import { TrendingUp } from "lucide-react";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
 import { filtrarPorCiclo, somarTransacoes, filtrarPorTipo } from "@/utils/calculosFinanceiros";
+import { useCycleStartDay } from "@/hooks/useCycleStartDay";
 
 interface EvolucaoReceitasDespesasProps {
   transacoes: Transacao[];
@@ -52,8 +53,9 @@ function gerarParcelasDoCiclo(transacoes: Transacao[], ciclo: { inicio: Date; fi
 }
 
 const EvolucaoReceitasDespesas = ({ transacoes }: EvolucaoReceitasDespesasProps) => {
+  const cycleStartDay = useCycleStartDay();
   const hoje = new Date();
-  const ciclos = gerarCiclosFinanceiros(transacoes)
+  const ciclos = gerarCiclosFinanceiros(transacoes, cycleStartDay)
     .filter(c => c.temTransacoes && c.fim < hoje)
     .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
     .slice(-8);
