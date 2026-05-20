@@ -2,6 +2,7 @@
 import { format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Transacao } from "@/types";
+import { DEFAULT_CYCLE_START_DAY } from "@/utils/financas";
 
 export interface CicloFinanceiroDetalhado {
   inicio: Date;
@@ -11,30 +12,31 @@ export interface CicloFinanceiroDetalhado {
   temTransacoes: boolean;
 }
 
+const clampDay = (d: number) => Math.max(1, Math.min(28, d || DEFAULT_CYCLE_START_DAY));
+
 // Função para calcular o início do ciclo financeiro baseado em uma data
-const calcularInicioCiclo = (data: Date): Date => {
+const calcularInicioCiclo = (data: Date, cycleStartDay: number = DEFAULT_CYCLE_START_DAY): Date => {
   const ano = data.getFullYear();
   const mes = data.getMonth();
-  
-  // Se estamos antes do dia 25, o ciclo atual começou no dia 25 do mês anterior
-  if (data.getDate() < 25) {
-    return new Date(ano, mes - 1, 25);
+  const startDay = clampDay(cycleStartDay);
+
+  if (data.getDate() < startDay) {
+    return new Date(ano, mes - 1, startDay);
   } else {
-    // Se estamos no dia 25 ou depois, o ciclo atual começou no dia 25 deste mês
-    return new Date(ano, mes, 25);
+    return new Date(ano, mes, startDay);
   }
 };
 
 // Função para calcular o fim do ciclo financeiro baseado no início
-const calcularFimCiclo = (inicioCiclo: Date): Date => {
+const calcularFimCiclo = (inicioCiclo: Date, cycleStartDay: number = DEFAULT_CYCLE_START_DAY): Date => {
   const fimCiclo = new Date(inicioCiclo);
   fimCiclo.setMonth(fimCiclo.getMonth() + 1);
-  fimCiclo.setDate(24);
+  fimCiclo.setDate(clampDay(cycleStartDay) - 1);
   return fimCiclo;
 };
 
 // Função aprimorada para gerar ciclos financeiros que detecta TODOS os ciclos com dados
-export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiroDetalhado[] => {
+export const gerarCiclosFinanceiros = (transacoes: Transacao[], cycleStartDay: number = DEFAULT_CYCLE_START_DAY): CicloFinanceiroDetalhado[] => {
   console.log("[ciclosFinanceiros] Iniciando geração de ciclos para", transacoes.length, "transações");
   
   if (transacoes.length === 0) {
@@ -58,11 +60,11 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
   console.log(`[ciclosFinanceiros] Gerando ciclos de ${inicioGeracao.toDateString()} até ${fimGeracao.toDateString()}`);
   
   // Começar do início do primeiro ciclo no período
-  let cicloAtual = calcularInicioCiclo(inicioGeracao);
+  let cicloAtual = calcularInicioCiclo(inicioGeracao, cycleStartDay);
   
   while (cicloAtual <= fimGeracao) {
     const inicioCiclo = new Date(cicloAtual);
-    const fimCiclo = calcularFimCiclo(inicioCiclo);
+    const fimCiclo = calcularFimCiclo(inicioCiclo, cycleStartDay);
     
     // Verificar se este ciclo tem transações usando comparação de datas normalizada
     const transacoesCiclo = transacoes.filter(t => {
@@ -105,10 +107,10 @@ export const gerarCiclosFinanceiros = (transacoes: Transacao[]): CicloFinanceiro
 };
 
 // Função para obter o ciclo financeiro de um mês/ano específico
-export const getCicloFinanceiro = (mes: number, ano: number): CicloFinanceiroDetalhado => {
-  // O ciclo do mês X começa no dia 25 do mês X-1 e vai até o dia 24 do mês X
-  const inicioCiclo = new Date(ano, mes - 2, 25); // mes - 2 porque meses são 0-indexados e queremos o mês anterior
-  const fimCiclo = new Date(ano, mes - 1, 24);
+export const getCicloFinanceiro = (mes: number, ano: number, cycleStartDay: number = DEFAULT_CYCLE_START_DAY): CicloFinanceiroDetalhado => {
+  const startDay = clampDay(cycleStartDay);
+  const inicioCiclo = new Date(ano, mes - 2, startDay);
+  const fimCiclo = new Date(ano, mes - 1, startDay - 1);
 
   return {
     inicio: inicioCiclo,
