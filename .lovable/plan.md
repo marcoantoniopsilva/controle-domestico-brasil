@@ -1,85 +1,60 @@
-# Categorias editáveis e ciclo financeiro configurável
+# Relatórios WhatsApp personalizáveis
 
-Tornar a aplicação flexível: cada usuário poderá renomear, criar e excluir categorias, editar os grupos macro e definir o dia de virada do ciclo financeiro. Novos usuários passam por um onboarding inicial para configurar tudo antes de começar a usar.
+Combinar abordagens 1 + 2: ampliar o template atual e criar templates adicionais focados, permitindo que cada usuário escolha o tipo de relatório que recebe e (quando aplicável) quais categorias quer destacar.
 
-Foco: zero quebra para os usuários atuais. Todas as categorias e o ciclo dia 25 → 24 continuam valendo como padrão até que o usuário decida mudar.
+## Tipos de relatório oferecidos
 
-## O que muda para o usuário
+1. **Resumo completo** (atual) — saldo, categorias principais, dias restantes.
+2. **Só despesas** — gastos do ciclo, top categorias de despesa, % do orçamento.
+3. **Só receitas** — entradas do ciclo, comparativo com ciclo anterior.
+4. **Categorias escolhidas** — usuário marca de 1 a N categorias para acompanhar; o relatório lista cada uma com gasto/orçamento/percentual.
 
-### Categorias personalizáveis
-- Nova tela "Categorias" (acessível pelo menu / configurações) listando despesas, receitas e investimentos.
-- Para cada categoria: renomear, editar orçamento, definir tipo, definir grupo macro, excluir (com aviso quando há lançamentos vinculados — opção de migrar para outra categoria).
-- Botão "Nova categoria" em cada aba (despesa / receita / investimento).
-- Editor de grupos macro: criar/renomear/excluir grupo, escolher ícone, mover categorias entre grupos.
-- Renomeações iniciais aplicadas como **novo padrão** para todos:
-  - Compras do Marco → Compras à vista 1
-  - Compras da Bruna → Compras à vista 2
-  - Compras parceladas Marco → Compras parceladas 1
-  - Compras parceladas Bruna → Compras parceladas 2
-  - Fórmula e leite Aurora → Gastos com bebê
-  - Atividades Aurora → Atividades do(a)(s) filho(a)(s)
-  - Presentes/roupas Aurora → Presentes/roupas bebê
-  - Gato → Gato/Cachorro
-  - Pagamento mamãe → Transferências
-  - Remuneração Bruna → Restituições
-- Renomeação propaga automaticamente para lançamentos existentes (UPDATE no campo `categoria` em `lancamentos` e `category_budgets`).
+## Mudanças no banco
 
-### Dia de virada do ciclo configurável
-- Nova preferência do usuário: `cycle_start_day` (1–28, default 25).
-- Toda função que hoje assume "dia 25 / dia 24" passa a ler esse valor.
-- Mudar a data recalcula em tempo real: ciclos exibidos, relatórios, gráficos comparativos, simulador, relatório de cartão, previsão de fechamento, parcelas futuras, daily report do WhatsApp.
-- Aviso ao mudar: explica que ciclos passados serão reagrupados visualmente (não altera lançamentos, só a janela de agrupamento).
+Nova tabela / extensão de `whatsapp_finance_users`:
 
-### Onboarding do novo usuário
-Wizard em 3 passos após o cadastro (antes do dashboard):
-1. **Ciclo financeiro** — escolher dia de virada (default 25).
-2. **Categorias** — confirmar/editar/excluir categorias padrão por tipo.
-3. **Orçamentos** — definir valor por categoria de despesa (campos pré-preenchidos).
-Botão "Usar padrão e começar agora" pula direto com os valores atuais.
+- `report_type`: `'completo' | 'despesas' | 'receitas' | 'categorias'` (default `'completo'`)
+- `selected_categories`: `text[]` (usado só quando `report_type='categorias'`)
 
-Usuários existentes não veem o wizard — apenas ganham acesso aos novos menus de edição.
+Como mudança de schema, vai por migration. Os usuários atuais ficam em `'completo'` para preservar comportamento.
 
-## Detalhes técnicos
+## Mudanças na UI
 
-### Banco (migrações)
-- `user_preferences` (nova): `usuario_id`, `cycle_start_day int default 25`, `onboarding_completed boolean` (true para registros migrados, false para novos), timestamps. RLS por `usuario_id`.
-- `categorias` (nova): `usuario_id`, `nome`, `tipo` (despesa/receita/investimento), `orcamento numeric default 0`, `grupo_id uuid null`, `ordem int`, `ativa boolean default true`, `is_default boolean`. RLS por `usuario_id`. Index `(usuario_id, nome, tipo)`.
-- `categoria_grupos` (nova): `usuario_id`, `nome`, `icone text`, `ordem int`. RLS por `usuario_id`.
-- Trigger no signup (ou função SECURITY DEFINER chamada do cliente) popula categorias padrão + grupos padrão + `user_preferences { onboarding_completed: false }` usando os nomes já renomeados.
-- Backfill único para usuários atuais: cria as categorias padrão renomeadas em `categorias` para cada `usuario_id` distinto encontrado em `lancamentos`, e roda UPDATE em `lancamentos.categoria` e `category_budgets.categoria_nome` mapeando nomes antigos → novos.
-- `category_budgets` continua existindo por compatibilidade (fallback de leitura). Plano futuro: deprecar em favor de `categorias.orcamento`.
+`src/components/financas/WhatsAppConfig.tsx`:
 
-### Frontend
-- Novo hook `useUserPreferences()` → `cycleStartDay`, `loading`, `update()`.
-- Novo hook `useCategorias()` substitui o array estático em `src/utils/financas.ts`. Retorna lista por tipo, agrupada, com CRUD.
-- Refator de `calcularCicloAtual`, `useCiclos`, `ciclosFinanceiros.ts` para receber `cycleStartDay` como parâmetro — eliminar constantes 25/24.
-- Substituir `categoryGroups` estático por dados de `categoria_grupos`.
-- Páginas novas:
-  - `src/pages/Onboarding.tsx` + componentes do wizard.
-  - `src/pages/Categorias.tsx` (gestão de categorias e grupos).
-  - Seção de Preferências (ciclo) — aba dentro de configurações ou página dedicada.
-- Guard de rota: se `onboarding_completed === false`, redireciona para `/onboarding`.
+- Novo seletor "Tipo de relatório" com as 4 opções.
+- Quando "Categorias escolhidas", mostrar multi-select alimentado por `useCategorias` (filtrando ativas), com limite recomendado de 6 categorias para caber no template.
+- Preview textual mostrando como o relatório vai chegar.
 
-### Áreas que precisam consumir os novos dados dinâmicos
-Cálculos: `utils/financas.ts`, `utils/ciclosFinanceiros.ts`, `utils/calculosFinanceiros.ts`, `hooks/useCiclos.ts`, `hooks/useDashboardData.ts`, `hooks/useParcelasFuturas.ts`, `hooks/useSimulacaoOrcamento.ts`, `hooks/useComparativoSimulacao.ts`, `hooks/useTransactionsByCategory.ts`.
-UI: dashboard, `relatorios/*`, `GraficoComparativo/*`, `simulador/*`, `RelatorioCartaoCredito`, `ResumoOrcamento`, `ProgressoCategoria*`, `grupos/*`, `DistribuicaoCategorias`, `EvolucaoReceitasDespesas`, formulários (`AddTransacaoForm`, `EditTransacaoForm`, `ImportarLancamentos*`), `EditarOrcamentos`, `WhatsAppConfig`.
-Edge functions: `whatsapp-finance`, `whatsapp-daily-report`, `twilio-webhook`, `infobip-webhook`, `extract-transactions` — passam a buscar `cycle_start_day` do `user_preferences` em vez de assumir 25.
+## Templates Twilio (Content Templates)
 
-### Compatibilidade
-- Default global continua `cycle_start_day = 25`.
-- O backfill garante que toda categoria já em uso por lançamentos existentes exista na tabela `categorias`.
-- A renomeação é feita via UPDATE restrito aos nomes exatos listados — não afeta customizações futuras nem categorias que já tenham nomes diferentes.
+Precisam ser criados no Console Twilio e aprovados pela Meta. Cada um usa variáveis genéricas para servir qualquer usuário:
 
-## Entregas em ordem
-1. Migração de schema (`user_preferences`, `categorias`, `categoria_grupos`) + trigger de signup + backfill + renomeações.
-2. Hooks `useUserPreferences` e `useCategorias`; refator dos utils de ciclo para receber `cycleStartDay`.
-3. Substituir consumos estáticos no frontend (cálculos, relatórios, simulador, formulários).
-4. Telas de gestão: Categorias, Grupos, Preferências (ciclo).
-5. Wizard de onboarding + guard de rota.
-6. Atualização das edge functions.
-7. QA: ciclo atual, ciclos passados, parcelas, simulador, relatórios, WhatsApp, importação por imagem.
+- **`daily_completo`** — o atual (`HXe114dce7a30e14b0aa6e97f680549e78`), mantido.
+- **`daily_despesas`** — variáveis: saldo de despesas, top 6 categorias de despesa formatadas como `"Nome: R$X de R$Y (Z%)"`, dias restantes.
+- **`daily_receitas`** — variáveis: total recebido, comparativo, principais fontes.
+- **`daily_categorias_flex`** — template "container": cabeçalho fixo + 1 variável grande (até ~1024 chars) onde o backend monta livremente a lista de categorias escolhidas pelo usuário.
 
-## Riscos
-- Renomear categoria com muitos lançamentos exige UPDATE em massa — fazer dentro de transação e com índice em `(usuario_id, categoria)`.
-- Mudar `cycle_start_day` muda a janela de TODOS os ciclos antigos exibidos; não altera dados, apenas o agrupamento. Tornar isso explícito no aviso.
-- Edge functions precisam ser re-deployadas; sem isso, o WhatsApp continuaria assumindo dia 25.
+IDs dos templates ficam em uma constante mapeada por `report_type` no edge function.
+
+## Mudanças no edge function `whatsapp-daily-report`
+
+- Ler `report_type` e `selected_categories` do usuário.
+- Selecionar `ContentSid` correto via map.
+- Função `generateReportData` vira `generateReportData(type, selectedCategories)` e retorna o set de variáveis adequado a cada template.
+- Para `categorias`, montar string única (uma linha por categoria) e mandar como `{{1}}` no template flex.
+
+## Passos de entrega
+
+1. Migration: adicionar `report_type` e `selected_categories` em `whatsapp_finance_users`.
+2. Atualizar `useWhatsAppConfig` para ler/gravar os novos campos.
+3. UI em `WhatsAppConfig.tsx` com seletor + multi-select de categorias + preview.
+4. Criar os 3 novos templates no Twilio (ação do usuário fora do código) e me informar os ContentSids.
+5. Edge function: map de templates, ramificação na geração de variáveis, ajustes nos logs.
+6. Testar cada tipo via `?force=true` para um usuário de teste.
+
+## Limitações conhecidas (regras Meta)
+
+- Templates precisam ser pré-aprovados pela Meta — não dá pra gerar templates dinamicamente.
+- Cada variável aceita ~1024 caracteres; o relatório "Categorias escolhidas" fica limitado a ~6-8 categorias na prática.
+- Sempre que o usuário enviar uma mensagem ao bot, abre a janela de 24h e respostas viram freeform (já é o comportamento do `whatsapp-finance`).
