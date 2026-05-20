@@ -133,18 +133,19 @@ Deno.serve(async (req) => {
   }
 });
 
-// Calcula o ciclo financeiro atual (dia 7 a dia 6 do próximo mês)
-function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
+// Calcula o ciclo financeiro atual com base no dia configurado pelo usuário
+function getCurrentCycle(cycleStartDay = 25): { inicio: Date; fim: Date; nome: string } {
   const hoje = new Date();
+  const startDay = Math.max(1, Math.min(28, cycleStartDay || 25));
   let inicio: Date;
   let fim: Date;
 
-  if (hoje.getDate() >= 7) {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 6);
+  if (hoje.getDate() >= startDay) {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, startDay - 1);
   } else {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 7);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 6);
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth(), startDay - 1);
   }
 
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -154,7 +155,14 @@ function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
 }
 
 async function getFinancialContext(supabase: any, usuarioId: string): Promise<FinancialContext> {
-  const ciclo = getCurrentCycle();
+  // Buscar preferência do dia de ciclo do usuário
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('cycle_start_day')
+    .eq('usuario_id', usuarioId)
+    .maybeSingle();
+  const cycleStartDay = prefs?.cycle_start_day ?? 25;
+  const ciclo = getCurrentCycle(cycleStartDay);
   
   // Buscar transações do ciclo atual
   const { data: transacoes, error: transError } = await supabase

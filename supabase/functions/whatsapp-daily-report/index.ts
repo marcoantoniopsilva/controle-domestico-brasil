@@ -205,18 +205,19 @@ async function processAllUsers(
   console.log(`[DailyReport] Background concluído: ${successCount} sucesso, ${errorCount} erros`);
 }
 
-// Calcula o ciclo financeiro atual (dia 25 a dia 24 do próximo mês)
-function getCurrentCycle(): { inicio: Date; fim: Date; nome: string } {
+// Calcula o ciclo financeiro atual com base no dia configurado pelo usuário
+function getCurrentCycle(cycleStartDay = 25): { inicio: Date; fim: Date; nome: string } {
   const hoje = new Date();
+  const startDay = Math.max(1, Math.min(28, cycleStartDay || 25));
   let inicio: Date;
   let fim: Date;
 
-  if (hoje.getDate() >= 25) {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 25);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
+  if (hoje.getDate() >= startDay) {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, startDay - 1);
   } else {
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 25);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth(), startDay - 1);
   }
 
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -237,7 +238,13 @@ interface ReportData {
 }
 
 async function generateReportData(supabase: any, usuarioId: string): Promise<ReportData> {
-  const ciclo = getCurrentCycle();
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('cycle_start_day')
+    .eq('usuario_id', usuarioId)
+    .maybeSingle();
+  const cycleStartDay = prefs?.cycle_start_day ?? 25;
+  const ciclo = getCurrentCycle(cycleStartDay);
 
   const { data: transacoesCiclo } = await supabase
     .from('lancamentos')
@@ -320,16 +327,10 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     return `R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
   };
 
-  // Calcular dias restantes até o dia 24
+  // Calcular dias restantes até o fechamento do ciclo
   const hoje = new Date();
-  let diaFechamento: Date;
-  if (hoje.getDate() <= 24) {
-    diaFechamento = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
-  } else {
-    diaFechamento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
-  }
-  const diffMs = diaFechamento.getTime() - hoje.getTime();
-  const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const diffMs = ciclo.fim.getTime() - hoje.getTime();
+  const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
   return {
     saldo: `R$${saldo.toFixed(2)}`,
