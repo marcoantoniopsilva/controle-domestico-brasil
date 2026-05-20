@@ -1,9 +1,14 @@
 
 import { Transacao, Categoria } from "@/types";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
+import { DEFAULT_CYCLE_START_DAY } from "@/utils/financas";
 import { DadosCiclo } from "./types";
 
-export const processFinancialData = (transacoes: Transacao[], categorias: Categoria[]) => {
+export const processFinancialData = (
+  transacoes: Transacao[],
+  categorias: Categoria[],
+  cycleStartDay: number = DEFAULT_CYCLE_START_DAY,
+) => {
   // Filtrar apenas transações de despesa para a tabela
   const transacoesDespesa = transacoes.filter(t => t.tipo === "despesa");
   
@@ -11,7 +16,7 @@ export const processFinancialData = (transacoes: Transacao[], categorias: Catego
   console.log("[GraficoComparativo] Total de transações:", transacoes.length);
   
   // Gerar ciclos baseados no período atual, sempre mostrando histórico
-  const ciclos = gerarCiclosFinanceiros(transacoesDespesa);
+  const ciclos = gerarCiclosFinanceiros(transacoesDespesa, cycleStartDay);
 
   // Preparar dados para a tabela usando a MESMA lógica exata do useDashboardData
   const dadosTabela: DadosCiclo[] = ciclos.map(ciclo => {

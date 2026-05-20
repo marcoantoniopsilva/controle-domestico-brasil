@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useCycleStartDay } from "./useCycleStartDay";
 import { ComparativoCiclo, SimulacaoMes } from "@/types/simulacao";
 import { getCicloFinanceiro } from "@/utils/ciclosFinanceiros";
 import { 
@@ -15,15 +16,16 @@ const ANO_SIMULACAO = 2026;
 
 export function useComparativoSimulacao(simulacao: SimulacaoMes[]) {
   const { usuario } = useAuth();
+  const cycleStartDay = useCycleStartDay();
   const [comparativos, setComparativos] = useState<ComparativoCiclo[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Verificar se um ciclo já está fechado (baseado na data atual)
   const cicloFechado = useCallback((mes: number, ano: number): boolean => {
     const hoje = new Date();
-    const ciclo = getCicloFinanceiro(mes, ano);
+    const ciclo = getCicloFinanceiro(mes, ano, cycleStartDay);
     return hoje > ciclo.fim;
-  }, []);
+  }, [cycleStartDay]);
 
   // Carregar transações reais e calcular comparativos
   const carregarComparativos = useCallback(async () => {
@@ -92,7 +94,7 @@ export function useComparativoSimulacao(simulacao: SimulacaoMes[]) {
         let totalInvestimentosRealizado = 0;
 
         if (estaFechado && transacoesFormatadas.length > 0) {
-          const ciclo = getCicloFinanceiro(mes, ANO_SIMULACAO);
+          const ciclo = getCicloFinanceiro(mes, ANO_SIMULACAO, cycleStartDay);
           const transacoesCiclo = filtrarPorCiclo(transacoesFormatadas, ciclo);
           
           totalReceitasRealizado = calcularTotalReceitas(transacoesCiclo);
@@ -125,7 +127,7 @@ export function useComparativoSimulacao(simulacao: SimulacaoMes[]) {
     } finally {
       setLoading(false);
     }
-  }, [usuario, simulacao, cicloFechado]);
+  }, [usuario, simulacao, cicloFechado, cycleStartDay]);
 
   // Obter apenas ciclos fechados
   const ciclosFechados = comparativos.filter(c => c.cicloFechado);

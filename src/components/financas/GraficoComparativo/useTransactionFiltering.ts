@@ -2,8 +2,12 @@
 import { useMemo } from "react";
 import { Transacao } from "@/types";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
+import { DEFAULT_CYCLE_START_DAY } from "@/utils/financas";
 
-export const useTransactionFiltering = (transacoes: Transacao[]) => {
+export const useTransactionFiltering = (
+  transacoes: Transacao[],
+  cycleStartDay: number = DEFAULT_CYCLE_START_DAY,
+) => {
   const getTransactionsForCategoryAndCycle = useMemo(() => {
     return (categoria: string, cicloNome: string): Transacao[] => {
       console.log(`[TransactionFiltering] Buscando transações para ${categoria} no ciclo ${cicloNome}`);
@@ -12,7 +16,7 @@ export const useTransactionFiltering = (transacoes: Transacao[]) => {
       const transacoesDespesa = transacoes.filter(t => t.tipo === "despesa");
       
       // Gerar ciclos para encontrar o período correto
-      const ciclos = gerarCiclosFinanceiros(transacoesDespesa);
+      const ciclos = gerarCiclosFinanceiros(transacoesDespesa, cycleStartDay);
       const ciclo = ciclos.find(c => c.nome === cicloNome);
       
       if (!ciclo) {
@@ -63,7 +67,7 @@ export const useTransactionFiltering = (transacoes: Transacao[]) => {
       
       return transacoesFiltradas;
     };
-  }, [transacoes]);
+  }, [transacoes, cycleStartDay]);
   
   return { getTransactionsForCategoryAndCycle };
 };
