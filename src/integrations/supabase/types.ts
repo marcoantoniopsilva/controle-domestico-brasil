@@ -777,6 +777,8 @@ export type Database = {
           phone_number: string
           report_frequency: string
           report_hour: number
+          report_type: string
+          selected_categories: string[]
           updated_at: string
           usuario_id: string
         }
@@ -788,6 +790,8 @@ export type Database = {
           phone_number: string
           report_frequency?: string
           report_hour?: number
+          report_type?: string
+          selected_categories?: string[]
           updated_at?: string
           usuario_id: string
         }
@@ -799,6 +803,8 @@ export type Database = {
           phone_number?: string
           report_frequency?: string
           report_hour?: number
+          report_type?: string
+          selected_categories?: string[]
           updated_at?: string
           usuario_id?: string
         }
