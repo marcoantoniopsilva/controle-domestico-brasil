@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Bell, Clock, Trash2, Save, Smartphone, CheckCircle } from "lucide-react";
 import { useWhatsAppConfig } from "@/hooks/useWhatsAppConfig";
+import { useCategorias } from "@/hooks/useCategorias";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +36,11 @@ const WhatsAppConfig = () => {
   const [isActive, setIsActive] = useState(true);
   const [reportFrequency, setReportFrequency] = useState<"daily" | "weekly" | "none">("daily");
   const [reportHour, setReportHour] = useState(20);
+  const [reportType, setReportType] = useState<"completo" | "despesas" | "receitas" | "categorias">("completo");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const { categorias } = useCategorias();
+  const MAX_CATEGORIES = 6;
 
   // Sincroniza estado local com dados do servidor
   useEffect(() => {
@@ -42,6 +49,8 @@ const WhatsAppConfig = () => {
       setIsActive(config.is_active);
       setReportFrequency(config.report_frequency);
       setReportHour(config.report_hour);
+      setReportType(config.report_type);
+      setSelectedCategories(config.selected_categories ?? []);
     }
   }, [config]);
 
@@ -75,7 +84,9 @@ const WhatsAppConfig = () => {
       phone_number: phoneNumber.replace(/\D/g, ""),
       is_active: isActive,
       report_frequency: reportFrequency,
-      report_hour: reportHour
+      report_hour: reportHour,
+      report_type: reportType,
+      selected_categories: selectedCategories,
     });
   };
 
@@ -84,7 +95,9 @@ const WhatsAppConfig = () => {
       phone_number: phoneNumber.replace(/\D/g, ""),
       is_active: isActive,
       report_frequency: reportFrequency,
-      report_hour: reportHour
+      report_hour: reportHour,
+      report_type: reportType,
+      selected_categories: selectedCategories,
     });
   };
 
@@ -94,18 +107,42 @@ const WhatsAppConfig = () => {
     setIsActive(true);
     setReportFrequency("daily");
     setReportHour(20);
+    setReportType("completo");
+    setSelectedCategories([]);
   };
 
   const hasSettingsChanges = () => {
     if (!config) return false;
     
     const cleanCurrentPhone = phoneNumber.replace(/\D/g, "");
+    const sameCats =
+      selectedCategories.length === (config.selected_categories?.length ?? 0) &&
+      selectedCategories.every((c) => config.selected_categories?.includes(c));
     return (
       cleanCurrentPhone !== config.phone_number ||
       isActive !== config.is_active ||
       reportFrequency !== config.report_frequency ||
-      reportHour !== config.report_hour
+      reportHour !== config.report_hour ||
+      reportType !== config.report_type ||
+      !sameCats
     );
+  };
+
+  const toggleCategory = (nome: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(nome)) return prev.filter((c) => c !== nome);
+      if (prev.length >= MAX_CATEGORIES) return prev;
+      return [...prev, nome];
+    });
+  };
+
+  const categoriasDespesa = categorias.filter((c) => c.tipo === "despesa" && c.ativa);
+
+  const reportTypeLabel: Record<typeof reportType, string> = {
+    completo: "Resumo completo (saldo + categorias principais)",
+    despesas: "Apenas despesas do ciclo",
+    receitas: "Apenas receitas do ciclo",
+    categorias: "Categorias escolhidas por você",
   };
 
   const isPhoneValid = () => {
@@ -234,6 +271,48 @@ const WhatsAppConfig = () => {
                 Horário de Brasília (UTC-3)
               </p>
             </div>
+
+            {/* Tipo de Relatório */}
+            <div className="space-y-2">
+              <Label>Tipo de Relatório</Label>
+              <Select value={reportType} onValueChange={(v) => setReportType(v as typeof reportType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="completo">Resumo completo</SelectItem>
+                  <SelectItem value="despesas">Só despesas</SelectItem>
+                  <SelectItem value="receitas">Só receitas</SelectItem>
+                  <SelectItem value="categorias">Categorias escolhidas</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{reportTypeLabel[reportType]}</p>
+            </div>
+
+            {/* Multi-select de Categorias */}
+            {reportType === "categorias" && (
+              <div className="space-y-2">
+                <Label>Categorias para acompanhar (máx. {MAX_CATEGORIES})</Label>
+                <div className="rounded-lg border p-3 max-h-64 overflow-y-auto space-y-2">
+                  {categoriasDespesa.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Nenhuma categoria de despesa encontrada.</p>
+                  )}
+                  {categoriasDespesa.map((c) => {
+                    const checked = selectedCategories.includes(c.nome);
+                    const disabled = !checked && selectedCategories.length >= MAX_CATEGORIES;
+                    return (
+                      <label key={c.id} className={`flex items-center gap-2 text-sm cursor-pointer ${disabled ? "opacity-50" : ""}`}>
+                        <Checkbox checked={checked} disabled={disabled} onCheckedChange={() => toggleCategory(c.nome)} />
+                        <span>{c.nome}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Selecionadas: {selectedCategories.length}/{MAX_CATEGORIES}
+                </p>
+              </div>
+            )}
           </>
         )}
 
