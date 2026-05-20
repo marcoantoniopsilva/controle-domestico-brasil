@@ -4,6 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Settings } from "lucide-react";
 
 const NavBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -60,6 +64,18 @@ const NavBar = () => {
                   Simulador
                 </Button>
               </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="px-2 md:px-3 text-xs md:text-sm">
+                    <Settings className="h-4 w-4 md:mr-1" />
+                    <span className="hidden sm:inline">Config</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button onClick={handleLogout} variant="outline" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
                 Sair
               </Button>

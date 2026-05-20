@@ -10,6 +10,10 @@ import Cadastro from "./pages/Cadastro";
 import Dashboard from "./pages/Dashboard";
 import Simulador from "./pages/Simulador";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
+import Categorias from "./pages/Categorias";
+import Preferencias from "./pages/Preferencias";
+import { AuthGuard } from "./components/auth/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -23,8 +27,11 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/simulador" element={<Simulador />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+          <Route path="/simulador" element={<AuthGuard><Simulador /></AuthGuard>} />
+          <Route path="/categorias" element={<AuthGuard><Categorias /></AuthGuard>} />
+          <Route path="/preferencias" element={<AuthGuard><Preferencias /></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

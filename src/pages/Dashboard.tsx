@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { calcularCicloAtual } from "@/utils/financas";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { CicloFinanceiro, Transacao } from "@/types";
 import DashboardLoading from "@/components/financas/DashboardLoading";
 import NavBar from "@/components/layout/NavBar";
@@ -15,7 +16,13 @@ import { toast } from "sonner";
 
 const Dashboard = () => {
   const { usuario } = useAuth();
+  const { preferences } = useUserPreferences(usuario?.id);
   const [cicloAtual, setCicloAtual] = useState<CicloFinanceiro>(calcularCicloAtual());
+
+  // Recalcula ciclo quando preferences carregar
+  useEffect(() => {
+    setCicloAtual(calcularCicloAtual(preferences.cycleStartDay));
+  }, [preferences.cycleStartDay]);
   const { 
     transacoes, 
     fetchTransacoes, 
