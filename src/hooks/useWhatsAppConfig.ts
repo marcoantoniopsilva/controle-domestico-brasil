@@ -9,6 +9,8 @@ export interface WhatsAppConfig {
   report_frequency: "daily" | "weekly" | "none";
   report_hour: number;
   is_verified: boolean;
+  report_type: "completo" | "despesas" | "receitas" | "categorias";
+  selected_categories: string[];
 }
 
 export function useWhatsAppConfig() {
@@ -45,7 +47,9 @@ export function useWhatsAppConfig() {
           is_active: data.is_active,
           report_frequency: data.report_frequency as "daily" | "weekly" | "none",
           report_hour: data.report_hour,
-          is_verified: data.is_verified
+          is_verified: data.is_verified,
+          report_type: ((data as any).report_type ?? "completo") as WhatsAppConfig["report_type"],
+          selected_categories: ((data as any).selected_categories ?? []) as string[],
         });
       }
     } catch (error) {
@@ -95,6 +99,8 @@ export function useWhatsAppConfig() {
             is_active: newConfig.is_active,
             report_frequency: newConfig.report_frequency,
             report_hour: newConfig.report_hour,
+            report_type: newConfig.report_type,
+            selected_categories: newConfig.selected_categories,
             is_verified: true,
             updated_at: new Date().toISOString()
           })
@@ -111,6 +117,8 @@ export function useWhatsAppConfig() {
             is_active: newConfig.is_active,
             report_frequency: newConfig.report_frequency,
             report_hour: newConfig.report_hour,
+            report_type: newConfig.report_type,
+            selected_categories: newConfig.selected_categories,
             is_verified: true
           });
 
