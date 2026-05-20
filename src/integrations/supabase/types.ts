@@ -158,6 +158,86 @@ export type Database = {
         }
         Relationships: []
       }
+      categoria_grupos: {
+        Row: {
+          created_at: string
+          icone: string
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          icone?: string
+          id?: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          icone?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      categorias: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          grupo_id: string | null
+          id: string
+          is_default: boolean
+          nome: string
+          orcamento: number
+          ordem: number
+          tipo: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          grupo_id?: string | null
+          id?: string
+          is_default?: boolean
+          nome: string
+          orcamento?: number
+          ordem?: number
+          tipo: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          grupo_id?: string | null
+          id?: string
+          is_default?: boolean
+          nome?: string
+          orcamento?: number
+          ordem?: number
+          tipo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categorias_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "categoria_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       category_budgets: {
         Row: {
           categoria_nome: string
@@ -550,6 +630,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          cycle_start_day: number
+          id: string
+          onboarding_completed: boolean
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_start_day?: number
+          id?: string
+          onboarding_completed?: boolean
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_start_day?: number
+          id?: string
+          onboarding_completed?: boolean
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -738,6 +845,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      seed_default_categorias: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
