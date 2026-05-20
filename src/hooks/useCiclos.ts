@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { CicloFinanceiro } from "@/types";
-import { calcularCicloAtual } from "@/utils/financas";
+import { calcularCicloAtual, DEFAULT_CYCLE_START_DAY } from "@/utils/financas";
 import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const useCiclos = () => {
-  const cicloAtual = calcularCicloAtual();
+export const useCiclos = (cycleStartDay: number = DEFAULT_CYCLE_START_DAY) => {
+  const startDay = Math.max(1, Math.min(28, cycleStartDay || DEFAULT_CYCLE_START_DAY));
+  const cicloAtual = calcularCicloAtual(startDay);
   const [ciclosDisponiveis, setCiclosDisponiveis] = useState<CicloFinanceiro[]>([]);
   
   useEffect(() => {
@@ -23,35 +24,12 @@ export const useCiclos = () => {
           c.inicio.getFullYear() === inicio.getFullYear()
         );
       };
-      
-      // Adiciona ciclo março-abril 2025 explicitamente
-      const marcoAbril2025Inicio = new Date(2025, 2, 25);
-      const marcoAbril2025Fim = new Date(2025, 3, 24);
-      
-      const marcoAbril2025 = {
-        inicio: marcoAbril2025Inicio,
-        fim: marcoAbril2025Fim,
-        nome: `março 2025 - abril 2025`
-      };
-      
-      ciclos.push(marcoAbril2025);
-      
-      console.log("[useCiclos] Ciclo março-abril 2025 adicionado explicitamente:", 
-        "início:", marcoAbril2025Inicio.toISOString(), 
-        "fim:", marcoAbril2025Fim.toISOString(),
-        "nome:", marcoAbril2025.nome);
 
       // Adiciona ciclos anteriores e posteriores
       for (let i = -12; i <= 12; i++) {
         const dataBase = addMonths(hoje, i);
-        const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth() - 1, 25);
-        const fim = new Date(dataBase.getFullYear(), dataBase.getMonth(), 24);
-        
-        // Pula o ciclo março-abril 2025 que já foi adicionado explicitamente
-        if (inicio.getFullYear() === 2025 && inicio.getMonth() === 2) {
-          console.log("[useCiclos] Pulando ciclo março-abril 2025 que já foi adicionado");
-          continue;
-        }
+        const inicio = new Date(dataBase.getFullYear(), dataBase.getMonth() - 1, startDay);
+        const fim = new Date(dataBase.getFullYear(), dataBase.getMonth(), startDay - 1);
         
         // Verifica se este ciclo já existe antes de adicionar
         if (cicloJaExiste(inicio, ciclos)) {
@@ -80,7 +58,7 @@ export const useCiclos = () => {
     };
 
     setCiclosDisponiveis(gerarCiclos());
-  }, []);
+  }, [startDay]);
 
   return {
     ciclosDisponiveis,
