@@ -10,22 +10,24 @@ export const formatarMoeda = (valor: number): string => {
   }).format(valor);
 };
 
+export const DEFAULT_CYCLE_START_DAY = 25;
+
 export const categorias = [
   // Categorias de Despesa - Apenas categorias com atividade no ciclo atual
   { nome: "Aplicativos e restaurantes", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
-  { nome: "Atividades Aurora", tipo: "despesa" as const, orcamento: 421, gastosAtuais: 0 },
+  { nome: "Atividades do(a)(s) filho(a)(s)", tipo: "despesa" as const, orcamento: 421, gastosAtuais: 0 },
   { nome: "Casa", tipo: "despesa" as const, orcamento: 1000, gastosAtuais: 0 },
   { nome: "Condomínio e aluguel", tipo: "despesa" as const, orcamento: 6500, gastosAtuais: 0 },
   { nome: "Contas e convênios", tipo: "despesa" as const, orcamento: 550, gastosAtuais: 0 },
-  { nome: "Compras da Bruna", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras do Marco", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras parceladas Bruna", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
-  { nome: "Compras parceladas Marco", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
+  { nome: "Compras à vista 1", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
+  { nome: "Compras à vista 2", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
+  { nome: "Compras parceladas 1", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
+  { nome: "Compras parceladas 2", tipo: "despesa" as const, orcamento: 600, gastosAtuais: 0 },
   { nome: "Despesas fixas no dinheiro", tipo: "despesa" as const, orcamento: 5200, gastosAtuais: 0 },
   { nome: "Estacionamento", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
   { nome: "Farmácia", tipo: "despesa" as const, orcamento: 250, gastosAtuais: 0 },
   { nome: "Recarga carro", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
-  { nome: "Gato", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
+  { nome: "Gato/Cachorro", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
   { nome: "Lazer", tipo: "despesa" as const, orcamento: 180, gastosAtuais: 0 },
   { nome: "Outros", tipo: "despesa" as const, orcamento: 350, gastosAtuais: 0 },
   { nome: "Serviços de internet", tipo: "despesa" as const, orcamento: 150, gastosAtuais: 0 },
@@ -33,9 +35,9 @@ export const categorias = [
   
   // Categorias com orçamentos baseados no histórico real
   { nome: "Academia", tipo: "despesa" as const, orcamento: 160, gastosAtuais: 0 },
-  { nome: "Presentes/roupas Aurora", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
+  { nome: "Presentes/roupas bebê", tipo: "despesa" as const, orcamento: 300, gastosAtuais: 0 },
   { nome: "Doações", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
-  { nome: "Fórmula e leite Aurora", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Gastos com bebê", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
   { nome: "Saúde", tipo: "despesa" as const, orcamento: 800, gastosAtuais: 0 },
   { nome: "Seguro e manutenção", tipo: "despesa" as const, orcamento: 500, gastosAtuais: 0 },
   { nome: "Uber", tipo: "despesa" as const, orcamento: 120, gastosAtuais: 0 },
@@ -46,8 +48,8 @@ export const categorias = [
   // Categorias de Receita - Baseadas nos dados reais do banco
   { nome: "⅓ de férias", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Outras receitas", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Pagamento mamãe", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
-  { nome: "Remuneração Bruna", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Transferências", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
+  { nome: "Restituições", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Salário", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "13º salário", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
   { nome: "Gratificações/horas extras", tipo: "receita" as const, orcamento: 0, gastosAtuais: 0 },
@@ -80,21 +82,20 @@ export const quemGastouOpcoes = [
   { value: "Bruna", label: "Bruna" },
 ];
 
-export const calcularCicloAtual = (): CicloFinanceiro => {
+export const calcularCicloAtual = (cycleStartDay: number = DEFAULT_CYCLE_START_DAY): CicloFinanceiro => {
   const hoje = new Date();
   const diaAtual = hoje.getDate();
-  
+  const startDay = Math.max(1, Math.min(28, cycleStartDay || DEFAULT_CYCLE_START_DAY));
+
   let inicio: Date;
   let fim: Date;
-  
-  if (diaAtual >= 25) {
-    // Estamos no ciclo atual (25 do mês atual até 24 do próximo mês)
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 25);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 24);
+
+  if (diaAtual >= startDay) {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, startDay - 1);
   } else {
-    // Estamos no ciclo anterior (25 do mês passado até 24 do mês atual)
-    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 25);
-    fim = new Date(hoje.getFullYear(), hoje.getMonth(), 24);
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, startDay);
+    fim = new Date(hoje.getFullYear(), hoje.getMonth(), startDay - 1);
   }
   
   const nomeMesInicio = format(inicio, 'MMMM', { locale: ptBR });
