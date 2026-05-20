@@ -9,6 +9,7 @@ import TableLegend from "./TableLegend";
 import EmptyState from "./EmptyState";
 import TransactionDetailModal from "./TransactionDetailModal";
 import { useTransactionFiltering } from "./useTransactionFiltering";
+import { useCycleStartDay } from "@/hooks/useCycleStartDay";
 
 interface GraficoComparativoMensalProps {
   transacoes: Transacao[];
@@ -16,6 +17,7 @@ interface GraficoComparativoMensalProps {
 }
 
 const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativoMensalProps) => {
+  const cycleStartDay = useCycleStartDay();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedCycle, setSelectedCycle] = useState<string>("");
@@ -25,10 +27,10 @@ const GraficoComparativoMensal = ({ transacoes, categorias }: GraficoComparativo
   console.log("[GraficoComparativo] Transações de despesa disponíveis:", transacoes.filter(t => t.tipo === "despesa").length);
   
   // Hook para filtrar transações
-  const { getTransactionsForCategoryAndCycle } = useTransactionFiltering(transacoes);
+  const { getTransactionsForCategoryAndCycle } = useTransactionFiltering(transacoes, cycleStartDay);
   
   // Processar dados financeiros
-  const { dadosTabela, categoriasDespesa } = processFinancialData(transacoes, categorias);
+  const { dadosTabela, categoriasDespesa } = processFinancialData(transacoes, categorias, cycleStartDay);
 
   // Filtrar apenas categorias de despesa que têm dados para mostrar
   const categoriasComDados = categoriasDespesa.filter(cat => 
