@@ -10,6 +10,8 @@ interface WhatsAppUser {
   phone_number: string;
   report_frequency: string;
   report_hour: number;
+  report_type?: string;
+  selected_categories?: string[];
 }
 
 interface Transacao {
@@ -29,13 +31,22 @@ interface CategoryBudget {
   orcamento: number;
 }
 
-// Categorias que devem aparecer no relatório WhatsApp
-const categoriasRelatorio = [
-  "Aplicativos e restaurantes",
-  "Casa",
-  "Compras da Bruna",
-  "Compras do Marco",
-];
+// ContentSids dos templates Twilio (configuráveis via secrets)
+// Fallback: template "completo" original
+const TEMPLATE_COMPLETO_DEFAULT = 'HXe114dce7a30e14b0aa6e97f680549e78';
+function getTemplateSid(reportType: string): string {
+  switch (reportType) {
+    case 'despesas':
+      return Deno.env.get('TWILIO_TEMPLATE_DESPESAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
+    case 'receitas':
+      return Deno.env.get('TWILIO_TEMPLATE_RECEITAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
+    case 'categorias':
+      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
+    case 'completo':
+    default:
+      return Deno.env.get('TWILIO_TEMPLATE_COMPLETO_SID') || TEMPLATE_COMPLETO_DEFAULT;
+  }
+}
 
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
 
@@ -74,7 +85,7 @@ Deno.serve(async (req) => {
     if (forceTest) {
       const { data, error } = await supabase
         .from('whatsapp_finance_users')
-        .select('usuario_id, phone_number, report_frequency, report_hour')
+        .select('usuario_id, phone_number, report_frequency, report_hour, report_type, selected_categories')
         .eq('is_active', true)
         .neq('report_frequency', 'none');
       
@@ -84,7 +95,7 @@ Deno.serve(async (req) => {
     } else {
       const { data, error } = await supabase
         .from('whatsapp_finance_users')
-        .select('usuario_id, phone_number, report_frequency, report_hour')
+        .select('usuario_id, phone_number, report_frequency, report_hour, report_type, selected_categories')
         .eq('is_active', true)
         .eq('report_hour', brasiliaHour)
         .neq('report_frequency', 'none');
@@ -112,7 +123,6 @@ Deno.serve(async (req) => {
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const twilioWhatsappNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER');
-    const templateContentSid = 'HXe114dce7a30e14b0aa6e97f680549e78';
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsappNumber) {
       console.error('[DailyReport] Credenciais Twilio não configuradas');
@@ -121,7 +131,7 @@ Deno.serve(async (req) => {
 
     // Processar em background usando EdgeRuntime.waitUntil
     const backgroundProcess = processAllUsers(
-      supabase, usersToNotify, twilioAccountSid, twilioAuthToken, twilioWhatsappNumber, templateContentSid
+      supabase, usersToNotify, twilioAccountSid, twilioAuthToken, twilioWhatsappNumber
     );
 
     EdgeRuntime.waitUntil(backgroundProcess);
@@ -149,8 +159,7 @@ async function processAllUsers(
   usersToNotify: WhatsAppUser[],
   twilioAccountSid: string,
   twilioAuthToken: string,
-  twilioWhatsappNumber: string,
-  templateContentSid: string
+  twilioWhatsappNumber: string
 ) {
   let successCount = 0;
   let errorCount = 0;
@@ -159,24 +168,18 @@ async function processAllUsers(
 
   for (const user of usersToNotify) {
     try {
-      console.log(`[DailyReport] Gerando relatório para ${user.phone_number}...`);
-      const reportData = await generateReportData(supabase, user.usuario_id);
-      console.log(`[DailyReport] Dados gerados, enviando template para ${user.phone_number}...`);
+      const reportType = user.report_type || 'completo';
+      const templateContentSid = getTemplateSid(reportType);
+      console.log(`[DailyReport] Gerando relatório (${reportType}) para ${user.phone_number}...`);
+
+      const variables = await buildTemplateVariables(supabase, user, reportType);
+      console.log(`[DailyReport] Enviando template ${templateContentSid} para ${user.phone_number}...`);
 
       const formData = new URLSearchParams();
       formData.append('From', `whatsapp:${twilioWhatsappNumber}`);
       formData.append('To', `whatsapp:+${user.phone_number}`);
       formData.append('ContentSid', templateContentSid);
-      formData.append('ContentVariables', JSON.stringify({
-        "1": reportData.saldo,
-        "2": reportData.comprasMarco,
-        "3": reportData.comprasBruna,
-        "4": reportData.appsRestaurantes,
-        "5": reportData.casa,
-        "6": reportData.presentesAurora,
-        "7": reportData.supermercado,
-        "8": reportData.diasRestantes
-      }));
+      formData.append('ContentVariables', JSON.stringify(variables));
 
       const response = await fetch(twilioUrl, {
         method: 'POST',
@@ -203,6 +206,61 @@ async function processAllUsers(
   }
 
   console.log(`[DailyReport] Background concluído: ${successCount} sucesso, ${errorCount} erros`);
+}
+
+async function buildTemplateVariables(
+  supabase: any,
+  user: WhatsAppUser,
+  reportType: string
+): Promise<Record<string, string>> {
+  const reportData = await generateReportData(supabase, user.usuario_id);
+
+  if (reportType === 'completo') {
+    return {
+      "1": reportData.saldo,
+      "2": reportData.comprasMarco,
+      "3": reportData.comprasBruna,
+      "4": reportData.appsRestaurantes,
+      "5": reportData.casa,
+      "6": reportData.presentesAurora,
+      "7": reportData.supermercado,
+      "8": reportData.diasRestantes,
+    };
+  }
+
+  if (reportType === 'despesas') {
+    return {
+      "1": `R$${reportData.totalDespesas.toFixed(2)}`,
+      "2": reportData.diasRestantes,
+      "3": reportData.topDespesas[0] || "—",
+      "4": reportData.topDespesas[1] || "—",
+      "5": reportData.topDespesas[2] || "—",
+      "6": reportData.topDespesas[3] || "—",
+      "7": reportData.topDespesas[4] || "—",
+      "8": reportData.topDespesas[5] || "—",
+    };
+  }
+
+  if (reportType === 'receitas') {
+    return {
+      "1": `R$${reportData.totalReceitas.toFixed(2)}`,
+      "2": `R$${reportData.totalDespesas.toFixed(2)}`,
+      "3": reportData.saldo,
+      "4": reportData.diasRestantes,
+    };
+  }
+
+  if (reportType === 'categorias') {
+    const selected = (user.selected_categories || []).slice(0, 8);
+    const linhas = selected.length > 0
+      ? selected.map((nome) => `• ${nome}: ${reportData.formatCategoria(nome)}`).join('\n')
+      : 'Nenhuma categoria selecionada. Configure no app.';
+    return {
+      "1": linhas.substring(0, 1000),
+    };
+  }
+
+  return { "1": reportData.saldo };
 }
 
 // Calcula o ciclo financeiro atual com base no dia configurado pelo usuário
@@ -235,6 +293,10 @@ interface ReportData {
   presentesAurora: string;
   supermercado: string;
   diasRestantes: string;
+  totalReceitas: number;
+  totalDespesas: number;
+  topDespesas: string[];
+  formatCategoria: (nome: string) => string;
 }
 
 async function generateReportData(supabase: any, usuarioId: string): Promise<ReportData> {
@@ -332,6 +394,12 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
   const diffMs = ciclo.fim.getTime() - hoje.getTime();
   const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
+  // Top despesas ordenadas
+  const topDespesas = Object.entries(gastosPorCategoria)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([nome]) => `${nome}: ${formatCategory(nome)}`);
+
   return {
     saldo: `R$${saldo.toFixed(2)}`,
     comprasMarco: formatCategory("Compras do Marco"),
@@ -340,6 +408,10 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     casa: formatCategory("Casa"),
     presentesAurora: formatCategory("Presentes/roupas Aurora"),
     supermercado: formatCategory("Supermercado"),
-    diasRestantes: `${diasRestantes}`
+    diasRestantes: `${diasRestantes}`,
+    totalReceitas,
+    totalDespesas,
+    topDespesas,
+    formatCategoria: formatCategory,
   };
 }
