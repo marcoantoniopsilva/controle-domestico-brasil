@@ -1,0 +1,1 @@
+UPDATE whatsapp_finance_users SET report_type = 'despesas', updated_at = now() WHERE phone_number IN ('553191584886', '553183995683');
