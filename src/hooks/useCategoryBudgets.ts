@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Categoria } from "@/types";
-import { categorias as categoriasDefault } from "@/utils/financas";
 
 interface CategoryBudget {
   id: string;
@@ -15,7 +14,7 @@ interface CategoryBudget {
 export function useCategoryBudgets() {
   const { usuario } = useAuth();
   const [customBudgets, setCustomBudgets] = useState<CategoryBudget[]>([]);
-  const [extraCategorias, setExtraCategorias] = useState<Categoria[]>([]);
+  const [dbCategorias, setDbCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCustomBudgets = async () => {
@@ -45,18 +44,17 @@ export function useCategoryBudgets() {
         ciclo_id: (d as any).ciclo_id ?? null
       })));
 
-      // Categorias adicionais do banco que não estão nos defaults estáticos
-      const defaultsSet = new Set(categoriasDefault.map(c => `${c.tipo}::${c.nome}`));
-      const extras: Categoria[] = ((catsRes.data as any[]) || [])
+      // Fonte de verdade: apenas categorias do banco do usuário (ativas).
+      // Não mesclar com lista hardcoded para evitar categorias-fantasma após renomeação.
+      const fromDb: Categoria[] = ((catsRes.data as any[]) || [])
         .filter((c: any) => c.ativa)
-        .filter((c: any) => !defaultsSet.has(`${c.tipo}::${c.nome}`))
         .map((c: any) => ({
           nome: c.nome,
           tipo: c.tipo as Categoria["tipo"],
           orcamento: Number(c.orcamento) || 0,
           gastosAtuais: 0,
         }));
-      setExtraCategorias(extras);
+      setDbCategorias(fromDb);
     } catch (error) {
       console.error('Erro ao carregar orçamentos:', error);
     } finally {
@@ -157,8 +155,7 @@ export function useCategoryBudgets() {
 
   // Hierarchy: cycle-specific > global custom > code default
   const getCategoriesWithCustomBudgets = useCallback((cicloId?: string | null): Categoria[] => {
-    const merged = [...categoriasDefault, ...extraCategorias];
-    return merged.map(categoria => {
+    return dbCategorias.map(categoria => {
       // 1. Check cycle-specific budget
       const cycleBudget = cicloId
         ? customBudgets.find(
@@ -179,10 +176,10 @@ export function useCategoryBudgets() {
         return { ...categoria, orcamento: Number(globalBudget.orcamento) };
       }
 
-      // 3. Code default
+      // 3. Orçamento padrão da categoria no banco
       return categoria;
     });
-  }, [customBudgets, extraCategorias]);
+  }, [customBudgets, dbCategorias]);
 
   useEffect(() => {
     fetchCustomBudgets();
