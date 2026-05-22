@@ -29,6 +29,7 @@ interface CategoryBudget {
   categoria_nome: string;
   categoria_tipo: string;
   orcamento: number;
+  ciclo_id?: string | null;
 }
 
 // ContentSids dos templates Twilio (configuráveis via secrets)
@@ -292,6 +293,13 @@ function getCurrentCycle(cycleStartDay = 25): { inicio: Date; fim: Date; nome: s
   return { inicio, fim, nome };
 }
 
+function formatDateLocal(date: Date): string {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
 interface ReportData {
   saldo: string;
   comprasMarco: string;
@@ -322,8 +330,8 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     .from('lancamentos')
     .select('*')
     .eq('usuario_id', usuarioId)
-    .gte('data', ciclo.inicio.toISOString().split('T')[0])
-    .lte('data', ciclo.fim.toISOString().split('T')[0]);
+    .gte('data', formatDateLocal(ciclo.inicio))
+    .lte('data', formatDateLocal(ciclo.fim));
 
   const dataLimiteAnterior = new Date(ciclo.inicio);
   dataLimiteAnterior.setMonth(dataLimiteAnterior.getMonth() - 12);
@@ -333,8 +341,8 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     .select('*')
     .eq('usuario_id', usuarioId)
     .gt('parcelas', 1)
-    .lt('data', ciclo.inicio.toISOString().split('T')[0])
-    .gte('data', dataLimiteAnterior.toISOString().split('T')[0]);
+    .lt('data', formatDateLocal(ciclo.inicio))
+    .gte('data', formatDateLocal(dataLimiteAnterior));
 
   const parcelasDoCiclo: Array<{ categoria: string; tipo: string; valor: number }> = [];
   
@@ -359,13 +367,26 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
 
   const { data: customBudgets } = await supabase
     .from('category_budgets')
-    .select('categoria_nome, categoria_tipo, orcamento')
-    .eq('usuario_id', usuarioId);
+    .select('categoria_nome, categoria_tipo, orcamento, ciclo_id')
+    .eq('usuario_id', usuarioId)
+    .eq('categoria_tipo', 'despesa');
 
+  const cicloId = formatDateLocal(ciclo.inicio);
   const orcamentosMap: Record<string, number> = {};
-  (customBudgets || []).forEach((cb: CategoryBudget) => {
-    orcamentosMap[cb.categoria_nome] = Number(cb.orcamento);
-  });
+
+  const resolveBudget = (nome: string, fallback: number) => {
+    const cycleBudget = (customBudgets || []).find((cb: CategoryBudget) =>
+      cb.categoria_nome === nome && cb.categoria_tipo === 'despesa' && cb.ciclo_id === cicloId
+    );
+    if (cycleBudget) return Number(cycleBudget.orcamento || 0);
+
+    const globalBudget = (customBudgets || []).find((cb: CategoryBudget) =>
+      cb.categoria_nome === nome && cb.categoria_tipo === 'despesa' && cb.ciclo_id === null
+    );
+    if (globalBudget) return Number(globalBudget.orcamento || 0);
+
+    return fallback;
+  };
 
   // Buscar baseline de orçamentos das categorias (despesa, ativas)
   const { data: categoriasDespesa } = await supabase
@@ -377,11 +398,8 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
 
   let totalOrcamentoDespesas = 0;
   (categoriasDespesa || []).forEach((c: any) => {
-    const valor = orcamentosMap[c.nome] !== undefined
-      ? orcamentosMap[c.nome]
-      : Number(c.orcamento || 0);
-    // Garantir que o map tenha valor (para formatCategory)
-    if (orcamentosMap[c.nome] === undefined) orcamentosMap[c.nome] = Number(c.orcamento || 0);
+    const valor = resolveBudget(c.nome, Number(c.orcamento || 0));
+    orcamentosMap[c.nome] = valor;
     totalOrcamentoDespesas += valor;
   });
 
