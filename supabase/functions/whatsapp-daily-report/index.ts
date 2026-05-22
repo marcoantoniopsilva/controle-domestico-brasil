@@ -359,6 +359,24 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     orcamentosMap[cb.categoria_nome] = Number(cb.orcamento);
   });
 
+  // Buscar baseline de orçamentos das categorias (despesa, ativas)
+  const { data: categoriasDespesa } = await supabase
+    .from('categorias')
+    .select('nome, orcamento, ativa, tipo')
+    .eq('usuario_id', usuarioId)
+    .eq('tipo', 'despesa')
+    .eq('ativa', true);
+
+  let totalOrcamentoDespesas = 0;
+  (categoriasDespesa || []).forEach((c: any) => {
+    const valor = orcamentosMap[c.nome] !== undefined
+      ? orcamentosMap[c.nome]
+      : Number(c.orcamento || 0);
+    // Garantir que o map tenha valor (para formatCategory)
+    if (orcamentosMap[c.nome] === undefined) orcamentosMap[c.nome] = Number(c.orcamento || 0);
+    totalOrcamentoDespesas += valor;
+  });
+
   let totalReceitas = 0;
   let totalDespesas = 0;
   const gastosPorCategoria: Record<string, number> = {};
@@ -384,11 +402,16 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
 
   const saldo = totalReceitas - totalDespesas;
 
+  const fmtBRL = (v: number) =>
+    v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtBRLshort = (v: number) =>
+    v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
   const formatCategory = (nome: string) => {
     const gasto = gastosPorCategoria[nome] || 0;
     const orcamento = orcamentosMap[nome] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
-    return `R$${gasto.toFixed(0)} de R$${orcamento.toFixed(0)} (${percentual}%)`;
+    return `R$${fmtBRLshort(gasto)} de R$${fmtBRLshort(orcamento)} (${percentual}%)`;
   };
 
   // Calcular dias restantes até o fechamento do ciclo
@@ -403,7 +426,7 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     .map(([nome]) => `${nome}: ${formatCategory(nome)}`);
 
   return {
-    saldo: `R$${saldo.toFixed(2)}`,
+    saldo: `R$${fmtBRL(saldo)}`,
     comprasMarco: formatCategory("Compras do Marco"),
     comprasBruna: formatCategory("Compras da Bruna"),
     appsRestaurantes: formatCategory("Aplicativos e restaurantes"),
@@ -415,5 +438,7 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     totalDespesas,
     topDespesas,
     formatCategoria: formatCategory,
+    totalOrcamentoDespesas,
+    cicloNome: ciclo.nome,
   };
 }
