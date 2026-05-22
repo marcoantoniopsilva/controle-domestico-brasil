@@ -297,6 +297,8 @@ interface ReportData {
   totalDespesas: number;
   topDespesas: string[];
   formatCategoria: (nome: string) => string;
+  totalOrcamentoDespesas: number;
+  cicloNome: string;
 }
 
 async function generateReportData(supabase: any, usuarioId: string): Promise<ReportData> {
