@@ -228,23 +228,31 @@ async function buildTemplateVariables(
     };
   }
 
+  const fmtBRL = (v: number) =>
+    v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtBRLshort = (v: number) =>
+    v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
   if (reportType === 'despesas') {
+    const pctUsado = reportData.totalOrcamentoDespesas > 0
+      ? Math.round((reportData.totalDespesas / reportData.totalOrcamentoDespesas) * 100)
+      : 0;
     return {
-      "1": `R$${reportData.totalDespesas.toFixed(2)}`,
-      "2": reportData.diasRestantes,
-      "3": reportData.topDespesas[0] || "—",
-      "4": reportData.topDespesas[1] || "—",
-      "5": reportData.topDespesas[2] || "—",
-      "6": reportData.topDespesas[3] || "—",
-      "7": reportData.topDespesas[4] || "—",
-      "8": reportData.topDespesas[5] || "—",
+      "1": reportData.cicloNome,
+      "2": fmtBRL(reportData.totalDespesas),
+      "3": fmtBRLshort(reportData.totalOrcamentoDespesas),
+      "4": `${pctUsado}`,
+      "5": reportData.topDespesas[0] || "—",
+      "6": reportData.topDespesas[1] || "—",
+      "7": reportData.topDespesas[2] || "—",
+      "8": reportData.diasRestantes,
     };
   }
 
   if (reportType === 'receitas') {
     return {
-      "1": `R$${reportData.totalReceitas.toFixed(2)}`,
-      "2": `R$${reportData.totalDespesas.toFixed(2)}`,
+      "1": `R$${fmtBRL(reportData.totalReceitas)}`,
+      "2": `R$${fmtBRL(reportData.totalDespesas)}`,
       "3": reportData.saldo,
       "4": reportData.diasRestantes,
     };
