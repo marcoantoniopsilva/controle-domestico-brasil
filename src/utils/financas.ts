@@ -26,7 +26,7 @@ export const categorias = [
   { nome: "Despesas fixas no dinheiro", tipo: "despesa" as const, orcamento: 5200, gastosAtuais: 0 },
   { nome: "Estacionamento", tipo: "despesa" as const, orcamento: 100, gastosAtuais: 0 },
   { nome: "Farmácia", tipo: "despesa" as const, orcamento: 250, gastosAtuais: 0 },
-  { nome: "Recarga carro", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
+  { nome: "Abastecimento Carro", tipo: "despesa" as const, orcamento: 200, gastosAtuais: 0 },
   { nome: "Gato/Cachorro", tipo: "despesa" as const, orcamento: 50, gastosAtuais: 0 },
   { nome: "Lazer", tipo: "despesa" as const, orcamento: 180, gastosAtuais: 0 },
   { nome: "Outros", tipo: "despesa" as const, orcamento: 350, gastosAtuais: 0 },

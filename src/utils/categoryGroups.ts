@@ -24,7 +24,7 @@ export const categoryGroups: CategoryGroup[] = [
   {
     nome: "Deslocamento",
     icon: Car,
-    categorias: ["Seguro e manutenção", "Uber", "Recarga carro", "Estacionamento"],
+    categorias: ["Seguro e manutenção", "Uber", "Abastecimento Carro", "Estacionamento"],
   },
   {
     nome: "Saúde",
