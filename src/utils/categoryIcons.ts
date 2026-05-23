@@ -40,7 +40,7 @@ export const categoryIcons: Record<string, LucideIcon> = {
   "Despesas fixas no dinheiro": Banknote,
   "Estacionamento": Car,
   "Farmácia": Pill,
-  "Recarga carro": Car,
+  "Abastecimento Carro": Car,
   "Gato": Cat,
   "Lazer": Gamepad2,
   "Outros": HelpCircle,
