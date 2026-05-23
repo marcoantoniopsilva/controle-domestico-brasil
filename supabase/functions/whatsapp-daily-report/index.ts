@@ -265,8 +265,10 @@ async function buildTemplateVariables(
 
   if (reportType === 'categorias') {
     const selected = (user.selected_categories || []).slice(0, 8);
+    // LINE SEPARATOR (U+2028) é renderizado como quebra de linha no WhatsApp
+    // e geralmente aceito pelo Twilio em ContentVariables, diferente de \n
     const linhas = selected.length > 0
-      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join(' • ')
+      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join('\u2028')
       : 'Nenhuma categoria selecionada. Configure no app.';
     return {
       "1": linhas.substring(0, 1000),
