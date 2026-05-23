@@ -271,7 +271,7 @@ async function buildTemplateVariables(
       ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join('\u2028')
       : 'Nenhuma categoria selecionada. Configure no app.';
     return {
-      "1": linhas.substring( 0, 100 0),
+      "1": linhas.substring(0, 1000),
     };
   }
 
