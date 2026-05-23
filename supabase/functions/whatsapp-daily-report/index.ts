@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     let forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
+    const phoneFilter = url.searchParams.get('phone');
     
     if (!forceTest && req.method === 'POST') {
       try {
@@ -92,6 +93,9 @@ Deno.serve(async (req) => {
       
       if (error) throw error;
       users = data || [];
+      if (phoneFilter) {
+        users = users.filter((u: WhatsAppUser) => u.phone_number === phoneFilter);
+      }
       console.log(`[DailyReport] TESTE MANUAL: ${users.length} usuários encontrados`);
     } else {
       const { data, error } = await supabase
