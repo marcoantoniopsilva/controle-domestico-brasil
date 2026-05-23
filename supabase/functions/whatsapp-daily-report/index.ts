@@ -266,7 +266,7 @@ async function buildTemplateVariables(
   if (reportType === 'categorias') {
     const selected = (user.selected_categories || []).slice(0, 8);
     const linhas = selected.length > 0
-      ? selected.map((nome) => `• ${nome}: ${reportData.formatCategoria(nome)}`).join('\n')
+      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join(' • ')
       : 'Nenhuma categoria selecionada. Configure no app.';
     return {
       "1": linhas.substring(0, 1000),
