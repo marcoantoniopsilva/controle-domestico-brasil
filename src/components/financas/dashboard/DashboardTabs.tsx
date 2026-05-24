@@ -108,16 +108,16 @@ const DashboardTabs = ({
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1 p-1">
-          <TabsTrigger value="resumo" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Resumo</TabsTrigger>
-          <TabsTrigger value="despesas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Despesas</TabsTrigger>
-          <TabsTrigger value="grupos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Grupos</TabsTrigger>
-          <TabsTrigger value="receitas" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Receitas</TabsTrigger>
-          <TabsTrigger value="investimentos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Investimentos</TabsTrigger>
-          <TabsTrigger value="transacoes" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Transações</TabsTrigger>
-          <TabsTrigger value="graficos" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Gráficos</TabsTrigger>
-          <TabsTrigger value="relatorios" className="text-xs md:text-sm px-2 md:px-3 py-1.5">Relatórios</TabsTrigger>
-          <TabsTrigger value="whatsapp" className="text-xs md:text-sm px-2 md:px-3 py-1.5">WhatsApp</TabsTrigger>
+        <TabsList className="w-full h-auto flex flex-wrap justify-start gap-1 p-1 bg-muted/40 rounded-2xl">
+          <TabsTrigger value="resumo" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Resumo</TabsTrigger>
+          <TabsTrigger value="despesas" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Despesas</TabsTrigger>
+          <TabsTrigger value="grupos" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Grupos</TabsTrigger>
+          <TabsTrigger value="receitas" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Receitas</TabsTrigger>
+          <TabsTrigger value="investimentos" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Investimentos</TabsTrigger>
+          <TabsTrigger value="transacoes" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Transações</TabsTrigger>
+          <TabsTrigger value="graficos" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Gráficos</TabsTrigger>
+          <TabsTrigger value="relatorios" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">Relatórios</TabsTrigger>
+          <TabsTrigger value="whatsapp" className="text-xs md:text-sm px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-card">WhatsApp</TabsTrigger>
         </TabsList>
         
         <TabsContent value="resumo" className="space-y-4">

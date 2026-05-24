@@ -51,94 +51,69 @@ const ProgressoCategoriaClickable = ({
     }
   };
 
+  const CategoryIcon = getCategoryIcon(categoria.nome);
+  const hasBar = (categoria.tipo === "despesa") || (categoria.tipo === "receita" && categoria.orcamento > 0);
+  const barColorClass = getProgressColor();
+
   return (
-    <Card 
-      className={`transition-all duration-200 ${
-        categoria.gastosAtuais > 0 && onClick 
-          ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] border-primary/20' 
-          : ''
+    <div
+      className={`bg-card rounded-2xl shadow-card p-4 md:p-5 transition-all ${
+        categoria.gastosAtuais > 0 && onClick
+          ? "cursor-pointer hover:shadow-elevated hover:-translate-y-0.5"
+          : ""
       }`}
       onClick={handleClick}
       title={categoria.gastosAtuais > 0 ? "Clique para ver as transações" : undefined}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            {(() => {
-              const CategoryIcon = getCategoryIcon(categoria.nome);
-              return <CategoryIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />;
-            })()}
-            <span className="truncate">{categoria.nome}</span>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <CategoryIcon className="h-4 w-4 text-foreground/70" />
           </div>
-          {getIcon()}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">
-            {categoria.tipo === "receita" ? "Recebido" : "Gasto"}
-          </span>
-          <span className="font-medium">
-            {formatarMoeda(categoria.gastosAtuais)}
-          </span>
+          <span className="truncate text-sm font-medium">{categoria.nome}</span>
         </div>
-        
-        {categoria.tipo === "despesa" && (
-          <>
-            <Progress 
-              value={percentual} 
-              className="h-2"
-              style={{
-                ['--progress-color' as string]: getProgressColor()
-              }}
-            />
-            
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Orçamento</span>
-              <span className="font-medium">{formatarMoeda(categoria.orcamento)}</span>
-            </div>
-            
-            <div className="text-xs text-center">
-              {isOverBudget ? (
-                <span className="text-red-600 font-medium">
-                  Excedido: {formatarMoeda(Math.abs(restante))}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">
-                  Restante: {formatarMoeda(restante)}
-                </span>
-              )}
-            </div>
-          </>
+        {getIcon()}
+      </div>
+
+      <div className="flex items-baseline justify-between mb-2">
+        <span className="text-lg font-semibold tabular-nums">
+          {formatarMoeda(categoria.gastosAtuais)}
+        </span>
+        {categoria.tipo !== "investimento" && categoria.orcamento > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            / {formatarMoeda(categoria.orcamento)}
+          </span>
         )}
-        
-        {categoria.tipo === "receita" && categoria.orcamento > 0 && (
-          <>
-            <Progress 
-              value={percentual} 
-              className="h-2"
-              style={{
-                ['--progress-color' as string]: getProgressColor()
-              }}
+      </div>
+
+      {hasBar && categoria.orcamento > 0 && (
+        <>
+          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full ${barColorClass} transition-all rounded-full`}
+              style={{ width: `${percentual}%` }}
             />
-            
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Meta</span>
-              <span className="font-medium">{formatarMoeda(categoria.orcamento)}</span>
-            </div>
-            
-            <div className="text-xs text-center">
-              <span className={`font-medium ${
-                categoria.gastosAtuais >= categoria.orcamento ? 'text-green-600' : 'text-amber-600'
-              }`}>
-                {categoria.gastosAtuais >= categoria.orcamento ? 'Meta atingida!' : 
-                 `Faltam: ${formatarMoeda(categoria.orcamento - categoria.gastosAtuais)}`}
+          </div>
+          <div className="flex items-center justify-between mt-2 text-xs">
+            <span className="text-muted-foreground">
+              {percentualReal}% {categoria.tipo === "receita" ? "da meta" : "do orçamento"}
+            </span>
+            {categoria.tipo === "despesa" && (
+              <span className={isOverBudget ? "text-destructive font-medium" : "text-muted-foreground"}>
+                {isOverBudget
+                  ? `Excedido ${formatarMoeda(Math.abs(restante))}`
+                  : `Restam ${formatarMoeda(restante)}`}
               </span>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            )}
+            {categoria.tipo === "receita" && (
+              <span className={categoria.gastosAtuais >= categoria.orcamento ? "text-primary font-medium" : "text-amber-600"}>
+                {categoria.gastosAtuais >= categoria.orcamento ? "Meta atingida" : `Faltam ${formatarMoeda(categoria.orcamento - categoria.gastosAtuais)}`}
+              </span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

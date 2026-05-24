@@ -92,6 +92,8 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
     <main className="flex-1 py-3 md:py-8">
       <Container>
         <DashboardContent
+          usuario={usuario}
+          transacoesParaInsights={todasTransacoes}
           transacoes={transacoesFiltradas || []}
           transacoesOriginais={transacoes}
           categorias={categorias || []}

@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { CicloFinanceiro, Transacao } from "@/types";
 import DashboardLoading from "@/components/financas/DashboardLoading";
-import NavBar from "@/components/layout/NavBar";
 import DashboardMain from "@/components/financas/DashboardMain";
 import DashboardFooter from "@/components/financas/DashboardFooter";
 import { APP_VERSION, useVersionCheck } from "@/hooks/useVersionCheck";
@@ -140,8 +139,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
-      <NavBar />
-      
       <div className="container mx-auto px-2 md:px-4 py-3 md:py-6">
         <DashboardHeader 
           usuario={usuario} 

@@ -20,9 +20,9 @@ const CardResumo: React.FC<CardResumoProps> = ({ titulo, valor, tipo }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 border">
-      <p className="text-sm text-muted-foreground">{titulo}</p>
-      <p className={`text-2xl font-bold ${getTextColorClass()}`}>
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <p className="text-label mb-2">{titulo}</p>
+      <p className={`text-metric ${getTextColorClass()}`}>
         {formatarMoeda(valor)}
       </p>
     </div>

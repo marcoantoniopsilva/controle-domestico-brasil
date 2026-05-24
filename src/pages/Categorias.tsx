@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import NavBar from "@/components/layout/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,7 +82,6 @@ const Categorias = () => {
 
   return (
     <div className="min-h-screen">
-      <NavBar />
       <div className="container mx-auto px-3 md:px-6 py-6 max-w-5xl space-y-6">
         <Card>
           <CardHeader>
