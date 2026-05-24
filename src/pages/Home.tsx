@@ -26,8 +26,8 @@ const Home = () => {
         {/* Hero Section */}
         <section className="bg-gradient-to-b from-white to-gray-50 py-20">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Controle Financeiro Familiar
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+              Saldo<span className="text-primary">.</span> Finanças da família.
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               Uma maneira simples e eficiente de gerenciar as finanças da sua família.
@@ -128,7 +128,7 @@ const Home = () => {
       
       <footer className="bg-gray-100 py-8">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>&copy; 2025 ControleFinanceiro. Todos os direitos reservados.</p>
+          <p>&copy; 2025 Saldo. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
