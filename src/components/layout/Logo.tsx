@@ -53,10 +53,10 @@ export function Logo({ showWordmark = true, className, size = "md" }: LogoProps)
       {showWordmark && (
         <div className="flex flex-col leading-none">
           <span className={cn("font-semibold tracking-tight text-foreground", s.text)}>
-            Patrimo<span className="text-primary">.</span>
+            Saldo<span className="text-primary">.</span>
           </span>
           <span className={cn("text-muted-foreground tracking-[0.18em] uppercase mt-0.5", s.sub)}>
-            Finanças em ordem
+            Finanças da família
           </span>
         </div>
       )}
