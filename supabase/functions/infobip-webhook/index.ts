@@ -308,7 +308,7 @@ async function processWithGemini(message: string, userName: string, context: Fin
     })
     .join('\n');
 
-  const systemPrompt = `Você é um assistente financeiro pessoal chamado "Controle Financeiro".
+  const systemPrompt = `Você é um assistente financeiro pessoal chamado "Plenna".
 Responda de forma amigável e concisa em português brasileiro.
 Use emojis apropriados para tornar a conversa mais agradável.
 Formate para WhatsApp (use *negrito* para destacar valores e títulos).

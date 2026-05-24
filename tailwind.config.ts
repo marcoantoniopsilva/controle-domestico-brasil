@@ -93,6 +93,8 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
+				serif: ['Fraunces', 'Georgia', 'serif'],
+				display: ['Fraunces', 'Georgia', 'serif'],
 			},
 		}
 	},

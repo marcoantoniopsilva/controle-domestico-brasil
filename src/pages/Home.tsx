@@ -24,14 +24,17 @@ const Home = () => {
       
       <main className="flex-1 container mx-auto px-4">
         {/* Hero Section */}
-        <section className="bg-gradient-to-b from-white to-gray-50 py-20">
+        <section className="bg-gradient-to-b from-background to-muted/40 py-20">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Saldo<span className="text-primary">.</span> Finanças da família.
+            <h1 className="font-serif text-4xl md:text-6xl font-semibold mb-6 tracking-tight text-primary">
+              Plenna<span className="text-gold">.</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Uma maneira simples e eficiente de gerenciar as finanças da sua família.
-              Monitore suas despesas, estabeleça metas e tome decisões informadas.
+            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground mb-6">
+              Sua vida financeira. Plena.
+            </p>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Planejamento inteligente com IA, visão completa em poucos segundos
+              e metas que realmente motivam — feito para o Brasil.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/cadastro">
@@ -128,7 +131,7 @@ const Home = () => {
       
       <footer className="bg-gray-100 py-8">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>&copy; 2025 Saldo. Todos os direitos reservados.</p>
+          <p>&copy; 2025 Plenna. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

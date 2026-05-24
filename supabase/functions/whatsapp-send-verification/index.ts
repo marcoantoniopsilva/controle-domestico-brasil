@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Controle Financeiro_`;
+    const message = `🔐 *Código de Verificação*\n\nSeu código é: *${code}*\n\nEste código expira em 5 minutos.\n\n_Plenna_`;
 
     // Formatar números para Twilio
     const fromNumber = `whatsapp:+${twilioWhatsAppNumber.replace(/\D/g, '')}`;
