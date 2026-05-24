@@ -8,6 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings } from "lucide-react";
+import { Logo } from "./Logo";
 
 const NavBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -45,10 +46,10 @@ const NavBar = () => {
   };
   
   return (
-    <nav className="bg-white border-b shadow-sm py-3 md:py-4">
+    <nav className="bg-card border-b border-border py-3 md:py-4">
       <div className="container mx-auto px-3 md:px-4 flex justify-between items-center">
-        <Link to="/" className="text-lg md:text-xl font-semibold text-primary truncate">
-          ControleFinanceiro
+        <Link to="/" className="shrink-0">
+          <Logo size="sm" />
         </Link>
         
         <div className="flex gap-1 md:gap-4 items-center">
