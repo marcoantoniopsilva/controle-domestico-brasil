@@ -14,11 +14,9 @@ const DashboardHeader = ({ onCicloChange }: DashboardHeaderProps) => {
   };
   
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-2xl font-bold">Dashboard Financeiro</h2>
-      <div className="flex items-center gap-2">
-        <SeletorCiclo onCicloChange={handleCicloChange} />
-      </div>
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+      <span className="text-label">Ciclo atual</span>
+      <SeletorCiclo onCicloChange={handleCicloChange} />
     </div>
   );
 };

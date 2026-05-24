@@ -1,13 +1,16 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Categoria, CicloFinanceiro, Transacao } from "@/types";
-import { formatarMoeda } from "@/utils/financas";
+import { Categoria, CicloFinanceiro, Transacao, Usuario } from "@/types";
 import DashboardHeader from "./dashboard/DashboardHeader";
 import DashboardTabs from "./dashboard/DashboardTabs";
 import SummaryCards from "./dashboard/SummaryCards";
+import { GreetingHeader } from "./dashboard/GreetingHeader";
+import { InsightsCard } from "./dashboard/InsightsCard";
+import { useDashboardInsights } from "@/hooks/useDashboardInsights";
 
 interface DashboardContentProps {
+  usuario: Usuario;
+  transacoesParaInsights: Transacao[];
   transacoes: Transacao[];
   transacoesOriginais?: Transacao[]; 
   categorias: Categoria[];
@@ -16,7 +19,7 @@ interface DashboardContentProps {
   onEditarTransacao?: (id: string, transacao: Omit<Transacao, "id">) => Promise<void>;
   totalReceitas: number;
   totalDespesas: number;
-  totalInvestimentos?: number; // Adicionar suporte para investimentos
+  totalInvestimentos?: number;
   saldo: number;
   orcamentoTotal: number;
   isLoading: boolean;
@@ -26,6 +29,8 @@ interface DashboardContentProps {
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
+  usuario,
+  transacoesParaInsights,
   transacoes,
   transacoesOriginais,
   categorias,
@@ -42,10 +47,25 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   updateKey,
   cacheKey
 }) => {
+  const { insights, isLoading: insightsLoading, error: insightsError, refresh } = useDashboardInsights(
+    transacoesParaInsights,
+    cicloAtual,
+    categorias,
+    totalReceitas,
+    totalDespesas
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
+      <GreetingHeader
+        usuario={usuario}
+        saldo={saldo}
+        totalReceitas={totalReceitas}
+        totalDespesas={totalDespesas}
+      />
+
       <DashboardHeader onCicloChange={onCicloChange} />
-      
+
       <SummaryCards
         totalReceitas={totalReceitas}
         totalDespesas={totalDespesas}
@@ -53,7 +73,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         saldo={saldo}
         orcamentoTotal={orcamentoTotal}
       />
-      
+
+      <InsightsCard
+        insights={insights}
+        isLoading={insightsLoading}
+        error={insightsError}
+        onRefresh={refresh}
+      />
+
       <DashboardTabs
         transacoes={transacoes}
         transacoesOriginais={transacoesOriginais}
