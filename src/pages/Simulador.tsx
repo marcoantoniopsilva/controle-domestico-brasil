@@ -8,7 +8,6 @@ import { ComparativoRealizado } from "@/components/simulador/ComparativoRealizad
 import { Skeleton } from "@/components/ui/skeleton";
 import { RotateCcw, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import NavBar from "@/components/layout/NavBar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +40,6 @@ export default function Simulador() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <NavBar />
         <div className="container mx-auto px-4 py-8 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -60,8 +58,6 @@ export default function Simulador() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavBar />
-      
       <div className="container mx-auto px-4 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
