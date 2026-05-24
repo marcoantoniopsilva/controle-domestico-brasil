@@ -9,9 +9,9 @@ interface LogoProps {
 }
 
 const sizeMap = {
-  sm: { full: "h-7", mark: "h-7 w-7" },
-  md: { full: "h-9", mark: "h-9 w-9" },
-  lg: { full: "h-12", mark: "h-12 w-12" },
+  sm: { full: "h-10", mark: "h-10 w-10" },
+  md: { full: "h-12", mark: "h-12 w-12" },
+  lg: { full: "h-16", mark: "h-16 w-16" },
 };
 
 export function Logo({ showWordmark = true, className, size = "md" }: LogoProps) {
