@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarMoeda } from "@/utils/financas";
-import { TrendingUp, TrendingDown, DollarSign, PiggyBank } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, PiggyBank } from "lucide-react";
 
 interface SummaryCardsProps {
   totalReceitas: number;
@@ -12,71 +11,51 @@ interface SummaryCardsProps {
   orcamentoTotal: number;
 }
 
+interface MetricCardProps {
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string }>;
+  accent?: "primary" | "destructive" | "secondary" | "neutral";
+  hint?: string;
+}
+
+function MetricCard({ label, value, icon: Icon, accent = "neutral", hint }: MetricCardProps) {
+  const accentClass = {
+    primary: "text-primary",
+    destructive: "text-destructive",
+    secondary: "text-secondary",
+    neutral: "text-foreground",
+  }[accent];
+
+  return (
+    <div className="bg-card rounded-2xl p-4 md:p-6 shadow-card hover:shadow-elevated transition-shadow">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-label">{label}</span>
+        <div className={`w-8 h-8 rounded-full bg-muted flex items-center justify-center ${accentClass}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <div className={`text-metric ${accentClass}`}>{formatarMoeda(value)}</div>
+      {hint && <p className="text-xs text-muted-foreground mt-2">{hint}</p>}
+    </div>
+  );
+}
+
 const SummaryCards: React.FC<SummaryCardsProps> = ({
   totalReceitas,
   totalDespesas,
   totalInvestimentos = 0,
   saldo,
-  orcamentoTotal
+  orcamentoTotal,
 }) => {
+  const pctOrcado = orcamentoTotal > 0 ? Math.round((totalDespesas / orcamentoTotal) * 100) : 0;
+
   return (
-    <div className="grid gap-2 md:gap-4 grid-cols-2 lg:grid-cols-4">
-      <Card className="p-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
-          <CardTitle className="text-xs md:text-sm font-medium">Receitas</CardTitle>
-          <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
-        </CardHeader>
-        <CardContent className="p-3 md:p-6 pt-0">
-          <div className="text-lg md:text-2xl font-bold text-green-600">
-            {formatarMoeda(totalReceitas)}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="p-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
-          <CardTitle className="text-xs md:text-sm font-medium">Despesas</CardTitle>
-          <TrendingDown className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
-        </CardHeader>
-        <CardContent className="p-3 md:p-6 pt-0">
-          <div className="text-lg md:text-2xl font-bold text-red-600">
-            {formatarMoeda(totalDespesas)}
-          </div>
-          <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-            de {formatarMoeda(orcamentoTotal)} orçado
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="p-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
-          <CardTitle className="text-xs md:text-sm font-medium">Investimentos</CardTitle>
-          <PiggyBank className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
-        </CardHeader>
-        <CardContent className="p-3 md:p-6 pt-0">
-          <div className="text-lg md:text-2xl font-bold text-blue-600">
-            {formatarMoeda(totalInvestimentos)}
-          </div>
-          <p className="text-[10px] md:text-xs text-muted-foreground">
-            Saldo atual
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="p-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-6 pb-1 md:pb-2">
-          <CardTitle className="text-xs md:text-sm font-medium">Saldo</CardTitle>
-          <DollarSign className={`h-3 w-3 md:h-4 md:w-4 ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-        </CardHeader>
-        <CardContent className="p-3 md:p-6 pt-0">
-          <div className={`text-lg md:text-2xl font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {formatarMoeda(saldo)}
-          </div>
-          <p className="text-[10px] md:text-xs text-muted-foreground">
-            Receitas - Despesas
-          </p>
-        </CardContent>
-      </Card>
+    <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+      <MetricCard label="Saldo do ciclo" value={saldo} icon={Wallet} accent={saldo >= 0 ? "primary" : "destructive"} hint="Receitas − Despesas" />
+      <MetricCard label="Receitas" value={totalReceitas} icon={TrendingUp} accent="primary" />
+      <MetricCard label="Despesas" value={totalDespesas} icon={TrendingDown} accent="destructive" hint={orcamentoTotal > 0 ? `${pctOrcado}% de ${formatarMoeda(orcamentoTotal)} orçado` : undefined} />
+      <MetricCard label="Investimentos" value={totalInvestimentos} icon={PiggyBank} accent="secondary" hint="Saldo acumulado" />
     </div>
   );
 };
