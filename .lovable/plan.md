@@ -1,60 +1,137 @@
-# Relatórios WhatsApp personalizáveis
 
-Combinar abordagens 1 + 2: ampliar o template atual e criar templates adicionais focados, permitindo que cada usuário escolha o tipo de relatório que recebe e (quando aplicável) quais categorias quer destacar.
+# Redesign visual: Dashboard + Design System + Sidebar + Insights IA
 
-## Tipos de relatório oferecidos
+Escopo focado em **camada de apresentação**. Nenhuma mudança em hooks, cálculos financeiros, schema do DB ou lógica de negócio. Tudo continua usando `useDashboardData`, `useTransacoes`, `calculosFinanceiros.ts`, etc.
 
-1. **Resumo completo** (atual) — saldo, categorias principais, dias restantes.
-2. **Só despesas** — gastos do ciclo, top categorias de despesa, % do orçamento.
-3. **Só receitas** — entradas do ciclo, comparativo com ciclo anterior.
-4. **Categorias escolhidas** — usuário marca de 1 a N categorias para acompanhar; o relatório lista cada uma com gasto/orçamento/percentual.
+## 1. Novo design system (base de tudo)
 
-## Mudanças no banco
+Atualizar `src/index.css` e `tailwind.config.ts` com paleta wealth-management:
 
-Nova tabela / extensão de `whatsapp_finance_users`:
+**Cores (HSL):**
+- `--background`: 60 14% 97% (off-white #F7F8F5)
+- `--card`: 0 0% 100% (branco puro)
+- `--foreground`: 220 9% 12% (#1D1D1F)
+- `--primary`: 158 35% 27% (verde escuro #2E5E4E) — substitui o verde atual 142 72% 40%
+- `--primary-foreground`: 60 14% 97%
+- `--accent-sand`: 35 25% 75% (areia suave)
+- `--accent-petrol`: 195 40% 30% (azul petróleo)
+- `--accent-terracotta`: 14 45% 55% (terracota leve)
+- `--muted`: 60 8% 94%
+- `--border`: 60 6% 90% (mais sutil)
+- `--radius`: 1.25rem (20px, era 0.5rem)
 
-- `report_type`: `'completo' | 'despesas' | 'receitas' | 'categorias'` (default `'completo'`)
-- `selected_categories`: `text[]` (usado só quando `report_type='categorias'`)
+**Sombras (novos tokens):**
+- `--shadow-card`: 0 1px 3px hsl(220 9% 12% / 0.04), 0 1px 2px hsl(220 9% 12% / 0.03)
+- `--shadow-elevated`: 0 4px 16px hsl(220 9% 12% / 0.06)
 
-Como mudança de schema, vai por migration. Os usuários atuais ficam em `'completo'` para preservar comportamento.
+**Tipografia:** Manter Inter (já carregado). Adicionar classes utilitárias:
+- `.text-display` → 2.5rem font-bold tracking-tight (números grandes 32–40px)
+- `.text-metric` → 2rem font-semibold tabular-nums
+- `.text-label` → 0.8125rem font-medium text-muted-foreground uppercase tracking-wide
 
-## Mudanças na UI
+Dark mode atualizado proporcionalmente.
 
-`src/components/financas/WhatsAppConfig.tsx`:
+## 2. Sidebar desktop + NavBar mobile
 
-- Novo seletor "Tipo de relatório" com as 4 opções.
-- Quando "Categorias escolhidas", mostrar multi-select alimentado por `useCategorias` (filtrando ativas), com limite recomendado de 6 categorias para caber no template.
-- Preview textual mostrando como o relatório vai chegar.
+Usar shadcn sidebar (`SidebarProvider`, `Sidebar`, `SidebarMenuButton`).
 
-## Templates Twilio (Content Templates)
+- Criar `src/components/layout/AppSidebar.tsx` com itens: Dashboard, Categorias, Simulador, Preferências (ícones lucide).
+- Criar `src/components/layout/AppLayout.tsx` que envolve rotas autenticadas com `SidebarProvider` + `Sidebar` (desktop) e mantém `NavBar` mobile (oculta a sidebar em `md:` para baixo via `hidden md:flex`).
+- Atualizar `src/App.tsx` para usar o novo layout em rotas autenticadas (Dashboard, Categorias, Simulador, Preferências).
+- `collapsible="icon"` para colapso elegante, com `SidebarTrigger` no header.
 
-Precisam ser criados no Console Twilio e aprovados pela Meta. Cada um usa variáveis genéricas para servir qualquer usuário:
+## 3. Redesign do Dashboard
 
-- **`daily_completo`** — o atual (`HXe114dce7a30e14b0aa6e97f680549e78`), mantido.
-- **`daily_despesas`** — variáveis: saldo de despesas, top 6 categorias de despesa formatadas como `"Nome: R$X de R$Y (Z%)"`, dias restantes.
-- **`daily_receitas`** — variáveis: total recebido, comparativo, principais fontes.
-- **`daily_categorias_flex`** — template "container": cabeçalho fixo + 1 variável grande (até ~1024 chars) onde o backend monta livremente a lista de categorias escolhidas pelo usuário.
+Reorganizar `src/pages/Dashboard.tsx` + componentes em `src/components/financas/dashboard/` em camadas visuais:
 
-IDs dos templates ficam em uma constante mapeada por `report_type` no edge function.
+**Camada 1 — Saudação personalizada (novo `GreetingHeader.tsx`):**
+- "Bom dia/tarde/noite, {nome} 👋" baseado em hora local
+- Subtítulo dinâmico: "Você economizou R$ X neste ciclo" ou "Você está R$ Y acima do orçamento"
+- Tipografia grande, sem card, muito respiro
 
-## Mudanças no edge function `whatsapp-daily-report`
+**Camada 2 — Cards de resumo (refatorar `SummaryCards.tsx`):**
+- Grid 2x2 no mobile, 4 colunas no desktop
+- Cards: Saldo, Receitas, Despesas, Investimentos
+- Label pequeno em cima (uppercase, muted), número grande (`.text-display`), variação vs ciclo anterior abaixo em verde/vermelho
+- Radius 20px, sombra suave, hover sutil
 
-- Ler `report_type` e `selected_categories` do usuário.
-- Selecionar `ContentSid` correto via map.
-- Função `generateReportData` vira `generateReportData(type, selectedCategories)` e retorna o set de variáveis adequado a cada template.
-- Para `categorias`, montar string única (uma linha por categoria) e mandar como `{{1}}` no template flex.
+**Camada 3 — Insights IA (novo `InsightsCard.tsx`):**
+- Card horizontal com 3 insights gerados por Gemini
+- Ex: "🍔 Restaurantes ↑18% vs ciclo anterior", "🛒 Mercado ↓7%", "💡 Você pode economizar R$240 reduzindo X"
+- Loading skeleton enquanto carrega; botão "Atualizar insights"
+- Cache no `localStorage` por ciclo (evita refazer chamada a cada render)
 
-## Passos de entrega
+**Camada 4 — Gráfico mensal limpo:**
+- Manter `EvolucaoReceitasDespesas` mas refinar: remover grid pesado, linhas mais finas, cores da nova paleta, tooltip minimalista, sem legenda redundante
 
-1. Migration: adicionar `report_type` e `selected_categories` em `whatsapp_finance_users`.
-2. Atualizar `useWhatsAppConfig` para ler/gravar os novos campos.
-3. UI em `WhatsAppConfig.tsx` com seletor + multi-select de categorias + preview.
-4. Criar os 3 novos templates no Twilio (ação do usuário fora do código) e me informar os ContentSids.
-5. Edge function: map de templates, ramificação na geração de variáveis, ajustes nos logs.
-6. Testar cada tipo via `?force=true` para um usuário de teste.
+**Camada 5 — Categorias estilo YNAB (refatorar `ProgressoCategoriaClickable.tsx`):**
+- Linha por categoria: ícone emoji + nome à esquerda, "R$ gasto / R$ orçamento" + % à direita, progress bar full-width abaixo
+- Cores semafóricas usando `getBudgetProgressColor` já existente
+- Click expande mostrando últimas transações da categoria (usa `useTransactionsByCategory`)
 
-## Limitações conhecidas (regras Meta)
+**Camada 6 — Tabs secundárias:**
+- Manter `DashboardTabs` mas com visual mais clean (underline em vez de pill, sem bg)
 
-- Templates precisam ser pré-aprovados pela Meta — não dá pra gerar templates dinamicamente.
-- Cada variável aceita ~1024 caracteres; o relatório "Categorias escolhidas" fica limitado a ~6-8 categorias na prática.
-- Sempre que o usuário enviar uma mensagem ao bot, abre a janela de 24h e respostas viram freeform (já é o comportamento do `whatsapp-finance`).
+## 4. Insights IA via Gemini (usa chave do usuário)
+
+**Edge function nova:** `supabase/functions/dashboard-insights/index.ts`
+- Recebe: ciclo atual + totais por categoria (ciclo atual e anterior)
+- Chama Gemini API com a chave `GEMINI_API_KEY` (mesma já usada pelo WhatsApp — confirmar via `fetch_secrets`)
+- Prompt instrui retornar JSON: `{ insights: [{ emoji, texto, tipo: 'positivo'|'negativo'|'dica' }] }` (3 a 4 insights, máx 80 chars cada)
+- Retorna JSON estruturado via tool calling do Gemini
+
+**Hook frontend novo:** `src/hooks/useDashboardInsights.ts`
+- Recebe `cicloAtual`, dados processados de `useDashboardData` (ciclo atual + anterior)
+- Cache em `localStorage` chave `insights-{cicloId}` por 24h
+- Chama edge function via `supabase.functions.invoke`
+- Estados: `insights`, `isLoading`, `error`, `refresh()`
+
+Se `GEMINI_API_KEY` não existir nos secrets, edge function retorna 400 e UI mostra mensagem amigável + botão para configurar.
+
+## 5. Refinos visuais nos componentes existentes
+
+Atualizar para usar os novos tokens (sem mudança estrutural):
+- `CardResumo.tsx`: remover `bg-white border` hardcoded → usar `bg-card shadow-[var(--shadow-card)] rounded-2xl`
+- `ResumoOrcamento.tsx`: padding maior, tipografia hierárquica nova
+- `DashboardHeader.tsx` (em `dashboard/`): simplificar, mover saudação pra `GreetingHeader`
+- `GraficoCategorias.tsx`: paleta de cores atualizada (verde escuro + acentos), tooltip clean
+
+## 6. Telas fora de escopo
+
+Categorias, Simulador, Preferências, Relatórios: **herdam automaticamente** a nova paleta/radius/sombras via design system, mas **não** vou redesenhar layouts. Visual ficará consistente sem trabalho extra.
+
+## Detalhes técnicos
+
+- Sidebar shadcn já está instalada (`src/components/ui/sidebar.tsx` existe via shadcn template)
+- Insights edge function: usar `google/gemini-2.5-flash` direto na API do Gemini (não pelo Lovable AI Gateway, pois usuário tem chave própria já configurada)
+- Cálculo "ciclo anterior" para comparação: derivar do `cicloAtual` subtraindo 1 mês usando `calcularCicloAtual` com data offset
+- Toda nova string em pt-BR
+- Mobile: sidebar colapsa via offcanvas + `SidebarTrigger` no header mobile
+
+## Arquivos novos
+
+- `src/components/layout/AppSidebar.tsx`
+- `src/components/layout/AppLayout.tsx`
+- `src/components/financas/dashboard/GreetingHeader.tsx`
+- `src/components/financas/dashboard/InsightsCard.tsx`
+- `src/hooks/useDashboardInsights.ts`
+- `supabase/functions/dashboard-insights/index.ts`
+
+## Arquivos editados
+
+- `src/index.css` (design tokens)
+- `tailwind.config.ts` (tokens + radius)
+- `src/App.tsx` (layout wrapper)
+- `src/pages/Dashboard.tsx` (estrutura nova)
+- `src/components/financas/dashboard/SummaryCards.tsx`
+- `src/components/financas/dashboard/DashboardHeader.tsx`
+- `src/components/financas/CardResumo.tsx`
+- `src/components/financas/ResumoOrcamento.tsx`
+- `src/components/financas/ProgressoCategoriaClickable.tsx`
+- `src/components/financas/GraficoCategorias.tsx`
+- `src/components/financas/graficos/EvolucaoReceitasDespesas.tsx`
+- `supabase/config.toml` (registrar nova edge function)
+
+## Fora de escopo (combinado com você)
+
+- Heatmap calendário, Financial Health Score, timeline de transações, cards expansíveis com subcategorias detalhadas, redesign de Categorias/Simulador/Preferências/Relatórios. Podemos atacar depois em iterações separadas.
