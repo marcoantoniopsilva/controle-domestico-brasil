@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "subscribers_delete_policy" ON public.subscribers;
