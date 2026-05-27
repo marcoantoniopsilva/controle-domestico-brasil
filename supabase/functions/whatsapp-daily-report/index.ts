@@ -45,7 +45,12 @@ function getTemplateSid(reportType: string): string {
       return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
     case 'completo':
     default:
-      return Deno.env.get('TWILIO_TEMPLATE_COMPLETO_SID') || TEMPLATE_COMPLETO_DEFAULT;
+      // O template "completo" antigo tinha rótulos hardcoded (Marco/Bruna/Aurora).
+      // Agora usamos o template de variável única (categorias) e montamos o conteúdo
+      // dinamicamente com as categorias reais do usuário.
+      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID')
+        || Deno.env.get('TWILIO_TEMPLATE_COMPLETO_SID')
+        || TEMPLATE_COMPLETO_DEFAULT;
   }
 }
 
@@ -221,16 +226,18 @@ async function buildTemplateVariables(
   const reportData = await generateReportData(supabase, user.usuario_id);
 
   if (reportType === 'completo') {
-    return {
-      "1": reportData.saldo,
-      "2": reportData.comprasMarco,
-      "3": reportData.comprasBruna,
-      "4": reportData.appsRestaurantes,
-      "5": reportData.casa,
-      "6": reportData.presentesAurora,
-      "7": reportData.supermercado,
-      "8": reportData.diasRestantes,
-    };
+    // Montar resumo dinâmico: saldo + top 6 categorias do usuário + dias restantes.
+    // Twilio NÃO aceita \n em ContentVariables (erro 21656), então usamos bullet.
+    const SEP = '  ▪️  ';
+    const partes: string[] = [];
+    partes.push(`Saldo: ${reportData.saldo}`);
+    const top = reportData.topCategoriasResumo.slice(0, 6);
+    if (top.length > 0) {
+      partes.push(...top);
+    }
+    partes.push(`Faltam ${reportData.diasRestantes} dias para fechar o ciclo`);
+    const linha = partes.join(SEP).substring(0, 1000);
+    return { "1": linha };
   }
 
   const fmtBRL = (v: number) =>
@@ -309,16 +316,11 @@ function formatDateLocal(date: Date): string {
 
 interface ReportData {
   saldo: string;
-  comprasMarco: string;
-  comprasBruna: string;
-  appsRestaurantes: string;
-  casa: string;
-  presentesAurora: string;
-  supermercado: string;
   diasRestantes: string;
   totalReceitas: number;
   totalDespesas: number;
   topDespesas: string[];
+  topCategoriasResumo: string[];
   formatCategoria: (nome: string) => string;
   totalOrcamentoDespesas: number;
   cicloNome: string;
@@ -458,18 +460,28 @@ async function generateReportData(supabase: any, usuarioId: string): Promise<Rep
     .slice(0, 6)
     .map(([nome]) => `${nome}: ${formatCategory(nome)}`);
 
+  // Resumo de categorias para relatório "completo" dinâmico:
+  // prioriza categorias com gasto > 0 (ordenadas por gasto desc),
+  // e completa com categorias de maior orçamento caso o usuário tenha pouca atividade.
+  const comGasto = Object.entries(gastosPorCategoria)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([nome]) => nome);
+  const semGasto = Object.entries(orcamentosMap)
+    .filter(([nome, v]) => v > 0 && !(gastosPorCategoria[nome] > 0))
+    .sort((a, b) => b[1] - a[1])
+    .map(([nome]) => nome);
+  const topCategoriasResumo = [...comGasto, ...semGasto]
+    .slice(0, 6)
+    .map((nome) => `${nome}: ${formatCategory(nome)}`);
+
   return {
     saldo: `R$${fmtBRL(saldo)}`,
-    comprasMarco: formatCategory("Compras do Marco"),
-    comprasBruna: formatCategory("Compras da Bruna"),
-    appsRestaurantes: formatCategory("Aplicativos e restaurantes"),
-    casa: formatCategory("Casa"),
-    presentesAurora: formatCategory("Presentes/roupas Aurora"),
-    supermercado: formatCategory("Supermercado"),
     diasRestantes: `${diasRestantes}`,
     totalReceitas,
     totalDespesas,
     topDespesas,
+    topCategoriasResumo,
     formatCategoria: formatCategory,
     totalOrcamentoDespesas,
     cicloNome: ciclo.nome,
