@@ -37,6 +37,7 @@ const App = () => (
           <Route path="/preferencias" element={<AuthGuard><AppLayout><Preferencias /></AppLayout></AuthGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <WhatsNewModal />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
