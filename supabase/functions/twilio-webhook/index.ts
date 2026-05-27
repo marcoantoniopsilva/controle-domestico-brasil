@@ -206,9 +206,17 @@ async function processImageMessage(
     const categoriasDisponiveis: string[] = (cats || []).map((c: any) => c.nome);
     if (categoriasDisponiveis.length === 0) categoriasDisponiveis.push('Outros');
 
-    const hoje = new Date();
-    const dataHojeStr = `${String(hoje.getDate()).padStart(2,'0')}/${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
-    const anoRef = hoje.getFullYear();
+    // Use Brazil timezone (America/Sao_Paulo) to avoid UTC offset shifting "today" to tomorrow
+    const fmtBR = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit', month: '2-digit', year: 'numeric',
+    });
+    const partsBR = fmtBR.formatToParts(new Date());
+    const diaBR = partsBR.find(p => p.type === 'day')!.value;
+    const mesBR = partsBR.find(p => p.type === 'month')!.value;
+    const anoBR = partsBR.find(p => p.type === 'year')!.value;
+    const dataHojeStr = `${diaBR}/${mesBR}/${anoBR}`;
+    const anoRef = Number(anoBR);
 
     const prompt = `Você é um especialista em extrair lançamentos financeiros de imagens (extratos bancários, faturas de cartão, notas fiscais, prints de apps).
 
