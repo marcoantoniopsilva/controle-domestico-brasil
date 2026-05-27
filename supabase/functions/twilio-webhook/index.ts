@@ -62,14 +62,17 @@ Deno.serve(async (req) => {
     const from = formData.get('From')?.toString() || '';
     const body = formData.get('Body')?.toString() || '';
     const profileName = formData.get('ProfileName')?.toString() || 'Usuário';
-    
+    const numMedia = parseInt(formData.get('NumMedia')?.toString() || '0', 10);
+    const mediaUrl0 = formData.get('MediaUrl0')?.toString() || '';
+    const mediaType0 = formData.get('MediaContentType0')?.toString() || '';
+
     // Extrair número do formato whatsapp:+5531999999999
     const phone = from.replace('whatsapp:', '').replace(/\D/g, '');
     const messageText = body.trim();
 
-    console.log(`[Twilio Webhook] Mensagem de ${profileName} (${phone}): ${messageText}`);
+    console.log(`[Twilio Webhook] Mensagem de ${profileName} (${phone}): "${messageText}" | media=${numMedia} (${mediaType0})`);
 
-    if (!messageText) {
+    if (!messageText && numMedia === 0) {
       console.log('[Twilio Webhook] Mensagem sem texto, ignorando');
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
         headers: { ...corsHeaders, 'Content-Type': 'text/xml' }
@@ -96,6 +99,16 @@ Deno.serve(async (req) => {
     } else if (!whatsappUser.is_active) {
       console.log(`[Twilio Webhook] Usuário inativo: ${phone}`);
       responseText = `⏸️ Suas notificações estão desativadas.\n\nPara reativar, acesse o app e ative as notificações na aba WhatsApp.`;
+    } else if (numMedia > 0 && mediaType0.startsWith('image/')) {
+      // Processar imagem enviada (extrato, NF, cartão de crédito)
+      responseText = await processImageMessage(
+        supabase,
+        whatsappUser.usuario_id,
+        profileName,
+        mediaUrl0,
+        mediaType0,
+        messageText
+      );
     } else {
       // Buscar contexto financeiro e processar mensagem
       const context = await getFinancialContext(supabase, whatsappUser.usuario_id);
