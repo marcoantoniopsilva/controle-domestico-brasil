@@ -46,27 +46,6 @@ interface FinancialContext {
   }>;
 }
 
-// Categorias padrão com orçamentos default
-const categoriasDefault = [
-  { nome: "Supermercado", tipo: "despesa", orcamento: 2300 },
-  { nome: "Pets", tipo: "despesa", orcamento: 450 },
-  { nome: "Casa", tipo: "despesa", orcamento: 900 },
-  { nome: "Transporte", tipo: "despesa", orcamento: 600 },
-  { nome: "Lazer", tipo: "despesa", orcamento: 200 },
-  { nome: "Saúde", tipo: "despesa", orcamento: 300 },
-  { nome: "Presentes", tipo: "despesa", orcamento: 200 },
-  { nome: "Delivery", tipo: "despesa", orcamento: 400 },
-  { nome: "Cartão de Crédito Marco", tipo: "despesa", orcamento: 600 },
-  { nome: "Cartão de Crédito Bruna", tipo: "despesa", orcamento: 500 },
-  { nome: "Educação", tipo: "despesa", orcamento: 250 },
-  { nome: "Doações", tipo: "despesa", orcamento: 200 },
-  { nome: "Outros", tipo: "despesa", orcamento: 200 },
-  { nome: "Salário Marco", tipo: "receita", orcamento: 10500 },
-  { nome: "Salário Bruna", tipo: "receita", orcamento: 5200 },
-  { nome: "Renda Extra", tipo: "receita", orcamento: 500 },
-  { nome: "Investimentos", tipo: "investimento", orcamento: 5000 },
-];
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -105,7 +84,7 @@ Deno.serve(async (req) => {
       console.log(`[Finance] Usuário não encontrado para telefone: ${phone}`);
       return new Response(
         JSON.stringify({ 
-          response: `❌ Número não cadastrado.\n\nPara usar o assistente financeiro, cadastre seu número WhatsApp no aplicativo.\n\n📱 Acesse: https://controle-domestico-brasil.lovable.app` 
+          response: `❌ Número não cadastrado.\n\nPara usar o assistente financeiro, cadastre seu número WhatsApp no aplicativo.\n\n📱 Acesse: https://plannerplenna.lovable.app` 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -186,6 +165,17 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
     console.error('[Finance] Erro ao buscar orçamentos:', budgetError);
   }
 
+  // Buscar categorias reais do usuário (ativas)
+  const { data: categoriasUsuario, error: catError } = await supabase
+    .from('categorias')
+    .select('nome, tipo, orcamento')
+    .eq('usuario_id', usuarioId)
+    .eq('ativa', true);
+
+  if (catError) {
+    console.error('[Finance] Erro ao buscar categorias:', catError);
+  }
+
   // Calcular totais
   let totalReceitas = 0;
   let totalDespesas = 0;
@@ -209,13 +199,13 @@ async function getFinancialContext(supabase: any, usuarioId: string): Promise<Fi
   });
 
   // Montar lista de categorias com orçamentos e gastos
-  const categorias = categoriasDefault.map(cat => {
+  const categorias = (categoriasUsuario || []).map((cat: any) => {
     // Verificar se há orçamento personalizado
     const customBudget = (customBudgets || []).find(
       (cb: CategoryBudget) => cb.categoria_nome === cat.nome && cb.categoria_tipo === cat.tipo
     );
     
-    const orcamento = customBudget ? Number(customBudget.orcamento) : cat.orcamento;
+    const orcamento = customBudget ? Number(customBudget.orcamento) : Number(cat.orcamento || 0);
     const key = `${cat.nome}|${cat.tipo}`;
     const gasto = gastosPorCategoria[key] || 0;
     const percentual = orcamento > 0 ? Math.round((gasto / orcamento) * 100) : 0;
