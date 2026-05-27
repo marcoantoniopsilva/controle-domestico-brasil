@@ -44,7 +44,7 @@ export function useTransacaoFetch() {
             categoria: t.categoria,
             valor: Number(t.valor),
             parcelas: t.parcelas || 1,
-            quemGastou: t.quem_gastou as "Marco" | "Bruna",
+            quemGastou: t.quem_gastou as string,
             descricao: t.descricao,
             tipo: t.tipo as "despesa" | "receita" | "investimento",
             ganhos: Number(t.ganhos) || 0, // Incluir ganhos

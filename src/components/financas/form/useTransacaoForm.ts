@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { categorias } from "@/utils/financas";
 import { Transacao } from "@/types";
 import { useCategoryBudgets } from "@/hooks/useCategoryBudgets";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => void;
@@ -13,6 +15,10 @@ interface UseTransacaoFormProps {
 
 export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = false }: UseTransacaoFormProps) {
   const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
+  const { usuario } = useAuth();
+  const { preferences } = useUserPreferences(usuario?.id);
+  const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
+  const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
   // Usar data diretamente sem manipulações complexas
   const dataInicial = initialValues?.data || new Date();
   
@@ -35,6 +41,9 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
   const [parcelas, setParcelas] = useState(initialValues?.parcelas?.toString() || "1");
   const [descricao, setDescricao] = useState(initialValues?.descricao || "");
   const [tipo, setTipo] = useState<"despesa" | "receita" | "investimento">(initialValues?.tipo || "despesa");
+  const [quemGastou, setQuemGastou] = useState<string>(
+    (initialValues as any)?.quemGastou || responsavelPadrao
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filtramos as categorias com base no tipo selecionado
@@ -104,7 +113,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
       categoria,
       valor: tipo === "despesa" ? -Math.abs(valorNumerico) : Math.abs(valorNumerico),
       parcelas: parcelasNum,
-      quemGastou: "Marco", // Valor padrão fixo, já que não usaremos mais este campo
+      quemGastou: quemGastou || responsavelPadrao,
       descricao: descricao || undefined,
       tipo
     };
@@ -119,6 +128,7 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
         setValor("");
         setParcelas("1");
         setDescricao("");
+        setQuemGastou(responsavelPadrao);
         // Mantenha a data e o tipo selecionado para facilitar múltiplos lançamentos
       }
     } catch (error) {
@@ -141,6 +151,9 @@ export function useTransacaoForm({ onAddTransacao, initialValues, isEditing = fa
     descricao,
     setDescricao,
     tipo,
+    quemGastou,
+    setQuemGastou,
+    responsaveis,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,

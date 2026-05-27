@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { toast } from "sonner";
@@ -20,11 +22,20 @@ const Preferencias = () => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [responsaveis, setResponsaveis] = useState<string[]>([]);
+  const [responsavelPadrao, setResponsavelPadrao] = useState<string>("");
+  const [novoResponsavel, setNovoResponsavel] = useState<string>("");
+  const [savingResp, setSavingResp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     setCycleDay(preferences.cycleStartDay);
   }, [preferences.cycleStartDay]);
+
+  useEffect(() => {
+    setResponsaveis(preferences.responsaveis || []);
+    setResponsavelPadrao(preferences.responsavelPadrao || (preferences.responsaveis?.[0] ?? ""));
+  }, [preferences.responsaveis, preferences.responsavelPadrao]);
 
   const save = async () => {
     setSaving(true);
@@ -34,6 +45,70 @@ const Preferencias = () => {
       toast.success("Preferências salvas. Os ciclos foram reagrupados.");
     } else {
       toast.error("Não foi possível salvar");
+    }
+  };
+
+  const renameResponsavel = (index: number, novoNome: string) => {
+    setResponsaveis((prev) => prev.map((n, i) => (i === index ? novoNome : n)));
+  };
+
+  const removeResponsavel = (index: number) => {
+    setResponsaveis((prev) => {
+      if (prev.length <= 1) {
+        toast.error("É necessário ter pelo menos um responsável.");
+        return prev;
+      }
+      const removido = prev[index];
+      const novaLista = prev.filter((_, i) => i !== index);
+      if (responsavelPadrao === removido) {
+        setResponsavelPadrao(novaLista[0]);
+      }
+      return novaLista;
+    });
+  };
+
+  const addResponsavel = () => {
+    const nome = novoResponsavel.trim();
+    if (!nome) return;
+    if (nome.length > 40) {
+      toast.error("Nome muito longo (máx. 40 caracteres).");
+      return;
+    }
+    if (responsaveis.length >= 5) {
+      toast.error("Limite de 5 responsáveis.");
+      return;
+    }
+    if (responsaveis.some((n) => n.toLowerCase() === nome.toLowerCase())) {
+      toast.error("Esse nome já está na lista.");
+      return;
+    }
+    setResponsaveis((prev) => [...prev, nome]);
+    setNovoResponsavel("");
+  };
+
+  const saveResponsaveis = async () => {
+    const limpa = responsaveis.map((n) => n.trim()).filter(Boolean);
+    if (limpa.length === 0) {
+      toast.error("É necessário ter pelo menos um responsável.");
+      return;
+    }
+    const duplicados = new Set<string>();
+    for (const n of limpa) {
+      const k = n.toLowerCase();
+      if (duplicados.has(k)) {
+        toast.error("Há nomes duplicados na lista.");
+        return;
+      }
+      duplicados.add(k);
+    }
+    const padrao = limpa.includes(responsavelPadrao) ? responsavelPadrao : limpa[0];
+    setSavingResp(true);
+    const ok = await update({ responsaveis: limpa, responsavelPadrao: padrao });
+    setSavingResp(false);
+    if (ok) {
+      toast.success("Responsáveis atualizados.");
+    } else {
+      toast.error("Não foi possível salvar os responsáveis.");
     }
   };
 
@@ -80,6 +155,83 @@ const Preferencias = () => {
             </div>
             <Button onClick={save} disabled={saving || loading}>
               Salvar
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Responsáveis pelos lançamentos</CardTitle>
+            <CardDescription>
+              Defina quem aparece no campo "Quem realizou" ao criar um lançamento. O responsável padrão
+              vem pré-selecionado em cada novo lançamento, mas pode ser alterado a cada um. Lançamentos
+              já existentes não são afetados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              {responsaveis.map((nome, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Input
+                    value={nome}
+                    onChange={(e) => renameResponsavel(idx, e.target.value)}
+                    maxLength={40}
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeResponsavel(idx)}
+                    disabled={loading || responsaveis.length <= 1}
+                    aria-label="Remover"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Adicionar novo responsável"
+                value={novoResponsavel}
+                onChange={(e) => setNovoResponsavel(e.target.value)}
+                maxLength={40}
+                disabled={loading || responsaveis.length >= 5}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addResponsavel(); } }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addResponsavel}
+                disabled={loading || !novoResponsavel.trim() || responsaveis.length >= 5}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Responsável padrão</Label>
+              <Select
+                value={responsavelPadrao}
+                onValueChange={setResponsavelPadrao}
+                disabled={loading || responsaveis.length === 0}
+              >
+                <SelectTrigger className="w-full md:w-64">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {responsaveis.filter((n) => n.trim()).map((nome) => (
+                    <SelectItem key={nome} value={nome}>{nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={saveResponsaveis} disabled={savingResp || loading}>
+              {savingResp ? "Salvando..." : "Salvar responsáveis"}
             </Button>
           </CardContent>
         </Card>

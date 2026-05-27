@@ -10,7 +10,7 @@ export interface Transacao {
   categoria: string;
   valor: number;
   parcelas: number;
-  quemGastou: "Marco" | "Bruna";
+  quemGastou: string;
   descricao?: string;
   tipo: "despesa" | "receita" | "investimento";
   ganhos?: number; // Novo campo para ganhos/perdas de investimentos

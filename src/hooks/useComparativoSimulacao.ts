@@ -60,7 +60,7 @@ export function useComparativoSimulacao(simulacao: SimulacaoMes[]) {
         tipo: t.tipo as "despesa" | "receita" | "investimento",
         descricao: t.descricao || "",
         parcelas: t.parcelas,
-        quemGastou: t.quem_gastou as "Marco" | "Bruna",
+        quemGastou: t.quem_gastou as string,
         ganhos: t.ganhos ? Number(t.ganhos) : undefined
       }));
 

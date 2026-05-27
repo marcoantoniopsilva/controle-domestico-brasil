@@ -10,6 +10,7 @@ import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
 import DescriptionInput from "./form/DescriptionInput";
 import GanhosInput from "./form/GanhosInput";
+import SpenderSelector from "./form/SpenderSelector";
 
 interface EditTransacaoFormProps {
   transacao: Transacao;
@@ -38,6 +39,9 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     tipo,
     ganhos,
     setGanhos,
+    quemGastou,
+    setQuemGastou,
+    responsaveis,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
@@ -99,6 +103,14 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
           />
         )}
       </div>
+
+      {tipo !== "investimento" && (
+        <SpenderSelector
+          quemGastou={quemGastou}
+          onQuemGastouChange={setQuemGastou}
+          opcoes={responsaveis}
+        />
+      )}
       
       <DescriptionInput 
         descricao={descricao} 

@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Transacao, Categoria } from "@/types";
 import { categorias as categoriasIniciais } from "@/utils/financas";
 import { useCategoryBudgets } from "./useCategoryBudgets";
+import { useAuth } from "./useAuth";
+import { useUserPreferences } from "./useUserPreferences";
 
 export interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean> | Promise<void>;
@@ -17,6 +19,10 @@ export function useTransacaoForm({
   isEditing = false
 }: UseTransacaoFormProps) {
   const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
+  const { usuario } = useAuth();
+  const { preferences } = useUserPreferences(usuario?.id);
+  const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
+  const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
   // Estado para todos os campos do formulário
   const [data, setData] = useState<Date>(
     initialValues?.data ? new Date(initialValues.data) : new Date()
@@ -28,6 +34,9 @@ export function useTransacaoForm({
   const [tipo, setTipo] = useState<"despesa" | "receita" | "investimento">(initialValues?.tipo || "despesa");
   const [ganhos, setGanhos] = useState<string>(
     initialValues?.ganhos ? initialValues.ganhos.toString() : "0"
+  );
+  const [quemGastou, setQuemGastou] = useState<string>(
+    initialValues?.quemGastou || responsavelPadrao
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -86,7 +95,7 @@ export function useTransacaoForm({
             ? -Math.abs(parseFloat(valor)) 
             : Math.abs(parseFloat(valor)),
           parcelas: parseInt(parcelas, 10),
-          quemGastou: "Marco", // Valor fixo padrão
+          quemGastou: quemGastou || responsavelPadrao,
           descricao,
           tipo,
           // Adicionar ganhos apenas para investimentos
@@ -103,6 +112,7 @@ export function useTransacaoForm({
           setParcelas("1");
           setDescricao("");
           setGanhos("0");
+          setQuemGastou(responsavelPadrao);
         }
       } catch (error) {
         console.error("Erro ao salvar transação:", error);
@@ -119,6 +129,8 @@ export function useTransacaoForm({
       tipo,
       data,
       ganhos,
+      quemGastou,
+      responsavelPadrao,
       onAddTransacao,
       isEditing,
     ]
@@ -139,6 +151,9 @@ export function useTransacaoForm({
     setTipo,
     ganhos,
     setGanhos,
+    quemGastou,
+    setQuemGastou,
+    responsaveis,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
