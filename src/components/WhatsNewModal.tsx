@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Users, MessageCircle, Camera, CheckCircle2 } from "lucide-react";
 
-const STORAGE_KEY = "whatsnew-v20250527";
+const STORAGE_KEY = "whatsnew-v20260527-2";
 
 interface Novidade {
   icone: React.ReactNode;
