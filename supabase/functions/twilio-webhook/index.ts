@@ -38,18 +38,6 @@ interface FinancialContext {
   }>;
 }
 
-// Categorias prioritárias que devem sempre aparecer nos relatórios
-const categoriasPrioritarias = [
-  "Aplicativos e restaurantes",
-  "Supermercado", 
-  "Casa",
-  "Compras da Bruna",
-  "Compras do Marco",
-  "Estacionamento",
-  "Farmácia",
-  "Presentes/roupas Aurora"
-];
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -95,7 +83,7 @@ Deno.serve(async (req) => {
 
     if (userError || !whatsappUser) {
       console.log(`[Twilio Webhook] Usuário não encontrado para telefone: ${phone}`);
-      responseText = `❌ Número não cadastrado.\n\nPara usar o assistente financeiro, cadastre seu número WhatsApp no aplicativo.\n\n📱 Acesse: https://controle-domestico-brasil.lovable.app`;
+      responseText = `❌ Número não cadastrado.\n\nPara usar o assistente financeiro, cadastre seu número WhatsApp no aplicativo.\n\n📱 Acesse: https://plannerplenna.lovable.app`;
     } else if (!whatsappUser.is_active) {
       console.log(`[Twilio Webhook] Usuário inativo: ${phone}`);
       responseText = `⏸️ Suas notificações estão desativadas.\n\nPara reativar, acesse o app e ative as notificações na aba WhatsApp.`;
@@ -514,20 +502,12 @@ async function processWithGemini(message: string, userName: string, context: Fin
     return getDefaultResponse(message, userName, context);
   }
 
-  // Montar contexto das categorias - priorizar categorias específicas
-  const categoriasPrioritariasComGasto = context.categorias
-    .filter(c => c.tipo === 'despesa' && categoriasPrioritarias.some(p => 
-      c.nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.nome.toLowerCase())
-    ));
-  
-  const outrasCategoriasComGasto = context.categorias
-    .filter(c => c.tipo === 'despesa' && c.gasto > 0 && !categoriasPrioritarias.some(p => 
-      c.nome.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(c.nome.toLowerCase())
-    ))
-    .sort((a, b) => b.gasto - a.gasto);
+  // Categorias de despesa com gasto, ordenadas por valor.
+  const todasCategorias = context.categorias
+    .filter((c) => c.tipo === 'despesa' && c.gasto > 0)
+    .sort((a, b) => b.gasto - a.gasto)
+    .slice(0, 8);
 
-  const todasCategorias = [...categoriasPrioritariasComGasto, ...outrasCategoriasComGasto];
-  
   const categoriasTexto = todasCategorias
     .map(c => {
       const status = c.percentual > 100 ? '🔴' : c.percentual > 80 ? '🟡' : '🟢';
