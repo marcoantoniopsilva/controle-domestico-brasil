@@ -77,10 +77,7 @@ const totalOrcamentoDespesas = categorias
 console.log("[financas.ts] TOTAL ORÇAMENTO DESPESAS:", totalOrcamentoDespesas);
 console.log("[financas.ts] Categorias de despesa:", categorias.filter(cat => cat.tipo === "despesa").map(cat => `${cat.nome}: R$ ${cat.orcamento}`));
 
-export const quemGastouOpcoes = [
-  { value: "Marco", label: "Marco" },
-  { value: "Bruna", label: "Bruna" },
-];
+// Lista de responsáveis agora é configurada por usuário (ver user_preferences.responsaveis).
 
 export const calcularCicloAtual = (cycleStartDay: number = DEFAULT_CYCLE_START_DAY): CicloFinanceiro => {
   const hoje = new Date();

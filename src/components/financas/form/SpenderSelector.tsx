@@ -4,24 +4,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SpenderSelectorProps {
-  quemGastou: "Marco" | "Bruna";
-  onQuemGastouChange: (quemGastou: "Marco" | "Bruna") => void;
+  quemGastou: string;
+  onQuemGastouChange: (quemGastou: string) => void;
+  opcoes: string[];
 }
 
-const SpenderSelector: React.FC<SpenderSelectorProps> = ({ quemGastou, onQuemGastouChange }) => {
+const SpenderSelector: React.FC<SpenderSelectorProps> = ({ quemGastou, onQuemGastouChange, opcoes }) => {
+  const lista = opcoes && opcoes.length > 0 ? opcoes : ["Você"];
   return (
     <div className="w-full space-y-2">
       <Label htmlFor="quemGastou">Quem realizou</Label>
-      <Select 
-        value={quemGastou} 
-        onValueChange={(value) => onQuemGastouChange(value as "Marco" | "Bruna")}
-      >
+      <Select value={quemGastou || lista[0]} onValueChange={onQuemGastouChange}>
         <SelectTrigger id="quemGastou">
           <SelectValue placeholder="Selecione quem realizou" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Marco">Marco</SelectItem>
-          <SelectItem value="Bruna">Bruna</SelectItem>
+          {lista.map((nome) => (
+            <SelectItem key={nome} value={nome}>{nome}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
