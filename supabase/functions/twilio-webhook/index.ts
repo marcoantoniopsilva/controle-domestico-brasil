@@ -143,6 +143,18 @@ function escapeXml(text: string): string {
     .replace(/'/g, '&apos;');
 }
 
+// Detecta "quem realizou" o gasto a partir da legenda da foto ou do nome do contato WhatsApp.
+// Aceita "por João", "from Maria", etc. Caso contrário usa o primeiro nome do ProfileName.
+function detectQuemGastou(profileName: string, caption: string): string {
+  const cap = (caption || '').trim();
+  const m = cap.match(/^(?:por|from)\s+([\p{L}][\p{L}\s.'-]{0,40})/iu);
+  if (m && m[1]) {
+    return m[1].trim().split(/\s+/)[0];
+  }
+  const first = (profileName || '').trim().split(/\s+/)[0];
+  return first || 'WhatsApp';
+}
+
 // Processa imagem enviada por WhatsApp: extrai lançamentos com Gemini e salva no banco
 async function processImageMessage(
   supabase: any,
