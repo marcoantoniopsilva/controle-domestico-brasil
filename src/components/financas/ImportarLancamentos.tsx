@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoriasDisponiveis } from "@/utils/categorizacao";
 import { ImportarLancamentosReview } from "./ImportarLancamentosReview";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface ExtractedTransaction {
   data: string;
@@ -25,7 +27,7 @@ interface ImportarLancamentosProps {
     categoria: string;
     valor: number;
     parcelas: number;
-    quemGastou: "Marco" | "Bruna";
+    quemGastou: string;
     descricao: string;
     tipo: "despesa";
     ganhos: number;
@@ -33,6 +35,10 @@ interface ImportarLancamentosProps {
 }
 
 export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLancamentosProps) {
+  const { usuario } = useAuth();
+  const { preferences } = useUserPreferences(usuario?.id);
+  const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
+  const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [extractedTransactions, setExtractedTransactions] = useState<ExtractedTransaction[]>([]);
@@ -109,7 +115,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
 
   const handleImport = async (
     transacoes: ExtractedTransaction[],
-    quemGastou: "Marco" | "Bruna",
+    quemGastou: string,
     anoImportacao: number
   ) => {
     const transacoesParaImportar = transacoes
@@ -265,6 +271,8 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
             onVoltar={() => setShowReview(false)}
             isLoading={isLoading}
             anoReferencia={anoReferencia}
+            responsaveis={responsaveis}
+            responsavelPadrao={responsavelPadrao}
           />
         )}
       </DialogContent>
