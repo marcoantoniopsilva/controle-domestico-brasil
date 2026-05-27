@@ -143,6 +143,18 @@ function escapeXml(text: string): string {
     .replace(/'/g, '&apos;');
 }
 
+// Detecta "quem realizou" o gasto a partir da legenda da foto ou do nome do contato WhatsApp.
+// Aceita "por João", "from Maria", etc. Caso contrário usa o primeiro nome do ProfileName.
+function detectQuemGastou(profileName: string, caption: string): string {
+  const cap = (caption || '').trim();
+  const m = cap.match(/^(?:por|from)\s+([\p{L}][\p{L}\s.'-]{0,40})/iu);
+  if (m && m[1]) {
+    return m[1].trim().split(/\s+/)[0];
+  }
+  const first = (profileName || '').trim().split(/\s+/)[0];
+  return first || 'WhatsApp';
+}
+
 // Processa imagem enviada por WhatsApp: extrai lançamentos com Gemini e salva no banco
 async function processImageMessage(
   supabase: any,
@@ -260,9 +272,11 @@ Retorne APENAS JSON válido, SEM markdown, no formato:
       return '🔍 Não encontrei lançamentos nesta imagem. Envie uma foto mais nítida do extrato/fatura.';
     }
 
-    // Definir "quem gastou" baseado no profileName (Marco/Bruna), default Marco
-    const lower = (profileName || '').toLowerCase();
-    const quemGastou = lower.includes('bruna') ? 'Bruna' : 'Marco';
+    // Definir "quem gastou" de forma genérica:
+    // 1) legenda iniciando com "por <nome>" / "from <nome>"
+    // 2) primeiro nome do ProfileName do WhatsApp
+    // 3) fallback "WhatsApp"
+    const quemGastou = detectQuemGastou(profileName, caption);
 
     const rows = transacoes.map(t => {
       const partes = (t.data || '').split('/');
