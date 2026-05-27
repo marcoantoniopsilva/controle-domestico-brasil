@@ -62,14 +62,17 @@ Deno.serve(async (req) => {
     const from = formData.get('From')?.toString() || '';
     const body = formData.get('Body')?.toString() || '';
     const profileName = formData.get('ProfileName')?.toString() || 'Usuário';
-    
+    const numMedia = parseInt(formData.get('NumMedia')?.toString() || '0', 10);
+    const mediaUrl0 = formData.get('MediaUrl0')?.toString() || '';
+    const mediaType0 = formData.get('MediaContentType0')?.toString() || '';
+
     // Extrair número do formato whatsapp:+5531999999999
     const phone = from.replace('whatsapp:', '').replace(/\D/g, '');
     const messageText = body.trim();
 
-    console.log(`[Twilio Webhook] Mensagem de ${profileName} (${phone}): ${messageText}`);
+    console.log(`[Twilio Webhook] Mensagem de ${profileName} (${phone}): "${messageText}" | media=${numMedia} (${mediaType0})`);
 
-    if (!messageText) {
+    if (!messageText && numMedia === 0) {
       console.log('[Twilio Webhook] Mensagem sem texto, ignorando');
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
         headers: { ...corsHeaders, 'Content-Type': 'text/xml' }
@@ -96,6 +99,16 @@ Deno.serve(async (req) => {
     } else if (!whatsappUser.is_active) {
       console.log(`[Twilio Webhook] Usuário inativo: ${phone}`);
       responseText = `⏸️ Suas notificações estão desativadas.\n\nPara reativar, acesse o app e ative as notificações na aba WhatsApp.`;
+    } else if (numMedia > 0 && mediaType0.startsWith('image/')) {
+      // Processar imagem enviada (extrato, NF, cartão de crédito)
+      responseText = await processImageMessage(
+        supabase,
+        whatsappUser.usuario_id,
+        profileName,
+        mediaUrl0,
+        mediaType0,
+        messageText
+      );
     } else {
       // Buscar contexto financeiro e processar mensagem
       const context = await getFinancialContext(supabase, whatsappUser.usuario_id);
@@ -128,6 +141,171 @@ function escapeXml(text: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
+}
+
+// Processa imagem enviada por WhatsApp: extrai lançamentos com Gemini e salva no banco
+async function processImageMessage(
+  supabase: any,
+  usuarioId: string,
+  profileName: string,
+  mediaUrl: string,
+  mediaType: string,
+  caption: string
+): Promise<string> {
+  try {
+    const geminiApiKey = Deno.env.get('GOOGLE_GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      return '❌ Recurso de leitura de imagem indisponível no momento (chave de IA não configurada).';
+    }
+
+    const twilioSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const twilioToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    if (!twilioSid || !twilioToken) {
+      return '❌ Credenciais do WhatsApp ausentes para baixar a imagem.';
+    }
+
+    // Baixar a mídia da Twilio (requer Basic Auth)
+    console.log(`[Twilio Webhook] Baixando mídia: ${mediaUrl}`);
+    const basicAuth = btoa(`${twilioSid}:${twilioToken}`);
+    const mediaResp = await fetch(mediaUrl, {
+      headers: { Authorization: `Basic ${basicAuth}` },
+      redirect: 'follow',
+    });
+    if (!mediaResp.ok) {
+      console.error('[Twilio Webhook] Falha ao baixar mídia:', mediaResp.status);
+      return '❌ Não consegui baixar a imagem enviada. Tente novamente.';
+    }
+    const buffer = new Uint8Array(await mediaResp.arrayBuffer());
+    // Converter para base64
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < buffer.length; i += chunk) {
+      binary += String.fromCharCode(...buffer.subarray(i, i + chunk));
+    }
+    const base64 = btoa(binary);
+
+    // Buscar categorias do usuário (apenas despesas ativas) para guiar a categorização
+    const { data: cats } = await supabase
+      .from('categorias')
+      .select('nome, tipo')
+      .eq('usuario_id', usuarioId)
+      .eq('tipo', 'despesa')
+      .eq('ativa', true);
+    const categoriasDisponiveis: string[] = (cats || []).map((c: any) => c.nome);
+    if (categoriasDisponiveis.length === 0) categoriasDisponiveis.push('Outros');
+
+    const hoje = new Date();
+    const dataHojeStr = `${String(hoje.getDate()).padStart(2,'0')}/${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
+    const anoRef = hoje.getFullYear();
+
+    const prompt = `Você é um especialista em extrair lançamentos financeiros de imagens (extratos bancários, faturas de cartão, notas fiscais, prints de apps).
+
+Analise a imagem e extraia TODOS os lançamentos de despesa visíveis.
+
+Para cada lançamento retorne:
+- data: DD/MM/AAAA. Se ausente/ilegível use ${dataHojeStr}. Se faltar só o ano, use ${anoRef}.
+- descricao: nome do estabelecimento/descrição
+- valor: número decimal positivo em reais (sem R$, sem separador de milhar; use ponto como decimal)
+- parcelas: número total de parcelas (ex.: "2/5" -> 5). Se não houver, 1.
+- parcelaAtual: parcela atual (ex.: "2/5" -> 2). Se não houver, 1.
+- categoria: escolha EXATAMENTE uma desta lista (preserve acentuação e capitalização):
+${categoriasDisponiveis.join(', ')}
+Se nada se encaixar, use "Outros".
+
+REGRAS:
+- Ignore totais, subtotais e linhas que não são lançamentos individuais.
+- Não invente valores. Se não houver lançamentos, retorne lista vazia.
+- Valores sempre positivos.
+${caption ? `\nObservação do usuário sobre a imagem: "${caption}"` : ''}
+
+Retorne APENAS JSON válido, SEM markdown, no formato:
+{"transacoes":[{"data":"DD/MM/AAAA","descricao":"...","valor":0.0,"parcelas":1,"parcelaAtual":1,"categoria":"..."}]}`;
+
+    const geminiResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mediaType || 'image/jpeg', data: base64 } },
+            ],
+          }],
+        }),
+      }
+    );
+
+    if (!geminiResp.ok) {
+      const t = await geminiResp.text();
+      console.error('[Twilio Webhook] Gemini error:', geminiResp.status, t);
+      return '❌ Não consegui ler a imagem agora. Tente novamente em alguns instantes.';
+    }
+
+    const geminiData = await geminiResp.json();
+    const textResp: string = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonStr = textResp.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    let transacoes: Array<{ data: string; descricao: string; valor: number; parcelas: number; parcelaAtual: number; categoria: string }> = [];
+    try {
+      const parsed = JSON.parse(jsonStr);
+      transacoes = Array.isArray(parsed.transacoes) ? parsed.transacoes : [];
+    } catch (e) {
+      console.error('[Twilio Webhook] Falha ao parsear JSON do Gemini:', e, jsonStr.slice(0, 500));
+      return '❌ Não consegui interpretar os lançamentos da imagem. Tente outra foto mais nítida.';
+    }
+
+    if (transacoes.length === 0) {
+      return '🔍 Não encontrei lançamentos nesta imagem. Envie uma foto mais nítida do extrato/fatura.';
+    }
+
+    // Definir "quem gastou" baseado no profileName (Marco/Bruna), default Marco
+    const lower = (profileName || '').toLowerCase();
+    const quemGastou = lower.includes('bruna') ? 'Bruna' : 'Marco';
+
+    const rows = transacoes.map(t => {
+      const partes = (t.data || '').split('/');
+      const dia = parseInt(partes[0]) || hoje.getDate();
+      const mes = parseInt(partes[1]) || (hoje.getMonth() + 1);
+      const ano = parseInt(partes[2]) || anoRef;
+      const dataISO = `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      const valorAbs = Math.abs(Number(t.valor) || 0);
+      return {
+        usuario_id: usuarioId,
+        data: dataISO,
+        categoria: t.categoria || 'Outros',
+        valor: -valorAbs, // despesas armazenadas como negativas
+        parcelas: Math.max(1, Number(t.parcelas) || 1),
+        quem_gastou: quemGastou,
+        descricao: t.descricao || null,
+        tipo: 'despesa',
+        ganhos: 0,
+      };
+    }).filter(r => r.valor !== 0);
+
+    if (rows.length === 0) {
+      return '🔍 Encontrei lançamentos, mas todos com valor zero. Verifique a imagem.';
+    }
+
+    const { error: insertError } = await supabase.from('lancamentos').insert(rows);
+    if (insertError) {
+      console.error('[Twilio Webhook] Erro ao inserir lançamentos:', insertError);
+      return '❌ Encontrei os lançamentos mas não consegui salvá-los. Tente novamente.';
+    }
+
+    const total = rows.reduce((s, r) => s + Math.abs(r.valor), 0);
+    const linhas = rows.slice(0, 10).map(r => {
+      const [a, m, d] = r.data.split('-');
+      return `• ${d}/${m} — ${r.descricao || r.categoria} (${r.categoria}): R$ ${Math.abs(r.valor).toFixed(2)}`;
+    }).join('\n');
+    const extra = rows.length > 10 ? `\n… e mais ${rows.length - 10} lançamento(s).` : '';
+
+    return `✅ *${rows.length} lançamento(s) importado(s)* (${quemGastou})\n\n${linhas}${extra}\n\n💸 *Total:* R$ ${total.toFixed(2)}\n\n_Conferir/editar no app._`;
+  } catch (err) {
+    console.error('[Twilio Webhook] Erro no processImageMessage:', err);
+    return '❌ Erro ao processar a imagem. Tente novamente.';
+  }
 }
 
 // Calcula o ciclo financeiro atual (dia 25 a dia 24 do próximo mês)
