@@ -636,6 +636,8 @@ export type Database = {
           cycle_start_day: number
           id: string
           onboarding_completed: boolean
+          responsaveis: string[]
+          responsavel_padrao: string | null
           updated_at: string
           usuario_id: string
         }
@@ -644,6 +646,8 @@ export type Database = {
           cycle_start_day?: number
           id?: string
           onboarding_completed?: boolean
+          responsaveis?: string[]
+          responsavel_padrao?: string | null
           updated_at?: string
           usuario_id: string
         }
@@ -652,6 +656,8 @@ export type Database = {
           cycle_start_day?: number
           id?: string
           onboarding_completed?: boolean
+          responsaveis?: string[]
+          responsavel_padrao?: string | null
           updated_at?: string
           usuario_id?: string
         }
