@@ -265,11 +265,11 @@ async function buildTemplateVariables(
 
   if (reportType === 'categorias') {
     const selected = (user.selected_categories || []).slice(0, 8);
-    // Quebra de linha real (\n) é suportada pelo Twilio em ContentVariables
-    // e renderizada corretamente no WhatsApp. Linha em branco entre itens
-    // para melhor legibilidade.
+    // IMPORTANTE: Twilio NÃO aceita quebras de linha (\n) em ContentVariables
+    // (retorna erro 21656). Usamos separador visual com bullet para manter
+    // legibilidade dentro de uma única variável.
     const linhas = selected.length > 0
-      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join('\n\n')
+      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join('  ▪️  ')
       : 'Nenhuma categoria selecionada. Configure no app.';
     return {
       "1": linhas.substring(0, 1000),
