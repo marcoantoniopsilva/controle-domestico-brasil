@@ -260,9 +260,11 @@ Retorne APENAS JSON válido, SEM markdown, no formato:
       return '🔍 Não encontrei lançamentos nesta imagem. Envie uma foto mais nítida do extrato/fatura.';
     }
 
-    // Definir "quem gastou" baseado no profileName (Marco/Bruna), default Marco
-    const lower = (profileName || '').toLowerCase();
-    const quemGastou = lower.includes('bruna') ? 'Bruna' : 'Marco';
+    // Definir "quem gastou" de forma genérica:
+    // 1) legenda iniciando com "por <nome>" / "from <nome>"
+    // 2) primeiro nome do ProfileName do WhatsApp
+    // 3) fallback "WhatsApp"
+    const quemGastou = detectQuemGastou(profileName, caption);
 
     const rows = transacoes.map(t => {
       const partes = (t.data || '').split('/');
