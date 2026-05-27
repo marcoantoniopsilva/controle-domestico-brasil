@@ -11,6 +11,7 @@ import ValueInput from "./form/ValueInput";
 import ParcelasSelector from "./form/ParcelasSelector";
 import DescriptionInput from "./form/DescriptionInput";
 import GanhosInput from "./form/GanhosInput";
+import SpenderSelector from "./form/SpenderSelector";
 
 interface AddTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean>;
@@ -31,6 +32,9 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
     tipo,
     ganhos,
     setGanhos,
+    quemGastou,
+    setQuemGastou,
+    responsaveis,
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
@@ -68,6 +72,14 @@ const AddTransacaoForm: React.FC<AddTransacaoFormProps> = ({ onAddTransacao }) =
               />
             )}
           </div>
+
+          {tipo !== "investimento" && (
+            <SpenderSelector
+              quemGastou={quemGastou}
+              onQuemGastouChange={setQuemGastou}
+              opcoes={responsaveis}
+            />
+          )}
 
           <DescriptionInput
             descricao={descricao}
