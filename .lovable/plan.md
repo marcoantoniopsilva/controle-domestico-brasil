@@ -1,15 +1,11 @@
-## Editar descrição na revisão de importação
+## Plano
 
-Tornar o campo "Descrição" editável em `ImportarLancamentosReview.tsx`, para que o usuário ajuste o nome antes de salvar.
+1. Mover os 3 lançamentos das categorias "Carro e Uber" (1) e "Compras parceladas" (2) para a categoria **Outros** do usuário `84618d95-3564-4a0e-b8f0-4370d65f3cdb`.
+2. Excluir as categorias "Carro e Uber" e "Compras parceladas".
+3. Manter "Aniversário da Aurora" intacta.
 
-### Alterações
-
-**`src/components/financas/ImportarLancamentosReview.tsx`**
-- Adicionar handler `handleDescricaoChange(index, value)` análogo aos já existentes (`handleDataChange`, `handleValorChange`).
-- Substituir o `<p>` atual da descrição por um `<Input>` controlado vinculado a `transacao.descricao`.
-- Manter o indicador de "Parcela X/Y" abaixo do input quando aplicável.
-
-Nada muda no fluxo de salvar: o estado `transacoes` já é a fonte da verdade enviada para `onImportar`, então a descrição editada será persistida automaticamente em `lancamentos.descricao`.
-
-### Fora de escopo
-- Edição em massa, sugestões automáticas/normalização de nomes ou aprendizado de "apelidos" recorrentes por loja (podemos abrir como próximo passo se quiser).
+### Detalhes técnicos
+- `UPDATE lancamentos SET categoria='Outros' WHERE usuario_id=... AND categoria IN ('Carro e Uber','Compras parceladas')`
+- `DELETE FROM categorias WHERE usuario_id=... AND nome IN ('Carro e Uber','Compras parceladas')`
+- Executado via migration (DELETE/UPDATE exigem migração).
+- Sem alterações de código no frontend.
