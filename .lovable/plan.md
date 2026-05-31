@@ -1,45 +1,55 @@
-# Responsáveis configuráveis por usuário
+## Diagnóstico
 
-Hoje o app fixa "Marco" e "Bruna" como opções de "quem realizou" e usa "Marco" como padrão em todo novo lançamento. Vamos tornar isso configurável por usuário, sem quebrar dados existentes.
+O bug relatado tem **uma causa raiz clara** e **um efeito colateral**:
 
-## O que muda para o usuário
+### 1. Causa raiz: importação por foto usa lista hardcoded
+Em `src/components/financas/ImportarLancamentos.tsx` (linha 72) e `src/components/financas/ImportarLancamentosReview.tsx` (linha 49), o código chama `getCategoriasDisponiveis()` de `src/utils/categorizacao.ts`, que retorna a **lista hardcoded `categoriasDefault`** (categorias antigas como "Aplicativos e restaurantes", "Compras da Bruna" etc.).
 
-1. **Em Preferências** surge uma nova seção "Responsáveis pelos lançamentos":
-   - Lista editável de nomes (mínimo 1, máximo 5). Botões para adicionar/remover/renomear.
-   - Seletor de "Responsável padrão" (um dos nomes da lista) — é o nome pré-selecionado em novos lançamentos.
-2. **No formulário de novo/editar lançamento**, o campo "Quem realizou" passa a listar os nomes configurados pelo usuário, com o padrão já selecionado. Continua editável por lançamento.
-3. **Na importação por imagem (OCR)** e na revisão de lançamentos importados, o seletor também usa os nomes do usuário; padrão = responsável padrão.
-4. **Usuários novos** começam com um único responsável igual ao nome do cadastro (fallback: parte antes do `@` do e-mail), podendo adicionar outros depois.
-5. **Usuários já existentes** (Marco/Bruna e demais) recebem backfill automático: a lista de responsáveis é preenchida com os nomes distintos já usados em `lancamentos`, e o padrão é o nome do primeiro lançamento mais recente do usuário. Lançamentos antigos permanecem intactos.
+Resultado:
+- O Gemini recebe a lista antiga no prompt → sugere categorias que não existem mais.
+- O dropdown de revisão também mostra a lista antiga → usuário não consegue reatribuir para suas categorias reais.
+- O lançamento é salvo com o nome da categoria antiga → some das despesas (porque os grupos/relatórios filtram pelas categorias atuais do usuário).
 
-## Mudanças técnicas
+### 2. Efeito colateral: lançamentos órfãos
+Verifiquei no banco: existem hoje 2 categorias órfãs no usuário relator ("Abastecimento Carro" com 2 lançamentos). São lançamentos cuja `categoria` aponta para um nome que não está mais na tabela `categorias`. Isso explica o "sumiço" — a UI agrupa/exibe apenas o que casa com as categorias ativas.
 
-### Banco (migration)
-Adicionar em `user_preferences`:
-- `responsaveis text[] not null default '{}'::text[]`
-- `responsavel_padrao text` (nullable)
+`updateCategoria` já faz rename em cascata em `lancamentos`, mas a importação por foto cria lançamentos **já órfãos**, então rename posterior não resolve.
 
-Backfill por usuário a partir de `lancamentos.quem_gastou` distintos; se vazio, usar `'Você'`. Definir `responsavel_padrao` como o `quem_gastou` do lançamento mais recente, ou primeiro da lista.
+---
 
-Nenhuma alteração em `lancamentos` (continua `quem_gastou text`). Tipo TS `"Marco" | "Bruna"` vira `string`.
+## Plano de correção
 
-### Frontend
-- `useUserPreferences`: expor `responsaveis: string[]`, `responsavelPadrao: string`, `update({...})`.
-- `src/types/index.ts`: `Transacao.quemGastou: string` (remover união Marco/Bruna).
-- `src/utils/financas.ts`: remover `quemGastouOpcoes` fixo.
-- `src/components/financas/form/SpenderSelector.tsx`: receber `opcoes: string[]` por props e renderizar dinamicamente; reintroduzir o seletor no formulário (hoje está oculto e fixo em "Marco").
-- `src/hooks/useTransacaoForm.ts` e `src/components/financas/form/useTransacaoForm.ts`: estado `quemGastou` inicializado com `responsavelPadrao`; expor handler e usar no submit em vez de fixar `"Marco"`.
-- `src/components/financas/AddTransacaoForm.tsx` e `EditTransacaoForm.tsx`: incluir `<SpenderSelector />` na grid, passando `opcoes`.
-- `src/components/financas/ImportarLancamentos.tsx` e `ImportarLancamentosReview.tsx`: trocar literais por lista do usuário; padrão = `responsavelPadrao`.
-- `src/hooks/useTransacaoFetch.ts` e `useComparativoSimulacao.ts`: remover cast `as "Marco" | "Bruna"`.
-- `src/pages/Preferencias.tsx`: nova seção "Responsáveis" com lista editável + select de padrão.
+### Passo 1 — Usar categorias reais do usuário na importação
+- `ImportarLancamentos.tsx`: substituir `getCategoriasDisponiveis()` por uma lista derivada de `useCategorias()` filtrada por `tipo = "despesa"` e `ativa = true`. Enviar `categorias.map(c => c.nome)` para a edge function.
+- `ImportarLancamentosReview.tsx`: receber as categorias reais via prop (ou também consumir `useCategorias`) e popular o `Select` com elas. Se o Gemini devolver uma categoria que não bate exatamente, fazer fallback para `"Outros"` (se existir) ou para a primeira categoria de despesa, e marcar visualmente como "revisar".
+- Manter `quemGastou` usando `responsaveis` (já está correto via `useUserPreferences`).
 
-### Categorias com nomes pessoais
-`categoryIcons.ts` e `categoryGroups.ts` mencionam "Compras do Marco / da Bruna". Isso só afeta usuários que ainda tenham essas categorias literais (Marco/Bruna originais). Não vamos renomear categorias automaticamente — manter os mapeamentos atuais como fallback. Renomear categorias é responsabilidade do usuário em "Categorias".
+### Passo 2 — Validação no salvamento
+No `handleImport` do `ImportarLancamentos.tsx`, antes de chamar `onImportar`, validar que cada `t.categoria` existe nas categorias ativas do usuário. Se não existir, forçar `"Outros"`. Isso garante que nunca mais entre lançamento órfão por essa via.
 
-### Fora do escopo
-- Edge functions de WhatsApp (já tratadas em iterações anteriores).
-- Migração automática de nomes de categorias com Marco/Bruna.
+### Passo 3 — Limpar a referência hardcoded
+- O arquivo `src/utils/categorizacao.ts` ainda tem utilidade para o keyword mapping (`categorizarPorDescricao`), mas o mapeamento aponta para nomes antigos. Vou:
+  - Manter a função `categorizarPorDescricao` mas fazê-la receber a lista de categorias atuais do usuário como parâmetro, e só retornar uma categoria se ela existir nessa lista (senão, `"Outros"` se existir, senão `""`).
+  - Remover/deprecar `getCategoriasDisponiveis()` para evitar reuso futuro do hardcode.
 
-## Resultado
-Qualquer usuário define seus próprios responsáveis, com um padrão pré-selecionado, e pode editar por lançamento. Dados existentes continuam funcionando.
+### Passo 4 — Sanear os 2 órfãos existentes
+Migrar os lançamentos órfãos de "Abastecimento Carro" para uma categoria válida do mesmo usuário. Como o usuário renomeou suas categorias, a opção mais segura é mover para **"Outros"** (despesa) do próprio usuário — ele pode reatribuir manualmente depois se quiser. Vou pedir confirmação do alvo antes de executar (ou usar "Outros" como padrão).
+
+---
+
+## Arquivos afetados
+
+```text
+src/components/financas/ImportarLancamentos.tsx      (usar useCategorias, validar antes de salvar)
+src/components/financas/ImportarLancamentosReview.tsx (receber categorias reais via prop)
+src/utils/categorizacao.ts                            (deprecar getCategoriasDisponiveis, parametrizar)
+```
+
+E uma migração de dados para os 2 lançamentos órfãos.
+
+## O que NÃO está no escopo
+
+- Não vou mexer na estrutura da tabela `categorias` nem nos grupos — eles estão corretos.
+- Não vou mexer no fluxo de criar/editar/deletar categoria (`useCategorias`) — o rename em cascata já funciona; o problema é só na importação por foto.
+
+Confirma que posso seguir? Se sim, sigo com a correção e movo os 2 órfãos para "Outros".
