@@ -1,55 +1,58 @@
 ## Diagnóstico
 
-O bug relatado tem **uma causa raiz clara** e **um efeito colateral**:
+Mesma classe de bug do anterior: **dados hardcoded no frontend ignorando os dados reais do usuário no banco**.
 
-### 1. Causa raiz: importação por foto usa lista hardcoded
-Em `src/components/financas/ImportarLancamentos.tsx` (linha 72) e `src/components/financas/ImportarLancamentosReview.tsx` (linha 49), o código chama `getCategoriasDisponiveis()` de `src/utils/categorizacao.ts`, que retorna a **lista hardcoded `categoriasDefault`** (categorias antigas como "Aplicativos e restaurantes", "Compras da Bruna" etc.).
+A aba "Grupos" e o componente "Evolução por Grupo" usam `categoryGroups` (constante hardcoded em `src/utils/categoryGroups.ts`) — uma lista fixa de 7 grupos ("Alimentação", "Deslocamento", "Saúde", "Aurora", "Pessoais", "Essenciais", "Extraordinários") com listas fixas de categorias pertencentes a cada um.
 
-Resultado:
-- O Gemini recebe a lista antiga no prompt → sugere categorias que não existem mais.
-- O dropdown de revisão também mostra a lista antiga → usuário não consegue reatribuir para suas categorias reais.
-- O lançamento é salvo com o nome da categoria antiga → some das despesas (porque os grupos/relatórios filtram pelas categorias atuais do usuário).
+Consequências:
+1. **Para qualquer usuário**: aparecem os grupos do dev/owner (ex.: "Aurora") mesmo que o usuário tenha grupos totalmente diferentes no banco.
+2. **Para o owner também**: categorias que ele moveu/colocou em grupos via Categorias **não aparecem** no grupo correto, porque o vínculo grupo↔categoria está sendo lido do array fixo e não do `categorias.grupo_id` do DB.
 
-### 2. Efeito colateral: lançamentos órfãos
-Verifiquei no banco: existem hoje 2 categorias órfãs no usuário relator ("Abastecimento Carro" com 2 lançamentos). São lançamentos cuja `categoria` aponta para um nome que não está mais na tabela `categorias`. Isso explica o "sumiço" — a UI agrupa/exibe apenas o que casa com as categorias ativas.
+O DB já tem tudo certo:
+- `categoria_grupos` (por usuário, com `nome`, `icone`, `ordem`)
+- `categorias.grupo_id` referenciando o grupo do usuário
 
-`updateCategoria` já faz rename em cascata em `lancamentos`, mas a importação por foto cria lançamentos **já órfãos**, então rename posterior não resolve.
-
----
+E `useCategorias()` já carrega ambos. O problema é só que a UI não está consumindo.
 
 ## Plano de correção
 
-### Passo 1 — Usar categorias reais do usuário na importação
-- `ImportarLancamentos.tsx`: substituir `getCategoriasDisponiveis()` por uma lista derivada de `useCategorias()` filtrada por `tipo = "despesa"` e `ativa = true`. Enviar `categorias.map(c => c.nome)` para a edge function.
-- `ImportarLancamentosReview.tsx`: receber as categorias reais via prop (ou também consumir `useCategorias`) e popular o `Select` com elas. Se o Gemini devolver uma categoria que não bate exatamente, fazer fallback para `"Outros"` (se existir) ou para a primeira categoria de despesa, e marcar visualmente como "revisar".
-- Manter `quemGastou` usando `responsaveis` (já está correto via `useUserPreferences`).
+### Passo 1 — Derivar grupos do DB
+Criar um helper `useGruposComCategorias()` (ou um `useMemo` direto em `DashboardTabs`) que, a partir de `useCategorias()`, produz uma estrutura equivalente ao tipo `CategoryGroup`:
 
-### Passo 2 — Validação no salvamento
-No `handleImport` do `ImportarLancamentos.tsx`, antes de chamar `onImportar`, validar que cada `t.categoria` existe nas categorias ativas do usuário. Se não existir, forçar `"Outros"`. Isso garante que nunca mais entre lançamento órfão por essa via.
+```ts
+{ id, nome, icon: LucideIcon, categorias: string[] }
+```
 
-### Passo 3 — Limpar a referência hardcoded
-- O arquivo `src/utils/categorizacao.ts` ainda tem utilidade para o keyword mapping (`categorizarPorDescricao`), mas o mapeamento aponta para nomes antigos. Vou:
-  - Manter a função `categorizarPorDescricao` mas fazê-la receber a lista de categorias atuais do usuário como parâmetro, e só retornar uma categoria se ela existir nessa lista (senão, `"Outros"` se existir, senão `""`).
-  - Remover/deprecar `getCategoriasDisponiveis()` para evitar reuso futuro do hardcode.
+- `categorias` = nomes das categorias com `grupo_id === grupo.id`, `tipo === "despesa"`, `ativa === true`.
+- `icon` = resolvido por um mapa nome-string → `LucideIcon` (o DB salva `icone` como texto, ex.: "Utensils", "Car"). Fallback para `Folder`.
+- Ordenado por `grupo.ordem`.
+- Categorias órfãs (sem `grupo_id`) ficam fora dos grupos — opcionalmente, agregar em um grupo virtual "Sem grupo" se houver alguma, para o usuário enxergar e atribuir depois.
 
-### Passo 4 — Sanear os 2 órfãos existentes
-Migrar os lançamentos órfãos de "Abastecimento Carro" para uma categoria válida do mesmo usuário. Como o usuário renomeou suas categorias, a opção mais segura é mover para **"Outros"** (despesa) do próprio usuário — ele pode reatribuir manualmente depois se quiser. Vou pedir confirmação do alvo antes de executar (ou usar "Outros" como padrão).
+### Passo 2 — Substituir consumo nos 3 lugares
+- `src/components/financas/dashboard/DashboardTabs.tsx`: trocar `categoryGroups` (import hardcoded) por `gruposDoUsuario` derivado do DB.
+- `src/components/financas/grupos/EvolucaoGrupos.tsx`: receber os grupos via prop (ou consumir `useCategorias` internamente) em vez de importar `categoryGroups`. Gerar cores dinamicamente (paleta cíclica) já que os nomes dos grupos são livres — não dá mais para ter mapa fixo por nome.
+- `src/components/financas/grupos/GrupoCategoriasCard.tsx`: continua aceitando `CategoryGroup`, só muda a origem dos dados.
 
----
+### Passo 3 — Deprecar o hardcode
+- `src/utils/categoryGroups.ts`: manter apenas o `interface CategoryGroup` (usado como tipo) e remover/esvaziar o array `categoryGroups` para evitar reuso. Mover o mapa `string → LucideIcon` para um arquivo dedicado (`src/utils/groupIcons.ts`) reutilizável.
+
+### Passo 4 — Verificação visual
+Após editar, abrir o dashboard, conferir aba "Grupos" mostrando exatamente os grupos do banco do usuário e cada categoria caindo no grupo correto.
 
 ## Arquivos afetados
 
 ```text
-src/components/financas/ImportarLancamentos.tsx      (usar useCategorias, validar antes de salvar)
-src/components/financas/ImportarLancamentosReview.tsx (receber categorias reais via prop)
-src/utils/categorizacao.ts                            (deprecar getCategoriasDisponiveis, parametrizar)
+src/utils/groupIcons.ts                                 (NOVO — mapa string→LucideIcon)
+src/utils/categoryGroups.ts                             (manter interface, remover array hardcoded)
+src/hooks/useGruposDespesa.ts                           (NOVO — opcional; pode ser useMemo inline)
+src/components/financas/dashboard/DashboardTabs.tsx     (usar grupos do DB)
+src/components/financas/grupos/EvolucaoGrupos.tsx       (receber grupos via prop, cores dinâmicas)
+src/components/financas/grupos/GrupoCategoriasCard.tsx  (sem mudança estrutural; tipo já é CategoryGroup)
 ```
-
-E uma migração de dados para os 2 lançamentos órfãos.
 
 ## O que NÃO está no escopo
 
-- Não vou mexer na estrutura da tabela `categorias` nem nos grupos — eles estão corretos.
-- Não vou mexer no fluxo de criar/editar/deletar categoria (`useCategorias`) — o rename em cascata já funciona; o problema é só na importação por foto.
+- Não vou mexer em CRUD de grupos/categorias — `useCategorias` já cobre.
+- Não vou alterar o schema do DB — `categoria_grupos` e `categorias.grupo_id` já estão certos.
 
-Confirma que posso seguir? Se sim, sigo com a correção e movo os 2 órfãos para "Outros".
+Posso seguir?

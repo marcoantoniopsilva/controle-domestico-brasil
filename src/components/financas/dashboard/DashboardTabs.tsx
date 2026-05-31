@@ -23,7 +23,10 @@ import AnaliseRecorrencias from "../relatorios/AnaliseRecorrencias";
 import WhatsAppConfig from "../WhatsAppConfig";
 import GrupoCategoriasCard from "../grupos/GrupoCategoriasCard";
 import EvolucaoGrupos from "../grupos/EvolucaoGrupos";
-import { categoryGroups } from "@/utils/categoryGroups";
+import type { CategoryGroup } from "@/utils/categoryGroups";
+import { getGroupIcon } from "@/utils/groupIcons";
+import { useCategorias } from "@/hooks/useCategorias";
+import { useMemo } from "react";
 import { useTransactionsByCategory } from "@/hooks/useTransactionsByCategory";
 
 interface DashboardTabsProps {
@@ -52,6 +55,34 @@ const DashboardTabs = ({
   orcamentoTotal
 }: DashboardTabsProps) => {
   const [activeTab, setActiveTab] = useState("resumo");
+  const { categorias: categoriasDB, grupos: gruposDB } = useCategorias();
+
+  const gruposDoUsuario: CategoryGroup[] = useMemo(() => {
+    const grupos: CategoryGroup[] = gruposDB
+      .slice()
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((g) => ({
+        id: g.id,
+        nome: g.nome,
+        icon: getGroupIcon(g.icone),
+        categorias: categoriasDB
+          .filter((c) => c.grupo_id === g.id && c.tipo === "despesa" && c.ativa)
+          .map((c) => c.nome),
+      }))
+      .filter((g) => g.categorias.length > 0);
+
+    const orfas = categoriasDB
+      .filter((c) => !c.grupo_id && c.tipo === "despesa" && c.ativa)
+      .map((c) => c.nome);
+    if (orfas.length > 0) {
+      grupos.push({
+        nome: "Sem grupo",
+        icon: getGroupIcon("Folder"),
+        categorias: orfas,
+      });
+    }
+    return grupos;
+  }, [categoriasDB, gruposDB]);
   
   // Estado para o modal de detalhes das transações
   const [modalState, setModalState] = useState<{
@@ -156,7 +187,7 @@ const DashboardTabs = ({
         
         <TabsContent value="grupos" className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {categoryGroups.map((group) => (
+            {gruposDoUsuario.map((group) => (
               <GrupoCategoriasCard
                 key={group.nome}
                 group={group}
@@ -166,7 +197,7 @@ const DashboardTabs = ({
               />
             ))}
           </div>
-          <EvolucaoGrupos transacoes={transacoesOriginais || transacoes} />
+          <EvolucaoGrupos transacoes={transacoesOriginais || transacoes} grupos={gruposDoUsuario} />
         </TabsContent>
 
         <TabsContent value="receitas">
