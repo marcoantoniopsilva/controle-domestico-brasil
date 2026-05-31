@@ -5,11 +5,12 @@ import { formatarMoeda } from "@/utils/financas";
 import { BarChart3 } from "lucide-react";
 import { gerarCiclosFinanceiros } from "@/utils/ciclosFinanceiros";
 import { filtrarPorCiclo, filtrarPorTipo } from "@/utils/calculosFinanceiros";
-import { categoryGroups } from "@/utils/categoryGroups";
+import type { CategoryGroup } from "@/utils/categoryGroups";
 import { useCycleStartDay } from "@/hooks/useCycleStartDay";
 
 interface EvolucaoGruposProps {
   transacoes: Transacao[];
+  grupos: CategoryGroup[];
 }
 
 // Replica installment projection logic
@@ -49,17 +50,21 @@ function gerarParcelasDoCiclo(transacoes: Transacao[], ciclo: { inicio: Date; fi
   return parcelas;
 }
 
-const GROUP_COLORS: Record<string, string> = {
-  "Alimentação": "hsl(25, 95%, 53%)",
-  "Deslocamento": "hsl(210, 79%, 46%)",
-  "Saúde": "hsl(340, 82%, 52%)",
-  "Aurora": "hsl(280, 68%, 60%)",
-  "Pessoais": "hsl(160, 60%, 45%)",
-  "Essenciais": "hsl(45, 93%, 47%)",
-  "Extraordinários": "hsl(0, 72%, 51%)",
-};
+const COLOR_PALETTE = [
+  "hsl(25, 95%, 53%)",
+  "hsl(210, 79%, 46%)",
+  "hsl(340, 82%, 52%)",
+  "hsl(280, 68%, 60%)",
+  "hsl(160, 60%, 45%)",
+  "hsl(45, 93%, 47%)",
+  "hsl(0, 72%, 51%)",
+  "hsl(190, 70%, 45%)",
+  "hsl(120, 50%, 45%)",
+  "hsl(260, 60%, 55%)",
+];
+const colorFor = (i: number) => COLOR_PALETTE[i % COLOR_PALETTE.length];
 
-const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
+const EvolucaoGrupos = ({ transacoes, grupos }: EvolucaoGruposProps) => {
   const cycleStartDay = useCycleStartDay();
   const hoje = new Date();
   const ciclos = gerarCiclosFinanceiros(transacoes, cycleStartDay)
@@ -67,7 +72,7 @@ const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
     .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
     .slice(-6);
 
-  if (ciclos.length < 2) return null;
+  if (ciclos.length < 2 || grupos.length === 0) return null;
 
   const dados = ciclos.map(ciclo => {
     const transacoesCiclo = filtrarPorCiclo(transacoes, ciclo);
@@ -79,7 +84,7 @@ const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
       ciclo: ciclo.nome.split(" ")[0],
     };
 
-    categoryGroups.forEach(group => {
+    grupos.forEach(group => {
       const total = despesas
         .filter(t => group.categorias.includes(t.categoria))
         .reduce((sum, t) => sum + Math.abs(t.valor), 0);
@@ -103,10 +108,10 @@ const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={dados}>
               <defs>
-                {categoryGroups.map(group => (
+                {grupos.map((group, i) => (
                   <linearGradient key={group.nome} id={`color-${group.nome}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={GROUP_COLORS[group.nome]} stopOpacity={0.6} />
-                    <stop offset="95%" stopColor={GROUP_COLORS[group.nome]} stopOpacity={0.05} />
+                    <stop offset="5%" stopColor={colorFor(i)} stopOpacity={0.6} />
+                    <stop offset="95%" stopColor={colorFor(i)} stopOpacity={0.05} />
                   </linearGradient>
                 ))}
               </defs>
@@ -129,15 +134,15 @@ const EvolucaoGrupos = ({ transacoes }: EvolucaoGruposProps) => {
                 }}
               />
               <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
-              {categoryGroups.map(group => (
+              {grupos.map((group, i) => (
                 <Area
                   key={group.nome}
                   type="monotone"
                   dataKey={group.nome}
-                  stroke={GROUP_COLORS[group.nome]}
+                  stroke={colorFor(i)}
                   strokeWidth={2}
                   fill={`url(#color-${group.nome})`}
-                  dot={{ r: 3, fill: GROUP_COLORS[group.nome], strokeWidth: 0 }}
+                  dot={{ r: 3, fill: colorFor(i), strokeWidth: 0 }}
                   activeDot={{ r: 5 }}
                 />
               ))}
