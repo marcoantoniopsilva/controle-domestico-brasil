@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Check } from "lucide-react";
-import { getCategoriasDisponiveis } from "@/utils/categorizacao";
 import { formatarMoeda } from "@/utils/financas";
 
 interface ExtractedTransaction {
@@ -31,6 +30,7 @@ interface ImportarLancamentosReviewProps {
   anoReferencia: number;
   responsaveis: string[];
   responsavelPadrao: string;
+  categoriasDisponiveis: string[];
 }
 
 export function ImportarLancamentosReview({
@@ -42,11 +42,12 @@ export function ImportarLancamentosReview({
   anoReferencia,
   responsaveis,
   responsavelPadrao,
+  categoriasDisponiveis,
 }: ImportarLancamentosReviewProps) {
   const lista = responsaveis && responsaveis.length > 0 ? responsaveis : ["Você"];
   const [quemGastou, setQuemGastou] = useState<string>(responsavelPadrao || lista[0]);
   const [anoImportacao, setAnoImportacao] = useState<number>(anoReferencia);
-  const categorias = getCategoriasDisponiveis();
+  const categorias = categoriasDisponiveis;
   const anosDisponiveis = [anoReferencia - 1, anoReferencia, anoReferencia + 1];
 
   const handleToggleSelect = (index: number) => {
