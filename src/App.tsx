@@ -15,7 +15,6 @@ import Categorias from "./pages/Categorias";
 import Preferencias from "./pages/Preferencias";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { AppLayout } from "./components/layout/AppLayout";
-import WhatsNewModal from "./components/WhatsNewModal";
 
 
 const queryClient = new QueryClient();
