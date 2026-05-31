@@ -80,6 +80,12 @@ export function ImportarLancamentosReview({
     onTransacoesChange(updated);
   };
 
+  const handleDescricaoChange = (index: number, descricao: string) => {
+    const updated = [...transacoes];
+    updated[index].descricao = descricao;
+    onTransacoesChange(updated);
+  };
+
   const selectedCount = transacoes.filter(t => t.selecionado).length;
   const totalSelecionado = transacoes
     .filter(t => t.selecionado)
@@ -173,9 +179,12 @@ export function ImportarLancamentosReview({
                 {/* Descrição */}
                 <div className="sm:col-span-1 lg:col-span-1">
                   <Label className="text-xs text-muted-foreground">Descrição</Label>
-                  <p className="text-sm font-medium truncate" title={transacao.descricao}>
-                    {transacao.descricao}
-                  </p>
+                  <Input
+                    value={transacao.descricao}
+                    onChange={(e) => handleDescricaoChange(index, e.target.value)}
+                    className="h-8 text-sm"
+                    title={transacao.descricao}
+                  />
                   {transacao.parcelas > 1 && (
                     <span className="text-xs text-muted-foreground">
                       Parcela {transacao.parcelaAtual}/{transacao.parcelas}
