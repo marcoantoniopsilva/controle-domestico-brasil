@@ -4,10 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Camera, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getCategoriasDisponiveis } from "@/utils/categorizacao";
 import { ImportarLancamentosReview } from "./ImportarLancamentosReview";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useCategorias } from "@/hooks/useCategorias";
 
 interface ExtractedTransaction {
   data: string;
@@ -37,6 +37,10 @@ interface ImportarLancamentosProps {
 export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLancamentosProps) {
   const { usuario } = useAuth();
   const { preferences } = useUserPreferences(usuario?.id);
+  const { categorias: categoriasDB } = useCategorias();
+  const categoriasDespesa = categoriasDB
+    .filter((c) => c.tipo === "despesa" && c.ativa)
+    .map((c) => c.nome);
   const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
   const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +73,11 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
   const processImage = async (imageBase64: string) => {
     setIsLoading(true);
     try {
-      const categorias = getCategoriasDisponiveis();
+      const categorias = categoriasDespesa;
+      if (categorias.length === 0) {
+        toast.error("Nenhuma categoria de despesa encontrada. Crie categorias antes de importar.");
+        return;
+      }
       
       console.log('Enviando imagem para processamento...');
       
@@ -95,10 +103,12 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
         return;
       }
 
-      // Adicionar campo de seleção a cada transação
+      // Adicionar campo de seleção e validar categoria contra as categorias reais do usuário
+      const fallback = categoriasDespesa.includes("Outros") ? "Outros" : categoriasDespesa[0];
       const transacoesComSelecao = data.transacoes.map((t: any) => ({
         ...t,
-        selecionado: true
+        categoria: categoriasDespesa.includes(t.categoria) ? t.categoria : fallback,
+        selecionado: true,
       }));
 
       setExtractedTransactions(transacoesComSelecao);
@@ -118,6 +128,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
     quemGastou: string,
     anoImportacao: number
   ) => {
+    const fallback = categoriasDespesa.includes("Outros") ? "Outros" : categoriasDespesa[0];
     const transacoesParaImportar = transacoes
       .filter(t => t.selecionado)
       .map(t => {
@@ -134,7 +145,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
 
         return {
           data: dataCompleta,
-          categoria: t.categoria,
+          categoria: categoriasDespesa.includes(t.categoria) ? t.categoria : fallback,
           valor: t.valor,
           parcelas: t.parcelas || 1,
           quemGastou,
