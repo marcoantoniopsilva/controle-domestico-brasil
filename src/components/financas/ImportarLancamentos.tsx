@@ -284,6 +284,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
             anoReferencia={anoReferencia}
             responsaveis={responsaveis}
             responsavelPadrao={responsavelPadrao}
+            categoriasDisponiveis={categoriasDespesa}
           />
         )}
       </DialogContent>
