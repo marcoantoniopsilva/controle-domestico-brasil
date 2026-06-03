@@ -1,0 +1,1 @@
+UPDATE lancamentos SET valor = -valor WHERE tipo = 'despesa' AND valor > 0;
