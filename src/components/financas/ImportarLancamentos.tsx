@@ -146,7 +146,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
         return {
           data: dataCompleta,
           categoria: categoriasDespesa.includes(t.categoria) ? t.categoria : fallback,
-          valor: t.valor,
+          valor: -Math.abs(t.valor),
           parcelas: t.parcelas || 1,
           quemGastou,
           descricao: t.descricao,
