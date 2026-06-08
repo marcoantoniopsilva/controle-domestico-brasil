@@ -62,6 +62,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Authorization: require either the service_role bearer (used by pg_cron)
+    // or a shared CRON_SECRET header. Blocks public abuse of mass-send/spam.
+    const authHeader = req.headers.get('Authorization') || '';
+    const cronHeader = req.headers.get('x-cron-secret') || '';
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const isServiceRole = !!serviceKey && authHeader === `Bearer ${serviceKey}`;
+    const isCronSecret = !!cronSecret && cronHeader === cronSecret;
+    if (!isServiceRole && !isCronSecret) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const url = new URL(req.url);
     let forceTest = url.searchParams.get('force') === 'true' || url.searchParams.get('sendNow') === 'true';
     const phoneFilter = url.searchParams.get('phone');

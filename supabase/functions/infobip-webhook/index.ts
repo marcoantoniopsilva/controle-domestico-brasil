@@ -83,6 +83,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Require a shared secret header so only Infobip (configured with the same
+    // secret in its webhook settings) can deliver messages here.
+    const expected = Deno.env.get('INFOBIP_WEBHOOK_SECRET');
+    if (!expected) {
+      console.error('[Infobip Webhook] INFOBIP_WEBHOOK_SECRET not configured');
+      return new Response(JSON.stringify({ error: 'Server misconfigured' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const provided =
+      req.headers.get('x-infobip-secret') ||
+      req.headers.get('x-webhook-secret') ||
+      new URL(req.url).searchParams.get('secret') ||
+      '';
+    if (provided !== expected) {
+      console.warn('[Infobip Webhook] Invalid or missing secret; rejecting');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const payload: InfobipIncomingMessage = await req.json();
     
     console.log('[Infobip Webhook] Payload recebido:', JSON.stringify(payload));
