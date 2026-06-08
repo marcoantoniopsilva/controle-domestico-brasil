@@ -44,15 +44,48 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Twilio envia webhooks como application/x-www-form-urlencoded
-    const formData = await req.formData();
+    // Validate Twilio signature before processing any payload.
+    // Algorithm: Base64(HMAC-SHA1(AUTH_TOKEN, fullUrl + sorted(k+v)))
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const signature = req.headers.get('X-Twilio-Signature') || '';
+    if (!twilioAuthToken) {
+      console.error('[Twilio Webhook] TWILIO_AUTH_TOKEN missing');
+      return new Response('Server misconfigured', { status: 500, headers: corsHeaders });
+    }
+
+    // Read raw body once, then re-parse it as form data.
+    const rawBody = await req.text();
+    const params = new URLSearchParams(rawBody);
+    const formData = new Map<string, string>();
+    for (const [k, v] of params.entries()) formData.set(k, v);
+
+    // Build the URL Twilio used to sign. Honor x-forwarded-* so the
+    // signature matches even behind Supabase's proxy.
+    const xfProto = req.headers.get('x-forwarded-proto');
+    const xfHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const reqUrl = new URL(req.url);
+    const signedUrl = xfHost ? `${xfProto || 'https'}://${xfHost}${reqUrl.pathname}${reqUrl.search}` : req.url;
+
+    const sortedKeys = [...formData.keys()].sort();
+    const dataToSign = signedUrl + sortedKeys.map((k) => k + (formData.get(k) ?? '')).join('');
+    const keyData = new TextEncoder().encode(twilioAuthToken);
+    const msgData = new TextEncoder().encode(dataToSign);
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    );
+    const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+    const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+    if (!signature || computed !== signature) {
+      console.warn('[Twilio Webhook] Invalid signature; rejecting request');
+      return new Response('Forbidden', { status: 403, headers: corsHeaders });
+    }
     
-    const from = formData.get('From')?.toString() || '';
-    const body = formData.get('Body')?.toString() || '';
-    const profileName = formData.get('ProfileName')?.toString() || 'Usuário';
-    const numMedia = parseInt(formData.get('NumMedia')?.toString() || '0', 10);
-    const mediaUrl0 = formData.get('MediaUrl0')?.toString() || '';
-    const mediaType0 = formData.get('MediaContentType0')?.toString() || '';
+    const from = formData.get('From') || '';
+    const body = formData.get('Body') || '';
+    const profileName = formData.get('ProfileName') || 'Usuário';
+    const numMedia = parseInt(formData.get('NumMedia') || '0', 10);
+    const mediaUrl0 = formData.get('MediaUrl0') || '';
+    const mediaType0 = formData.get('MediaContentType0') || '';
 
     // Extrair número do formato whatsapp:+5531999999999
     const phone = from.replace('whatsapp:', '').replace(/\D/g, '');
