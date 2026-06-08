@@ -11,6 +11,7 @@ import ParcelasSelector from "./form/ParcelasSelector";
 import DescriptionInput from "./form/DescriptionInput";
 import GanhosInput from "./form/GanhosInput";
 import SpenderSelector from "./form/SpenderSelector";
+import { CardSelector } from "./form/CardSelector";
 
 interface EditTransacaoFormProps {
   transacao: Transacao;
@@ -45,7 +46,9 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     handleTipoChange,
     isSubmitting,
     categoriasFiltradas,
-    handleSubmit
+    handleSubmit,
+    cartaoId,
+    setCartaoId,
   } = useTransacaoForm({ 
     onAddTransacao: async (transacao) => {
       await onSalvar(transacao);
@@ -110,6 +113,10 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
           onQuemGastouChange={setQuemGastou}
           opcoes={responsaveis}
         />
+      )}
+
+      {tipo === "despesa" && (
+        <CardSelector cartaoId={cartaoId} onChange={setCartaoId} />
       )}
       
       <DescriptionInput 
