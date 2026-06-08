@@ -42,7 +42,8 @@ export function useTransacaoCRUD() {
         tipo: novaTransacao.tipo,
         ganhos: novaTransacao.ganhos || 0, // Incluir ganhos
         usuario_id: usuarioId,
-      };
+        cartao_id: novaTransacao.cartaoId ?? null,
+      } as any;
       
       console.log("Objeto para inserção:", insertObj);
       
@@ -109,8 +110,9 @@ export function useTransacaoCRUD() {
         quem_gastou: transacaoAtualizada.quemGastou,
         descricao: transacaoAtualizada.descricao || null,
         tipo: transacaoAtualizada.tipo,
-        ganhos: transacaoAtualizada.ganhos || 0 // Incluir ganhos
-      };
+        ganhos: transacaoAtualizada.ganhos || 0,
+        cartao_id: transacaoAtualizada.cartaoId ?? null,
+      } as any;
       
       console.log("Objeto para atualização:", updateObj);
       
