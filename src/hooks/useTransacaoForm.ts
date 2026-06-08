@@ -38,6 +38,9 @@ export function useTransacaoForm({
   const [quemGastou, setQuemGastou] = useState<string>(
     initialValues?.quemGastou || responsavelPadrao
   );
+  const [cartaoId, setCartaoId] = useState<string | null>(
+    initialValues?.cartaoId ?? null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lista de categorias filtradas com base no tipo selecionado
@@ -100,6 +103,7 @@ export function useTransacaoForm({
           tipo,
           // Adicionar ganhos apenas para investimentos
           ganhos: tipo === "investimento" ? parseFloat(ganhos) || 0 : 0,
+          cartaoId: tipo === "despesa" ? cartaoId : null,
         };
 
         // Enviar para o handler
@@ -113,6 +117,7 @@ export function useTransacaoForm({
           setDescricao("");
           setGanhos("0");
           setQuemGastou(responsavelPadrao);
+          // mantém cartaoId para facilitar múltiplos lançamentos no mesmo cartão
         }
       } catch (error) {
         console.error("Erro ao salvar transação:", error);
@@ -133,6 +138,7 @@ export function useTransacaoForm({
       responsavelPadrao,
       onAddTransacao,
       isEditing,
+      cartaoId,
     ]
   );
 
@@ -158,5 +164,7 @@ export function useTransacaoForm({
     isSubmitting,
     categoriasFiltradas,
     handleSubmit,
+    cartaoId,
+    setCartaoId,
   };
 }
