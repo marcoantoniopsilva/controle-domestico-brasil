@@ -1,4 +1,27 @@
 import { CreditCard } from "lucide-react";
+import nubankIcon from "@/assets/banks/nubank.png.asset.json";
+import itauIcon from "@/assets/banks/itau.png.asset.json";
+import bradescoIcon from "@/assets/banks/bradesco.png.asset.json";
+import santanderIcon from "@/assets/banks/santander.png.asset.json";
+import bbIcon from "@/assets/banks/bb.webp.asset.json";
+import caixaIcon from "@/assets/banks/caixa.jpeg.asset.json";
+import interIcon from "@/assets/banks/inter.webp.asset.json";
+import c6Icon from "@/assets/banks/c6.png.asset.json";
+import xpIcon from "@/assets/banks/xp.jpg.asset.json";
+import mercadopagoIcon from "@/assets/banks/mercadopago.png.asset.json";
+
+export const BANCO_ICONES: Record<string, string> = {
+  nubank: nubankIcon.url,
+  itau: itauIcon.url,
+  bradesco: bradescoIcon.url,
+  santander: santanderIcon.url,
+  bb: bbIcon.url,
+  caixa: caixaIcon.url,
+  inter: interIcon.url,
+  c6: c6Icon.url,
+  xp: xpIcon.url,
+  mercadopago: mercadopagoIcon.url,
+};
 
 export const BANDEIRAS = [
   { value: "visa", label: "Visa" },
@@ -21,6 +44,7 @@ export const BANCOS = [
   { value: "c6", label: "C6 Bank", cor: "#1C1C1C" },
   { value: "xp", label: "XP", cor: "#000000" },
   { value: "next", label: "Next", cor: "#00FF5F" },
+  { value: "mercadopago", label: "Mercado Pago", cor: "#00B1EA" },
   { value: "outro", label: "Outro", cor: "#6366f1" },
 ];
 
@@ -58,6 +82,19 @@ interface CartaoIconeProps {
 }
 
 export function CartaoIcone({ banco, bandeira, cor, size = 36, className = "" }: CartaoIconeProps) {
+  const iconUrl = banco ? BANCO_ICONES[banco] : undefined;
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt={getBancoLabel(banco)}
+        className={`inline-block rounded-md object-cover ${className}`}
+        style={{ width: size, height: size }}
+        title={`${getBancoLabel(banco)} ${getBandeiraLabel(bandeira)}`.trim()}
+      />
+    );
+  }
+
   const corFundo = cor || getBancoCor(banco);
   const sigla =
     (banco && getBancoLabel(banco).slice(0, 2).toUpperCase()) ||
