@@ -48,6 +48,7 @@ export function useTransacaoFetch() {
             descricao: t.descricao,
             tipo: t.tipo as "despesa" | "receita" | "investimento",
             ganhos: Number(t.ganhos) || 0, // Incluir ganhos
+            cartaoId: t.cartao_id ?? null,
           };
         });
         

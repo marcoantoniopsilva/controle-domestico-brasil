@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Categorias from "./pages/Categorias";
 import Preferencias from "./pages/Preferencias";
+import Cartoes from "./pages/Cartoes";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/dashboard" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
           <Route path="/simulador" element={<AuthGuard><AppLayout><Simulador /></AppLayout></AuthGuard>} />
           <Route path="/categorias" element={<AuthGuard><AppLayout><Categorias /></AppLayout></AuthGuard>} />
+          <Route path="/cartoes" element={<AuthGuard><AppLayout><Cartoes /></AppLayout></AuthGuard>} />
           <Route path="/preferencias" element={<AuthGuard><AppLayout><Preferencias /></AppLayout></AuthGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

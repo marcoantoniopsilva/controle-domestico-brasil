@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Check } from "lucide-react";
 import { formatarMoeda } from "@/utils/financas";
+import { useCartoes } from "@/hooks/useCartoes";
+import { CartaoIcone } from "@/utils/cardIcons";
 
 interface ExtractedTransaction {
   data: string;
@@ -23,7 +25,8 @@ interface ImportarLancamentosReviewProps {
   onImportar: (
     transacoes: ExtractedTransaction[],
     quemGastou: string,
-    anoImportacao: number
+    anoImportacao: number,
+    cartaoId: string | null
   ) => Promise<void>;
   onVoltar: () => void;
   isLoading: boolean;
@@ -47,6 +50,9 @@ export function ImportarLancamentosReview({
   const lista = responsaveis && responsaveis.length > 0 ? responsaveis : ["Você"];
   const [quemGastou, setQuemGastou] = useState<string>(responsavelPadrao || lista[0]);
   const [anoImportacao, setAnoImportacao] = useState<number>(anoReferencia);
+  const { cartoes } = useCartoes();
+  const cartoesAtivos = cartoes.filter((c) => c.ativo);
+  const [cartaoId, setCartaoId] = useState<string>("__none__");
   const categorias = categoriasDisponiveis;
   const anosDisponiveis = [anoReferencia - 1, anoReferencia, anoReferencia + 1];
 
@@ -143,6 +149,28 @@ export function ImportarLancamentosReview({
               </SelectContent>
             </Select>
           </div>
+
+          {cartoesAtivos.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm">Cartão:</Label>
+              <Select value={cartaoId} onValueChange={setCartaoId}>
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem cartão</SelectItem>
+                  {cartoesAtivos.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <div className="flex items-center gap-2">
+                        <CartaoIcone banco={c.banco} bandeira={c.bandeira} cor={c.cor} size={18} />
+                        <span>{c.nome}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </div>
 
@@ -235,7 +263,7 @@ export function ImportarLancamentosReview({
         </Button>
         
         <Button 
-          onClick={() => onImportar(transacoes, quemGastou, anoImportacao)}
+          onClick={() => onImportar(transacoes, quemGastou, anoImportacao, cartaoId === "__none__" ? null : cartaoId)}
           disabled={isLoading || selectedCount === 0}
         >
           {isLoading ? (

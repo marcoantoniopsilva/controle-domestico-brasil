@@ -158,6 +158,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cartoes_credito: {
+        Row: {
+          ativo: boolean
+          banco: string | null
+          bandeira: string | null
+          cor: string
+          created_at: string
+          dia_fechamento: number
+          dia_vencimento: number
+          id: string
+          meta_mensal: number | null
+          nome: string
+          ordem: number
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          banco?: string | null
+          bandeira?: string | null
+          cor?: string
+          created_at?: string
+          dia_fechamento: number
+          dia_vencimento: number
+          id?: string
+          meta_mensal?: number | null
+          nome: string
+          ordem?: number
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          ativo?: boolean
+          banco?: string | null
+          bandeira?: string | null
+          cor?: string
+          created_at?: string
+          dia_fechamento?: number
+          dia_vencimento?: number
+          id?: string
+          meta_mensal?: number | null
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       categoria_grupos: {
         Row: {
           created_at: string
@@ -333,6 +381,7 @@ export type Database = {
       }
       lancamentos: {
         Row: {
+          cartao_id: string | null
           categoria: string
           created_at: string
           data: string
@@ -346,6 +395,7 @@ export type Database = {
           valor: number
         }
         Insert: {
+          cartao_id?: string | null
           categoria: string
           created_at?: string
           data: string
@@ -359,6 +409,7 @@ export type Database = {
           valor: number
         }
         Update: {
+          cartao_id?: string | null
           categoria?: string
           created_at?: string
           data?: string
@@ -371,7 +422,15 @@ export type Database = {
           usuario_id?: string
           valor?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -635,9 +694,11 @@ export type Database = {
           created_at: string
           cycle_start_day: number
           id: string
+          meta_cartao_credito_total: number | null
           onboarding_completed: boolean
           responsaveis: string[]
           responsavel_padrao: string | null
+          ultimo_cartao_id: string | null
           updated_at: string
           usuario_id: string
         }
@@ -645,9 +706,11 @@ export type Database = {
           created_at?: string
           cycle_start_day?: number
           id?: string
+          meta_cartao_credito_total?: number | null
           onboarding_completed?: boolean
           responsaveis?: string[]
           responsavel_padrao?: string | null
+          ultimo_cartao_id?: string | null
           updated_at?: string
           usuario_id: string
         }
@@ -655,9 +718,11 @@ export type Database = {
           created_at?: string
           cycle_start_day?: number
           id?: string
+          meta_cartao_credito_total?: number | null
           onboarding_completed?: boolean
           responsaveis?: string[]
           responsavel_padrao?: string | null
+          ultimo_cartao_id?: string | null
           updated_at?: string
           usuario_id?: string
         }

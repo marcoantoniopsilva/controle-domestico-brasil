@@ -16,6 +16,7 @@ export interface Transacao {
   ganhos?: number; // Novo campo para ganhos/perdas de investimentos
   isParcela?: boolean;
   parcelaAtual?: number;
+  cartaoId?: string | null;
 }
 
 export interface Categoria {
@@ -44,4 +45,17 @@ export interface InvestmentEvolution {
   valorInvestido: number;
   ganhos: number;
   saldoTotal: number;
+}
+
+export interface CartaoCredito {
+  id: string;
+  nome: string;
+  bandeira?: string | null;
+  banco?: string | null;
+  cor: string;
+  diaFechamento: number;
+  diaVencimento: number;
+  metaMensal?: number | null;
+  ativo: boolean;
+  ordem: number;
 }
