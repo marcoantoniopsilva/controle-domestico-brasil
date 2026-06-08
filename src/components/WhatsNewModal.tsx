@@ -10,9 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Users, MessageCircle, Camera, CheckCircle2 } from "lucide-react";
+import { Sparkles, CreditCard, PlusCircle, BarChart3, CheckCircle2, Target } from "lucide-react";
 
-const STORAGE_KEY = "whatsnew-v20260527-2";
+const STORAGE_KEY = "whatsnew-v20260608-cartoes";
+// Pop-up reaparece por 3 dias mesmo sem marcar "não mostrar"
+const DIAS_EXIBICAO = 3;
 
 interface Novidade {
   icone: React.ReactNode;
@@ -22,28 +24,28 @@ interface Novidade {
 
 const novidades: Novidade[] = [
   {
-    icone: <Users className="h-5 w-5 text-primary" />,
-    titulo: "Responsáveis personalizáveis",
+    icone: <CreditCard className="h-5 w-5 text-primary" />,
+    titulo: "Cadastro de cartões de crédito",
     descricao:
-      "Agora você define quem aparece no campo 'Quem realizou'. Adicione os nomes que fizerem sentido pra você (ex: seu nome, seu cônjuge, dependentes) e escolha qual vem pré-selecionado por padrão em cada lançamento.",
+      "Acesse o menu lateral em 'Cartões' para cadastrar seus cartões com apelido, bandeira, banco, cor, dia de fechamento e dia de vencimento. Você pode cadastrar quantos quiser.",
   },
   {
-    icone: <MessageCircle className="h-5 w-5 text-primary" />,
-    titulo: "WhatsApp mais inteligente",
+    icone: <PlusCircle className="h-5 w-5 text-primary" />,
+    titulo: "Associe lançamentos a um cartão",
     descricao:
-      "O assistente por WhatsApp parou de usar nomes fixos. As mensagens agora se adaptam ao seu perfil, sem mais referências pessoais de outras contas.",
+      "Ao adicionar uma nova despesa (manual ou pela importação de extrato/foto), aparece um seletor de cartão. O campo é opcional — lançamentos antigos continuam sem cartão e podem ser editados depois caso queira atribuir.",
   },
   {
-    icone: <Camera className="h-5 w-5 text-primary" />,
-    titulo: "Data corrigida na importação por foto",
+    icone: <BarChart3 className="h-5 w-5 text-primary" />,
+    titulo: "Relatório por fatura do cartão",
     descricao:
-      "Lançamentos feitos a partir de uma foto da fatura agora registram a data correta do dia em que a foto foi enviada, não mais do dia seguinte.",
+      "No relatório de Cartão de Crédito você alterna entre 'Todos os cartões' (visão do ciclo financeiro) e um cartão específico, que mostra os gastos agrupados pela fatura (do fechamento ao fechamento).",
   },
   {
-    icone: <Sparkles className="h-5 w-5 text-primary" />,
-    titulo: "Cadastro de WhatsApp nas preferências",
+    icone: <Target className="h-5 w-5 text-primary" />,
+    titulo: "Metas independentes por cartão",
     descricao:
-      "Na tela de Preferências você pode cadastrar seu número do WhatsApp para receber relatórios diários e conversar com o assistente financeiro.",
+      "Defina, se quiser, uma meta mensal de consumo para cada cartão. As metas são independentes dos orçamentos por categoria — funcionam como um teto adicional só para acompanhar o uso do cartão.",
   },
 ];
 
@@ -52,16 +54,36 @@ const WhatsNewModal = () => {
   const [naoMostrar, setNaoMostrar] = useState(false);
 
   useEffect(() => {
-    const jaViu = localStorage.getItem(STORAGE_KEY);
-    if (!jaViu) {
+    const registro = localStorage.getItem(STORAGE_KEY);
+    if (!registro) {
+      // Primeira vez: registra timestamp e abre
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ firstSeen: Date.now(), dismissed: false }));
+      setOpen(true);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(registro);
+      if (parsed.dismissed) return;
+      const diasPassados = (Date.now() - parsed.firstSeen) / (1000 * 60 * 60 * 24);
+      if (diasPassados < DIAS_EXIBICAO) {
+        setOpen(true);
+      }
+    } catch {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ firstSeen: Date.now(), dismissed: false }));
       setOpen(true);
     }
   }, []);
 
   const fechar = () => {
-    if (naoMostrar) {
-      localStorage.setItem(STORAGE_KEY, "1");
-    }
+    const registro = localStorage.getItem(STORAGE_KEY);
+    let firstSeen = Date.now();
+    try {
+      if (registro) firstSeen = JSON.parse(registro).firstSeen ?? firstSeen;
+    } catch {}
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ firstSeen, dismissed: naoMostrar })
+    );
     setOpen(false);
   };
 
