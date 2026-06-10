@@ -1,28 +1,63 @@
-## Remover Infobip do projeto
+## Contexto
 
-O fluxo de WhatsApp roda 100% no Twilio. O Infobip ficou como código legado e abre superfície de ataque sem benefício. Vou limpar tudo.
+Os 2 jobs de cron já existem (`whatsapp-daily-report` jobid 2 e `whatsapp-hourly-report` jobid 3), mas estão batendo na edge function com `Authorization: Bearer <anon_key>`. Há 2 dias a função passou a exigir `Bearer <service_role>` OU header `x-cron-secret`, então as últimas 525 execuções retornaram **HTTP 401** — por isso o relatório parou de chegar.
 
-### O que será feito
+Como você não é o dono dos jobs no `pg_cron`, `cron.unschedule` e `cron.schedule` dão `permission denied`. Mas `cron.alter_job` funciona para o dono atual e permite trocar só o `command`.
 
-1. **Apagar a edge function `infobip-webhook`**
-   - Remove `supabase/functions/infobip-webhook/index.ts`
-   - Chama `supabase--delete_edge_functions` para tirar do Supabase também
+## O que fazer
 
-2. **Apagar os secrets do Infobip**
-   - `INFOBIP_API_KEY`
-   - `INFOBIP_BASE_URL`
-   - `INFOBIP_WHATSAPP_NUMBER`
-   - `INFOBIP_WEBHOOK_SECRET` (o que acabei de adicionar — não será mais necessário)
+Você roda **um único SQL** no SQL Editor do Supabase, substituindo `COLE_AQUI_O_VALOR_DO_CRON_SECRET` pelo valor real do secret `CRON_SECRET` (o mesmo que está em Edge Function Secrets).
 
-3. **Não mexer no Twilio**
-   - `twilio-webhook`, `whatsapp-send-verification`, `whatsapp-verify-code`, `whatsapp-daily-report` e os secrets `TWILIO_*` ficam exatamente como estão.
-   - `CRON_SECRET` continua válido para proteger o relatório diário do Twilio.
+```sql
+-- Job diário (23:00 UTC = 20:00 BRT)
+select cron.alter_job(
+  job_id := 2,
+  command := $cmd$
+    select net.http_post(
+      url := 'https://eepkixxqvelppxzfwoin.supabase.co/functions/v1/whatsapp-daily-report',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', 'COLE_AQUI_O_VALOR_DO_CRON_SECRET'
+      ),
+      body := '{}'::jsonb
+    );
+  $cmd$
+);
 
-### O que você precisa fazer depois
+-- Job horário (toda hora cheia)
+select cron.alter_job(
+  job_id := 3,
+  command := $cmd$
+    select net.http_post(
+      url := 'https://eepkixxqvelppxzfwoin.supabase.co/functions/v1/whatsapp-daily-report',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', 'COLE_AQUI_O_VALOR_DO_CRON_SECRET'
+      ),
+      body := '{}'::jsonb
+    );
+  $cmd$
+);
+```
 
-- **Painel do Infobip:** se houver um webhook apontando para `…/infobip-webhook`, pode remover lá também (opcional — depois de apagada, a URL retorna 404 de qualquer forma).
-- **Cron do relatório diário (Twilio):** segue valendo a instrução anterior — configurar o header `x-cron-secret` no `pg_cron` que dispara `whatsapp-daily-report`.
+## Verificação (rodar 5 min depois)
 
-### Observação de segurança
+```sql
+select jobid, status, return_message, start_time
+from cron.job_run_details
+where jobid in (2,3)
+order by start_time desc
+limit 10;
+```
 
-Depois da limpeza, o scanner não terá mais o endpoint Infobip aberto para reclamar. Vou atualizar a `@security-memory` registrando que Infobip foi removido e Twilio é o único provedor WhatsApp.
+Esperado: `status = succeeded` e o `return_message` contendo `200`. Se aparecer `401`, o valor colado não bate com o secret `CRON_SECRET`.
+
+## O que NÃO vou mexer
+
+- Código da edge function `whatsapp-daily-report` (a checagem de auth está correta do ponto de vista de segurança).
+- Secrets já configurados.
+- Frontend / fluxo do Twilio (o webhook de mensagem do usuário não passa pelo cron).
+
+## Observação sobre o job horário
+
+O `jobid 3` (`whatsapp-hourly-report`) está agendado para rodar de hora em hora, mas chama a mesma função do relatório diário. A própria função já filtra usuários pela hora preferida deles, então isso está ok — só queria registrar para você saber.
