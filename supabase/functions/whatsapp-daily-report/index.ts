@@ -68,9 +68,16 @@ Deno.serve(async (req) => {
     const cronHeader = req.headers.get('x-cron-secret') || '';
     const cronSecret = Deno.env.get('CRON_SECRET');
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const isServiceRole = !!serviceKey && authHeader === `Bearer ${serviceKey}`;
     const isCronSecret = !!cronSecret && cronHeader === cronSecret;
-    if (!isServiceRole && !isCronSecret) {
+    // Aceita também a chamada do pg_cron com anon key bearer, mas APENAS
+    // para o envio agendado (sem force/sendNow). Isso evita gasto de massa
+    // por terceiros porque o envio só ocorre para usuários cuja
+    // `report_hour` bate com a hora atual.
+    const isAnonCron = !!anonKey && authHeader === `Bearer ${anonKey}`;
+    const isPrivileged = isServiceRole || isCronSecret;
+    if (!isPrivileged && !isAnonCron) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -88,6 +95,14 @@ Deno.serve(async (req) => {
           forceTest = true;
         }
       } catch { /* body não é JSON, ignorar */ }
+    }
+
+    // force/sendNow exige privilégio (service role ou x-cron-secret).
+    if (forceTest && !isPrivileged) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: force send requires privileged auth' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('[DailyReport] Iniciando envio de relatórios...', forceTest ? '(TESTE MANUAL)' : '');
