@@ -98,10 +98,10 @@ export function ImportarLancamentosReview({
     .reduce((sum, t) => sum + t.valor, 0);
 
   return (
-    <div className="space-y-4">
-      {/* Header com seleção global e quem gastou */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b">
-        <div className="flex items-center gap-4">
+    <div className="space-y-4 w-full">
+      {/* Header com seleção global e controles de importação */}
+      <div className="flex flex-col gap-4 pb-4 border-b">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Checkbox 
               checked={transacoes.every(t => t.selecionado)}
@@ -116,14 +116,14 @@ export function ImportarLancamentosReview({
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm">Ano:</Label>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Label className="text-sm shrink-0">Ano:</Label>
             <Select
               value={String(anoImportacao)}
               onValueChange={(v) => setAnoImportacao(parseInt(v, 10) || anoReferencia)}
             >
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-full sm:w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -136,25 +136,11 @@ export function ImportarLancamentosReview({
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Label className="text-sm">Quem gastou:</Label>
-            <Select value={quemGastou} onValueChange={setQuemGastou}>
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {lista.map((nome) => (
-                  <SelectItem key={nome} value={nome}>{nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {cartoesAtivos.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Label className="text-sm">Cartão:</Label>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label className="text-sm shrink-0">Cartão:</Label>
               <Select value={cartaoId} onValueChange={setCartaoId}>
-                <SelectTrigger className="w-44">
+                <SelectTrigger className="w-full sm:w-44">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -171,6 +157,20 @@ export function ImportarLancamentosReview({
               </Select>
             </div>
           )}
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Label className="text-sm shrink-0">Quem gastou:</Label>
+            <Select value={quemGastou} onValueChange={setQuemGastou}>
+              <SelectTrigger className="w-full sm:w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {lista.map((nome) => (
+                  <SelectItem key={nome} value={nome}>{nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
