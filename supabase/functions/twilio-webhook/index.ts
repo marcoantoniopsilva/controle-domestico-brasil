@@ -76,7 +76,16 @@ Deno.serve(async (req) => {
     const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
     const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
     if (!signature || computed !== signature) {
-      console.warn('[Twilio Webhook] Invalid signature; rejecting request');
+      console.warn('[Twilio Webhook] Invalid signature; rejecting request', {
+        signature,
+        computed,
+        signedUrl,
+        reqUrl: req.url,
+        xfProto,
+        xfHost,
+        host: req.headers.get('host'),
+        keys: sortedKeys,
+      });
       return new Response('Forbidden', { status: 403, headers: corsHeaders });
     }
     
