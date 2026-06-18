@@ -42,13 +42,18 @@ function getTemplateSid(reportType: string): string {
     case 'receitas':
       return Deno.env.get('TWILIO_TEMPLATE_RECEITAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
     case 'categorias':
-      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID') || TEMPLATE_COMPLETO_DEFAULT;
+      // Prefere o template v2 (multi-variável, com quebras de linha reais no body)
+      // quando configurado. Caso contrário, usa o template antigo de variável única.
+      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_V2_SID')
+        || Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID')
+        || TEMPLATE_COMPLETO_DEFAULT;
     case 'completo':
     default:
       // O template "completo" antigo tinha rótulos hardcoded (Marco/Bruna/Aurora).
       // Agora usamos o template de variável única (categorias) e montamos o conteúdo
       // dinamicamente com as categorias reais do usuário.
-      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID')
+      return Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_V2_SID')
+        || Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_SID')
         || Deno.env.get('TWILIO_TEMPLATE_COMPLETO_SID')
         || TEMPLATE_COMPLETO_DEFAULT;
   }
