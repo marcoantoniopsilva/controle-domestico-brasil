@@ -59,31 +59,48 @@ Deno.serve(async (req) => {
     const formData = new Map<string, string>();
     for (const [k, v] of params.entries()) formData.set(k, v);
 
-    // Build the URL Twilio used to sign. Honor x-forwarded-* so the
-    // signature matches even behind Supabase's proxy.
-    const xfProto = req.headers.get('x-forwarded-proto');
-    const xfHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    // Build candidate URLs Twilio may have signed against. Behind Supabase's
+    // proxy the request URL doesn't always match what was configured in the
+    // Twilio console, so we try several variants and accept the first match.
+    const xfProto = req.headers.get('x-forwarded-proto') || 'https';
+    const xfHost = req.headers.get('x-forwarded-host');
+    const host = req.headers.get('host');
     const reqUrl = new URL(req.url);
-    const signedUrl = xfHost ? `${xfProto || 'https'}://${xfHost}${reqUrl.pathname}${reqUrl.search}` : req.url;
+    const pathAndQuery = `${reqUrl.pathname}${reqUrl.search}`;
+    const candidates = new Set<string>([
+      req.url,
+      `${xfProto}://${xfHost || host}${pathAndQuery}`,
+      `https://${xfHost || host}${pathAndQuery}`,
+      `https://${host}${pathAndQuery}`,
+      `https://${reqUrl.hostname}${pathAndQuery}`,
+    ]);
 
     const sortedKeys = [...formData.keys()].sort();
-    const dataToSign = signedUrl + sortedKeys.map((k) => k + (formData.get(k) ?? '')).join('');
+    const paramsConcat = sortedKeys.map((k) => k + (formData.get(k) ?? '')).join('');
     const keyData = new TextEncoder().encode(twilioAuthToken);
-    const msgData = new TextEncoder().encode(dataToSign);
     const cryptoKey = await crypto.subtle.importKey(
       'raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
     );
-    const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-    const computed = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
-    if (!signature || computed !== signature) {
+    const computeSig = async (url: string) => {
+      const msgData = new TextEncoder().encode(url + paramsConcat);
+      const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+      return btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+    };
+    let matched = false;
+    const tried: Record<string, string> = {};
+    for (const url of candidates) {
+      const computed = await computeSig(url);
+      tried[url] = computed;
+      if (signature && computed === signature) { matched = true; break; }
+    }
+    if (!matched) {
       console.warn('[Twilio Webhook] Invalid signature; rejecting request', {
         signature,
-        computed,
-        signedUrl,
+        tried,
         reqUrl: req.url,
         xfProto,
         xfHost,
-        host: req.headers.get('host'),
+        host,
         keys: sortedKeys,
       });
       return new Response('Forbidden', { status: 403, headers: corsHeaders });
