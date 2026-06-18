@@ -307,18 +307,109 @@ async function buildTemplateVariables(
 
   if (reportType === 'categorias') {
     const selected = (user.selected_categories || []).slice(0, 8);
-    // IMPORTANTE: Twilio NÃO aceita quebras de linha (\n) em ContentVariables
-    // (retorna erro 21656). Usamos separador visual com bullet para manter
-    // legibilidade dentro de uma única variável.
+    const v2Sid = Deno.env.get('TWILIO_TEMPLATE_CATEGORIAS_V2_SID');
+
+    // Template V2 (recomendado): body com quebras de linha REAIS e múltiplas
+    // variáveis (1=ciclo, 2=saldo, 3=receitas, 4=despesas, 5=%orçamento,
+    // 6=dias restantes, 7..14=categorias). Cada categoria vai em sua própria
+    // variável, então o WhatsApp renderiza linha por linha.
+    if (v2Sid) {
+      const pctUsado = reportData.totalOrcamentoDespesas > 0
+        ? Math.round((reportData.totalDespesas / reportData.totalOrcamentoDespesas) * 100)
+        : 0;
+      const fmtBRL = (v: number) =>
+        v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      const vars: Record<string, string> = {
+        "1": reportData.cicloNome,
+        "2": reportData.saldo,
+        "3": `R$${fmtBRL(reportData.totalReceitas)}`,
+        "4": `R$${fmtBRL(reportData.totalDespesas)}`,
+        "5": `${pctUsado}`,
+        "6": reportData.diasRestantes,
+      };
+      for (let i = 0; i < 8; i++) {
+        const nome = selected[i];
+        const slot = String(7 + i);
+        vars[slot] = nome
+          ? `${emojiForCategoria(nome)} ${nome}: ${reportData.formatCategoria(nome)}`
+          : '—';
+      }
+      return vars;
+    }
+
+    // Fallback (template V1 antigo, variável única): incluímos resumo do orçamento
+    // e emoji por categoria. Twilio NÃO aceita \n em ContentVariables (erro 21656),
+    // então separamos com bullets visuais para reduzir o aspecto de "texto corrido".
+    const pctUsado = reportData.totalOrcamentoDespesas > 0
+      ? Math.round((reportData.totalDespesas / reportData.totalOrcamentoDespesas) * 100)
+      : 0;
+    const fmtBRL = (v: number) =>
+      v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const SEP = '  ┊  ';
+    const resumo = [
+      `📊 ${reportData.cicloNome}`,
+      `💰 Saldo: ${reportData.saldo}`,
+      `📈 Receitas: R$${fmtBRL(reportData.totalReceitas)}`,
+      `📉 Despesas: R$${fmtBRL(reportData.totalDespesas)} (${pctUsado}%)`,
+      `📅 Faltam ${reportData.diasRestantes} dias`,
+    ].join(SEP);
+
     const linhas = selected.length > 0
-      ? selected.map((nome) => `${nome}: ${reportData.formatCategoria(nome)}`).join('  ▪️  ')
+      ? selected.map((nome) => `${emojiForCategoria(nome)} ${nome}: ${reportData.formatCategoria(nome)}`).join(SEP)
       : 'Nenhuma categoria selecionada. Configure no app.';
+
+    const conteudo = `${resumo}${SEP}🗂 Categorias:${SEP}${linhas}`;
     return {
-      "1": linhas.substring(0, 1000),
+      "1": conteudo.substring(0, 1000),
     };
   }
 
   return { "1": reportData.saldo };
+}
+
+// Mapeia categoria -> emoji visual para o relatório do WhatsApp.
+// Usa palavras-chave (case-insensitive, ignorando acentos) e cai num fallback
+// genérico caso não haja correspondência.
+function emojiForCategoria(nome: string): string {
+  const n = nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const map: Array<[RegExp, string]> = [
+    [/supermerc|mercado/, '🛒'],
+    [/restaurant|aplicativ|ifood|alimenta/, '🍽️'],
+    [/uber|taxi|transport/, '🚕'],
+    [/recarga|combust|gasolin|carro/, '⛽'],
+    [/estacion/, '🅿️'],
+    [/seguro|manuten/, '🔧'],
+    [/farmac|remedi/, '💊'],
+    [/saude|medic|hospital|plano/, '🏥'],
+    [/filho|bebe|crianc/, '👶'],
+    [/presente|roupa/, '🎁'],
+    [/lazer|cinema|diversao/, '🎮'],
+    [/compra/, '🛍️'],
+    [/casa|moradia/, '🏠'],
+    [/internet|telefon|celular/, '📶'],
+    [/academia|gym|esporte/, '🏋️'],
+    [/gato|cachorro|pet/, '🐾'],
+    [/condomin|aluguel/, '🏢'],
+    [/conta|conveni|agua|luz|energia/, '💡'],
+    [/doaca/, '❤️'],
+    [/viagem|hotel/, '✈️'],
+    [/imposto|taxa|multa/, '🧾'],
+    [/salario|sal\.|13|ferias|gratific/, '💼'],
+    [/restitui|transfer|outras receit/, '💵'],
+    [/invest|renda fixa|tesouro|cdb|lci|lca|acao|cripto|previdenc|fundo/, '📈'],
+    [/extraordin/, '⚠️'],
+    [/outros/, '📦'],
+  ];
+
+  for (const [re, emoji] of map) {
+    if (re.test(n)) return emoji;
+  }
+  return '•';
 }
 
 // Calcula o ciclo financeiro atual com base no dia configurado pelo usuário
