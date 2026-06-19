@@ -568,11 +568,10 @@ async function processWithGemini(message: string, userName: string, context: Fin
     return getDefaultResponse(message, userName, context);
   }
 
-  // Categorias de despesa com gasto, ordenadas por valor.
+  // Todas as categorias de despesa (com ou sem gasto), ordenadas por valor.
   const todasCategorias = context.categorias
-    .filter((c) => c.tipo === 'despesa' && c.gasto > 0)
-    .sort((a, b) => b.gasto - a.gasto)
-    .slice(0, 8);
+    .filter((c) => c.tipo === 'despesa')
+    .sort((a, b) => b.gasto - a.gasto);
 
   const categoriasTexto = todasCategorias
     .map(c => {

@@ -240,7 +240,7 @@ async function processWithGemini(message: string, userName: string, context: Fin
 
   // Montar contexto das categorias
   const categoriasTexto = context.categorias
-    .filter(c => c.tipo === 'despesa' && c.gasto > 0)
+    .filter(c => c.tipo === 'despesa')
     .sort((a, b) => b.gasto - a.gasto)
     .map(c => {
       const status = c.percentual > 100 ? '🔴' : c.percentual > 80 ? '🟡' : '🟢';
