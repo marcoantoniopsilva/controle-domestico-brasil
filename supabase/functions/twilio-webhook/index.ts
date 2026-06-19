@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
     const host = req.headers.get('host');
     const reqUrl = new URL(req.url);
     const pathAndQuery = `${reqUrl.pathname}${reqUrl.search}`;
+    const configuredUrl = (Deno.env.get('TWILIO_WEBHOOK_URL') || '').trim();
     const candidates = new Set<string>([
       req.url,
       `${xfProto}://${xfHost || host}${pathAndQuery}`,
@@ -74,6 +75,12 @@ Deno.serve(async (req) => {
       `https://${host}${pathAndQuery}`,
       `https://${reqUrl.hostname}${pathAndQuery}`,
     ]);
+    if (configuredUrl) {
+      // URL exata configurada no console do Twilio — é a que ele usa para assinar.
+      candidates.add(configuredUrl);
+      // Também testa com a querystring atual, caso o Twilio adicione params.
+      if (reqUrl.search) candidates.add(configuredUrl + reqUrl.search);
+    }
 
     const sortedKeys = [...formData.keys()].sort();
     const paramsConcat = sortedKeys.map((k) => k + (formData.get(k) ?? '')).join('');
