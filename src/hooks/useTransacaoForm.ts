@@ -1,11 +1,12 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { Transacao, Categoria } from "@/types";
 import { categorias as categoriasIniciais } from "@/utils/financas";
 import { useCategoryBudgets } from "./useCategoryBudgets";
 import { useAuth } from "./useAuth";
 import { useUserPreferences } from "./useUserPreferences";
+import { useCartoes } from "./useCartoes";
 
 export interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean> | Promise<void>;
@@ -21,8 +22,16 @@ export function useTransacaoForm({
   const { getCategoriesWithCustomBudgets } = useCategoryBudgets();
   const { usuario } = useAuth();
   const { preferences } = useUserPreferences(usuario?.id);
+  const { cartoes } = useCartoes();
   const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
   const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
+  // Cartão padrão válido (existe e ativo); senão null
+  const cartaoPadraoValido = useMemo(() => {
+    const id = preferences.cartaoPadraoId;
+    if (!id) return null;
+    const c = cartoes.find((x) => x.id === id);
+    return c && c.ativo ? id : null;
+  }, [preferences.cartaoPadraoId, cartoes]);
   // Estado para todos os campos do formulário
   const [data, setData] = useState<Date>(
     initialValues?.data ? new Date(initialValues.data) : new Date()
@@ -41,6 +50,20 @@ export function useTransacaoForm({
   const [cartaoId, setCartaoId] = useState<string | null>(
     initialValues?.cartaoId ?? null
   );
+  // Aplica cartão padrão quando criando nova despesa e usuário ainda não tocou
+  const [cartaoTocado, setCartaoTocado] = useState(false);
+  useEffect(() => {
+    if (isEditing) return;
+    if (cartaoTocado) return;
+    if (tipo !== "despesa") return;
+    if (cartaoId) return;
+    if (cartaoPadraoValido) setCartaoId(cartaoPadraoValido);
+  }, [isEditing, cartaoTocado, tipo, cartaoId, cartaoPadraoValido]);
+
+  const setCartaoIdManual = useCallback((v: string | null) => {
+    setCartaoTocado(true);
+    setCartaoId(v);
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lista de categorias filtradas com base no tipo selecionado
@@ -165,6 +188,6 @@ export function useTransacaoForm({
     categoriasFiltradas,
     handleSubmit,
     cartaoId,
-    setCartaoId,
+    setCartaoId: setCartaoIdManual,
   };
 }
