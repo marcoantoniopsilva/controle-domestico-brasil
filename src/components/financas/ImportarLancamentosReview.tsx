@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Loader2, ArrowLeft, Check } from "lucide-react";
 import { formatarMoeda } from "@/utils/financas";
 import { useCartoes } from "@/hooks/useCartoes";
 import { CartaoIcone } from "@/utils/cardIcons";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface ExtractedTransaction {
   data: string;
@@ -53,6 +55,20 @@ export function ImportarLancamentosReview({
   const { cartoes } = useCartoes();
   const cartoesAtivos = cartoes.filter((c) => c.ativo);
   const [cartaoId, setCartaoId] = useState<string>("__none__");
+  const { usuario } = useAuth();
+  const { preferences } = useUserPreferences(usuario?.id);
+  const [cartaoTocado, setCartaoTocado] = useState(false);
+  useEffect(() => {
+    if (cartaoTocado) return;
+    const padrao = preferences.cartaoPadraoId;
+    if (padrao && cartoesAtivos.some((c) => c.id === padrao)) {
+      setCartaoId(padrao);
+    }
+  }, [preferences.cartaoPadraoId, cartoesAtivos, cartaoTocado]);
+  const handleCartaoChange = (v: string) => {
+    setCartaoTocado(true);
+    setCartaoId(v);
+  };
   const categorias = categoriasDisponiveis;
   const anosDisponiveis = [anoReferencia - 1, anoReferencia, anoReferencia + 1];
 
