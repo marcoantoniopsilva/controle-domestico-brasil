@@ -74,6 +74,8 @@ const NavBar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/simulador")} className="sm:hidden">Simulador</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
