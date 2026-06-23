@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, CreditCard } from "lucide-react";
 import { useCartoes } from "@/hooks/useCartoes";
 import { CartaoForm } from "@/components/cartoes/CartaoForm";
 import { CartaoIcone, getBancoLabel, getBandeiraLabel } from "@/utils/cardIcons";
 import { CartaoCredito } from "@/types";
 import { formatarMoeda } from "@/utils/financas";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { CardSelector } from "@/components/financas/form/CardSelector";
+import { toast } from "sonner";
+import { useEffect } from "react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -17,6 +22,22 @@ const Cartoes = () => {
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<CartaoCredito | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<CartaoCredito | null>(null);
+  const { usuario } = useAuth();
+  const { preferences, loading: loadingPrefs, update } = useUserPreferences(usuario?.id);
+  const [cartaoPadraoId, setCartaoPadraoId] = useState<string | null>(null);
+  const [savingPadrao, setSavingPadrao] = useState(false);
+
+  useEffect(() => {
+    setCartaoPadraoId(preferences.cartaoPadraoId ?? null);
+  }, [preferences.cartaoPadraoId]);
+
+  const saveCartaoPadrao = async () => {
+    setSavingPadrao(true);
+    const ok = await update({ cartaoPadraoId });
+    setSavingPadrao(false);
+    if (ok) toast.success("Cartão padrão atualizado.");
+    else toast.error("Não foi possível salvar.");
+  };
 
   const handleNew = () => {
     setEditing(null);
@@ -119,6 +140,28 @@ const Cartoes = () => {
         cartao={editing}
         onSave={handleSave}
       />
+
+      {cartoes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Cartão padrão</CardTitle>
+            <CardDescription>
+              Quando definido, será pré-selecionado automaticamente em todos os novos lançamentos
+              de despesa (manuais ou via importação). Você pode trocar ou remover na hora de salvar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CardSelector
+              cartaoId={cartaoPadraoId}
+              onChange={setCartaoPadraoId}
+              label="Cartão padrão para novos lançamentos"
+            />
+            <Button onClick={saveCartaoPadrao} disabled={savingPadrao || loadingPrefs}>
+              {savingPadrao ? "Salvando..." : "Salvar cartão padrão"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>

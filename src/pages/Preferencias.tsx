@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { CardSelector } from "@/components/financas/form/CardSelector";
 
 const Preferencias = () => {
   const { usuario } = useAuth();
@@ -27,8 +26,6 @@ const Preferencias = () => {
   const [responsavelPadrao, setResponsavelPadrao] = useState<string>("");
   const [novoResponsavel, setNovoResponsavel] = useState<string>("");
   const [savingResp, setSavingResp] = useState(false);
-  const [cartaoPadraoId, setCartaoPadraoId] = useState<string | null>(null);
-  const [savingCartao, setSavingCartao] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,18 +36,6 @@ const Preferencias = () => {
     setResponsaveis(preferences.responsaveis || []);
     setResponsavelPadrao(preferences.responsavelPadrao || (preferences.responsaveis?.[0] ?? ""));
   }, [preferences.responsaveis, preferences.responsavelPadrao]);
-
-  useEffect(() => {
-    setCartaoPadraoId(preferences.cartaoPadraoId ?? null);
-  }, [preferences.cartaoPadraoId]);
-
-  const saveCartaoPadrao = async () => {
-    setSavingCartao(true);
-    const ok = await update({ cartaoPadraoId });
-    setSavingCartao(false);
-    if (ok) toast.success("Cartão padrão atualizado.");
-    else toast.error("Não foi possível salvar.");
-  };
 
   const save = async () => {
     setSaving(true);
@@ -247,26 +232,6 @@ const Preferencias = () => {
 
             <Button onClick={saveResponsaveis} disabled={savingResp || loading}>
               {savingResp ? "Salvando..." : "Salvar responsáveis"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Cartão padrão</CardTitle>
-            <CardDescription>
-              Quando definido, será pré-selecionado automaticamente em todos os novos lançamentos
-              de despesa (manuais ou via importação). Você pode trocar ou remover na hora de salvar.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <CardSelector
-              cartaoId={cartaoPadraoId}
-              onChange={setCartaoPadraoId}
-              label="Cartão padrão para novos lançamentos"
-            />
-            <Button onClick={saveCartaoPadrao} disabled={savingCartao || loading}>
-              {savingCartao ? "Salvando..." : "Salvar cartão padrão"}
             </Button>
           </CardContent>
         </Card>
