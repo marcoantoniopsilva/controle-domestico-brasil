@@ -691,6 +691,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          cartao_padrao_id: string | null
           created_at: string
           cycle_start_day: number
           id: string
@@ -703,6 +704,7 @@ export type Database = {
           usuario_id: string
         }
         Insert: {
+          cartao_padrao_id?: string | null
           created_at?: string
           cycle_start_day?: number
           id?: string
@@ -715,6 +717,7 @@ export type Database = {
           usuario_id: string
         }
         Update: {
+          cartao_padrao_id?: string | null
           created_at?: string
           cycle_start_day?: number
           id?: string
@@ -726,7 +729,15 @@ export type Database = {
           updated_at?: string
           usuario_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_cartao_padrao_id_fkey"
+            columns: ["cartao_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {
