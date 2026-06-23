@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings } from "lucide-react";
+import { Settings, Menu } from "lucide-react";
 import { Logo } from "./Logo";
 
 const NavBar = () => {
@@ -55,7 +55,27 @@ const NavBar = () => {
         <div className="flex gap-1 md:gap-4 items-center">
           {isLoggedIn ? (
             <>
-              <Link to="/dashboard">
+              {/* Mobile: menu geral único */}
+              <div className="sm:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="px-2 text-xs gap-1">
+                      <Menu className="h-4 w-4" />
+                      Menu
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/simulador")}>Simulador</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões de crédito</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop: navegação principal + dropdown de config */}
+              <Link to="/dashboard" className="hidden sm:block">
                 <Button variant="ghost" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
                   Dashboard
                 </Button>
@@ -65,20 +85,21 @@ const NavBar = () => {
                   Simulador
                 </Button>
               </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="px-2 md:px-3 text-xs md:text-sm">
-                    <Settings className="h-4 w-4 md:mr-1" />
-                    <span className="hidden sm:inline">Config</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/simulador")} className="sm:hidden">Simulador</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="hidden sm:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="px-2 md:px-3 text-xs md:text-sm">
+                      <Settings className="h-4 w-4 md:mr-1" />
+                      <span>Config</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <Button onClick={handleLogout} variant="outline" size="sm" className="px-2 md:px-4 text-xs md:text-sm">
                 Sair
               </Button>
