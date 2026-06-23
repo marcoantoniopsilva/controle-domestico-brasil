@@ -155,7 +155,7 @@ export function ImportarLancamentosReview({
           {cartoesAtivos.length > 0 && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Label className="text-sm shrink-0">Cartão:</Label>
-              <Select value={cartaoId} onValueChange={setCartaoId}>
+              <Select value={cartaoId} onValueChange={handleCartaoChange}>
                 <SelectTrigger className="w-full sm:w-44">
                   <SelectValue />
                 </SelectTrigger>
