@@ -9,6 +9,7 @@ interface SummaryCardsProps {
   totalInvestimentos?: number;
   saldo: number;
   orcamentoTotal: number;
+  orcamentoReceitas?: number;
 }
 
 interface MetricCardProps {
