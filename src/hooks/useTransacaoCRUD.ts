@@ -43,6 +43,7 @@ export function useTransacaoCRUD() {
         ganhos: novaTransacao.ganhos || 0, // Incluir ganhos
         usuario_id: usuarioId,
         cartao_id: novaTransacao.cartaoId ?? null,
+        conta_id: novaTransacao.contaId ?? null,
       } as any;
       
       console.log("Objeto para inserção:", insertObj);
@@ -112,6 +113,7 @@ export function useTransacaoCRUD() {
         tipo: transacaoAtualizada.tipo,
         ganhos: transacaoAtualizada.ganhos || 0,
         cartao_id: transacaoAtualizada.cartaoId ?? null,
+        conta_id: transacaoAtualizada.contaId ?? null,
       } as any;
       
       console.log("Objeto para atualização:", updateObj);
