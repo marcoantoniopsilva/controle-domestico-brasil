@@ -4,7 +4,6 @@ import { Categoria, CicloFinanceiro, Transacao, Usuario } from "@/types";
 import DashboardHeader from "./dashboard/DashboardHeader";
 import DashboardTabs from "./dashboard/DashboardTabs";
 import SummaryCards from "./dashboard/SummaryCards";
-import { GreetingHeader } from "./dashboard/GreetingHeader";
 import { InsightsCard } from "./dashboard/InsightsCard";
 import { useDashboardInsights } from "@/hooks/useDashboardInsights";
 
@@ -57,13 +56,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <GreetingHeader
-        usuario={usuario}
-        saldo={saldo}
-        totalReceitas={totalReceitas}
-        totalDespesas={totalDespesas}
-      />
-
       <DashboardHeader onCicloChange={onCicloChange} />
 
       <SummaryCards
