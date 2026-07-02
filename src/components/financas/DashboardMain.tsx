@@ -111,6 +111,7 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
           totalInvestimentos={totalInvestimentos}
           saldo={saldo}
           orcamentoTotal={orcamentoTotal}
+          orcamentoReceitas={orcamentoReceitas}
           isLoading={isLoading}
           onCicloChange={onCicloChange}
           updateKey={forceUpdate}
