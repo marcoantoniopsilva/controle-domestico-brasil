@@ -42,6 +42,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   totalInvestimentos = 0,
   saldo,
   orcamentoTotal,
+  orcamentoReceitas = 0,
   isLoading,
   onCicloChange,
   updateKey,
