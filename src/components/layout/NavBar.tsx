@@ -71,6 +71,7 @@ const NavBar = () => {
                     <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões de crédito</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/contas")}>Contas bancárias</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/metas")}>Metas & reservas</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/recorrentes")}>Lançamentos recorrentes</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -100,6 +101,7 @@ const NavBar = () => {
                     <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/contas")}>Contas bancárias</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/metas")}>Metas & reservas</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/recorrentes")}>Lançamentos recorrentes</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
