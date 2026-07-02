@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, ArrowLeft, Check } from "lucide-react";
 import { formatarMoeda } from "@/utils/financas";
 import { useCartoes } from "@/hooks/useCartoes";
+import { useContas } from "@/hooks/useContas";
 import { CartaoIcone } from "@/utils/cardIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -28,7 +29,8 @@ interface ImportarLancamentosReviewProps {
     transacoes: ExtractedTransaction[],
     quemGastou: string,
     anoImportacao: number,
-    cartaoId: string | null
+    cartaoId: string | null,
+    contaId: string | null
   ) => Promise<void>;
   onVoltar: () => void;
   isLoading: boolean;
@@ -55,6 +57,9 @@ export function ImportarLancamentosReview({
   const { cartoes } = useCartoes();
   const cartoesAtivos = cartoes.filter((c) => c.ativo);
   const [cartaoId, setCartaoId] = useState<string>("__none__");
+  const { contas } = useContas();
+  const contasAtivas = contas.filter((c) => c.ativo);
+  const [contaId, setContaId] = useState<string>("__none__");
   const { usuario } = useAuth();
   const { preferences } = useUserPreferences(usuario?.id);
   const [cartaoTocado, setCartaoTocado] = useState(false);
@@ -68,6 +73,18 @@ export function ImportarLancamentosReview({
   const handleCartaoChange = (v: string) => {
     setCartaoTocado(true);
     setCartaoId(v);
+  };
+  const [contaTocada, setContaTocada] = useState(false);
+  useEffect(() => {
+    if (contaTocada) return;
+    const padrao = preferences.contaPadraoId;
+    if (padrao && contasAtivas.some((c) => c.id === padrao)) {
+      setContaId(padrao);
+    }
+  }, [preferences.contaPadraoId, contasAtivas, contaTocada]);
+  const handleContaChange = (v: string) => {
+    setContaTocada(true);
+    setContaId(v);
   };
   const categorias = categoriasDisponiveis;
   const anosDisponiveis = [anoReferencia - 1, anoReferencia, anoReferencia + 1];
@@ -165,6 +182,28 @@ export function ImportarLancamentosReview({
                     <SelectItem key={c.id} value={c.id}>
                       <div className="flex items-center gap-2">
                         <CartaoIcone banco={c.banco} bandeira={c.bandeira} cor={c.cor} size={18} />
+                        <span>{c.nome}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {contasAtivas.length > 0 && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label className="text-sm shrink-0">Conta:</Label>
+              <Select value={contaId} onValueChange={handleContaChange}>
+                <SelectTrigger className="w-full sm:w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sem conta</SelectItem>
+                  {contasAtivas.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: c.cor }} />
                         <span>{c.nome}</span>
                       </div>
                     </SelectItem>
@@ -279,7 +318,15 @@ export function ImportarLancamentosReview({
         </Button>
         
         <Button 
-          onClick={() => onImportar(transacoes, quemGastou, anoImportacao, cartaoId === "__none__" ? null : cartaoId)}
+          onClick={() =>
+            onImportar(
+              transacoes,
+              quemGastou,
+              anoImportacao,
+              cartaoId === "__none__" ? null : cartaoId,
+              contaId === "__none__" ? null : contaId
+            )
+          }
           disabled={isLoading || selectedCount === 0}
         >
           {isLoading ? (
