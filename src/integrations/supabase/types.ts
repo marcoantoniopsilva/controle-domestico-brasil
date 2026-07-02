@@ -447,6 +447,7 @@ export type Database = {
           id: number
           parcelas: number
           quem_gastou: string
+          recorrente_id: string | null
           tipo: string
           usuario_id: string
           valor: number
@@ -462,6 +463,7 @@ export type Database = {
           id?: number
           parcelas?: number
           quem_gastou: string
+          recorrente_id?: string | null
           tipo: string
           usuario_id: string
           valor: number
@@ -477,6 +479,7 @@ export type Database = {
           id?: number
           parcelas?: number
           quem_gastou?: string
+          recorrente_id?: string | null
           tipo?: string
           usuario_id?: string
           valor?: number
@@ -491,6 +494,103 @@ export type Database = {
           },
           {
             foreignKeyName: "lancamentos_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_recorrente_id_fkey"
+            columns: ["recorrente_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos_recorrentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lancamentos_recorrentes: {
+        Row: {
+          ativo: boolean
+          cartao_id: string | null
+          categoria: string
+          conta_id: string | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          descricao: string
+          dia_mes: number | null
+          dia_semana: number | null
+          frequencia: string
+          id: string
+          mes_ano: number | null
+          observacao: string | null
+          parcelas: number
+          proxima_execucao: string
+          quem_gastou: string | null
+          tipo: string
+          ultima_execucao: string | null
+          updated_at: string
+          usuario_id: string
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean
+          cartao_id?: string | null
+          categoria: string
+          conta_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao: string
+          dia_mes?: number | null
+          dia_semana?: number | null
+          frequencia?: string
+          id?: string
+          mes_ano?: number | null
+          observacao?: string | null
+          parcelas?: number
+          proxima_execucao?: string
+          quem_gastou?: string | null
+          tipo?: string
+          ultima_execucao?: string | null
+          updated_at?: string
+          usuario_id: string
+          valor: number
+        }
+        Update: {
+          ativo?: boolean
+          cartao_id?: string | null
+          categoria?: string
+          conta_id?: string | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string
+          dia_mes?: number | null
+          dia_semana?: number | null
+          frequencia?: string
+          id?: string
+          mes_ano?: number | null
+          observacao?: string | null
+          parcelas?: number
+          proxima_execucao?: string
+          quem_gastou?: string | null
+          tipo?: string
+          ultima_execucao?: string | null
+          updated_at?: string
+          usuario_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_recorrentes_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_recorrentes_conta_id_fkey"
             columns: ["conta_id"]
             isOneToOne: false
             referencedRelation: "contas_bancarias"

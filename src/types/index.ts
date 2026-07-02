@@ -97,3 +97,27 @@ export interface ContaBancaria {
   ativo: boolean;
   observacoes: string | null;
 }
+
+export type FrequenciaRecorrencia = "mensal" | "semanal" | "anual";
+
+export interface LancamentoRecorrente {
+  id: string;
+  descricao: string;
+  categoria: string;
+  valor: number;
+  tipo: "despesa" | "receita" | "investimento";
+  frequencia: FrequenciaRecorrencia;
+  diaMes: number | null;
+  mesAno: number | null;
+  diaSemana: number | null;
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string | null;
+  cartaoId: string | null;
+  contaId: string | null;
+  quemGastou: string | null;
+  parcelas: number;
+  ativo: boolean;
+  proximaExecucao: string;
+  ultimaExecucao: string | null;
+  observacao: string | null;
+}

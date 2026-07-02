@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderTree, Calculator, Settings, LogOut, CreditCard, Target, Wallet } from "lucide-react";
+import { LayoutDashboard, FolderTree, Calculator, Settings, LogOut, CreditCard, Target, Wallet, Repeat } from "lucide-react";
 import { Logo } from "./Logo";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ const items = [
   { title: "Cartões", url: "/cartoes", icon: CreditCard },
   { title: "Contas", url: "/contas", icon: Wallet },
   { title: "Metas", url: "/metas", icon: Target },
+  { title: "Recorrentes", url: "/recorrentes", icon: Repeat },
   { title: "Simulador", url: "/simulador", icon: Calculator },
   { title: "Preferências", url: "/preferencias", icon: Settings },
 ];
