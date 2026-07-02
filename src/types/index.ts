@@ -17,6 +17,7 @@ export interface Transacao {
   isParcela?: boolean;
   parcelaAtual?: number;
   cartaoId?: string | null;
+  contaId?: string | null;
 }
 
 export interface Categoria {
@@ -81,4 +82,18 @@ export interface MetaAporte {
   valor: number;
   data: string; // YYYY-MM-DD
   observacao: string | null;
+}
+
+export type ContaTipo = "corrente" | "poupanca" | "carteira" | "dinheiro" | "investimento" | "outro";
+
+export interface ContaBancaria {
+  id: string;
+  nome: string;
+  tipo: ContaTipo;
+  banco: string | null;
+  saldoInicial: number;
+  cor: string;
+  incluirNoSaldo: boolean;
+  ativo: boolean;
+  observacoes: string | null;
 }
