@@ -163,6 +163,7 @@ export type Database = {
           ativo: boolean
           banco: string | null
           bandeira: string | null
+          conta_id: string | null
           cor: string
           created_at: string
           dia_fechamento: number
@@ -178,6 +179,7 @@ export type Database = {
           ativo?: boolean
           banco?: string | null
           bandeira?: string | null
+          conta_id?: string | null
           cor?: string
           created_at?: string
           dia_fechamento: number
@@ -193,6 +195,7 @@ export type Database = {
           ativo?: boolean
           banco?: string | null
           bandeira?: string | null
+          conta_id?: string | null
           cor?: string
           created_at?: string
           dia_fechamento?: number
@@ -204,7 +207,15 @@ export type Database = {
           updated_at?: string
           usuario_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_credito_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categoria_grupos: {
         Row: {
@@ -319,6 +330,51 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_bancarias: {
+        Row: {
+          ativo: boolean
+          banco: string | null
+          cor: string | null
+          created_at: string
+          id: string
+          incluir_no_saldo: boolean
+          nome: string
+          observacoes: string | null
+          saldo_inicial: number
+          tipo: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          banco?: string | null
+          cor?: string | null
+          created_at?: string
+          id?: string
+          incluir_no_saldo?: boolean
+          nome: string
+          observacoes?: string | null
+          saldo_inicial?: number
+          tipo?: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          ativo?: boolean
+          banco?: string | null
+          cor?: string | null
+          created_at?: string
+          id?: string
+          incluir_no_saldo?: boolean
+          nome?: string
+          observacoes?: string | null
+          saldo_inicial?: number
+          tipo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           contact_name: string | null
@@ -383,6 +439,7 @@ export type Database = {
         Row: {
           cartao_id: string | null
           categoria: string
+          conta_id: string | null
           created_at: string
           data: string
           descricao: string | null
@@ -397,6 +454,7 @@ export type Database = {
         Insert: {
           cartao_id?: string | null
           categoria: string
+          conta_id?: string | null
           created_at?: string
           data: string
           descricao?: string | null
@@ -411,6 +469,7 @@ export type Database = {
         Update: {
           cartao_id?: string | null
           categoria?: string
+          conta_id?: string | null
           created_at?: string
           data?: string
           descricao?: string | null
@@ -428,6 +487,13 @@ export type Database = {
             columns: ["cartao_id"]
             isOneToOne: false
             referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
             referencedColumns: ["id"]
           },
         ]
@@ -778,6 +844,7 @@ export type Database = {
       user_preferences: {
         Row: {
           cartao_padrao_id: string | null
+          conta_padrao_id: string | null
           created_at: string
           cycle_start_day: number
           id: string
@@ -791,6 +858,7 @@ export type Database = {
         }
         Insert: {
           cartao_padrao_id?: string | null
+          conta_padrao_id?: string | null
           created_at?: string
           cycle_start_day?: number
           id?: string
@@ -804,6 +872,7 @@ export type Database = {
         }
         Update: {
           cartao_padrao_id?: string | null
+          conta_padrao_id?: string | null
           created_at?: string
           cycle_start_day?: number
           id?: string
@@ -821,6 +890,13 @@ export type Database = {
             columns: ["cartao_padrao_id"]
             isOneToOne: false
             referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_preferences_conta_padrao_id_fkey"
+            columns: ["conta_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
             referencedColumns: ["id"]
           },
         ]
