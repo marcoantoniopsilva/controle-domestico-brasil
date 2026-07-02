@@ -69,6 +69,7 @@ const NavBar = () => {
                     <DropdownMenuItem onClick={() => navigate("/simulador")}>Simulador</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões de crédito</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/metas")}>Metas & reservas</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -96,6 +97,7 @@ const NavBar = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => navigate("/categorias")}>Categorias</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/cartoes")}>Cartões</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/metas")}>Metas & reservas</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/preferencias")}>Preferências (ciclo)</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
