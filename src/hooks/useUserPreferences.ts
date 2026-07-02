@@ -8,6 +8,7 @@ export interface UserPreferences {
   responsaveis: string[];
   responsavelPadrao: string;
   cartaoPadraoId: string | null;
+  contaPadraoId: string | null;
 }
 
 export function useUserPreferences(userId?: string) {
@@ -17,6 +18,7 @@ export function useUserPreferences(userId?: string) {
     responsaveis: ["Você"],
     responsavelPadrao: "Você",
     cartaoPadraoId: null,
+    contaPadraoId: null,
   });
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +30,7 @@ export function useUserPreferences(userId?: string) {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("user_preferences")
-      .select("cycle_start_day, onboarding_completed, responsaveis, responsavel_padrao, cartao_padrao_id")
+      .select("cycle_start_day, onboarding_completed, responsaveis, responsavel_padrao, cartao_padrao_id, conta_padrao_id")
       .eq("usuario_id", userId)
       .maybeSingle();
 
@@ -50,6 +52,7 @@ export function useUserPreferences(userId?: string) {
         responsaveis,
         responsavelPadrao: padrao,
         cartaoPadraoId: data.cartao_padrao_id ?? null,
+        contaPadraoId: data.conta_padrao_id ?? null,
       });
     } else {
       // sem registro: criar default
@@ -66,6 +69,7 @@ export function useUserPreferences(userId?: string) {
         responsaveis: ["Você"],
         responsavelPadrao: "Você",
         cartaoPadraoId: null,
+        contaPadraoId: null,
       });
     }
     setLoading(false);
@@ -84,6 +88,7 @@ export function useUserPreferences(userId?: string) {
       if (patch.responsaveis !== undefined) payload.responsaveis = patch.responsaveis;
       if (patch.responsavelPadrao !== undefined) payload.responsavel_padrao = patch.responsavelPadrao;
       if (patch.cartaoPadraoId !== undefined) payload.cartao_padrao_id = patch.cartaoPadraoId;
+      if (patch.contaPadraoId !== undefined) payload.conta_padrao_id = patch.contaPadraoId;
 
       const { error } = await (supabase as any)
         .from("user_preferences")

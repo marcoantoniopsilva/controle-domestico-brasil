@@ -49,6 +49,7 @@ export function useTransacaoFetch() {
             tipo: t.tipo as "despesa" | "receita" | "investimento",
             ganhos: Number(t.ganhos) || 0, // Incluir ganhos
             cartaoId: t.cartao_id ?? null,
+            contaId: t.conta_id ?? null,
           };
         });
         

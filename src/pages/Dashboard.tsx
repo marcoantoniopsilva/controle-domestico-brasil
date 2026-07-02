@@ -12,6 +12,7 @@ import { useTransacoes } from "@/hooks/useTransacoes";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { DashboardHeader } from "@/components/financas/DashboardHeader";
 import { MetasWidget } from "@/components/metas/MetasWidget";
+import { ContasWidget } from "@/components/financas/dashboard/ContasWidget";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -146,7 +147,8 @@ const Dashboard = () => {
           onAddTransacao={handleAdicionarTransacao}
           cicloAtual={cicloAtual}
         />
-        <div className="mt-4">
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ContasWidget />
           <MetasWidget />
         </div>
       </div>

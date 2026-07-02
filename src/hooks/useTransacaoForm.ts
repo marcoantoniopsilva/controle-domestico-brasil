@@ -7,6 +7,7 @@ import { useCategoryBudgets } from "./useCategoryBudgets";
 import { useAuth } from "./useAuth";
 import { useUserPreferences } from "./useUserPreferences";
 import { useCartoes } from "./useCartoes";
+import { useContas } from "./useContas";
 
 export interface UseTransacaoFormProps {
   onAddTransacao: (transacao: Omit<Transacao, "id">) => Promise<boolean> | Promise<void>;
@@ -23,6 +24,7 @@ export function useTransacaoForm({
   const { usuario } = useAuth();
   const { preferences } = useUserPreferences(usuario?.id);
   const { cartoes } = useCartoes();
+  const { contas } = useContas();
   const responsaveis = preferences.responsaveis?.length ? preferences.responsaveis : ["Você"];
   const responsavelPadrao = preferences.responsavelPadrao || responsaveis[0];
   // Cartão padrão válido (existe e ativo); senão null
@@ -32,6 +34,12 @@ export function useTransacaoForm({
     const c = cartoes.find((x) => x.id === id);
     return c && c.ativo ? id : null;
   }, [preferences.cartaoPadraoId, cartoes]);
+  const contaPadraoValida = useMemo(() => {
+    const id = preferences.contaPadraoId;
+    if (!id) return null;
+    const c = contas.find((x) => x.id === id);
+    return c && c.ativo ? id : null;
+  }, [preferences.contaPadraoId, contas]);
   // Estado para todos os campos do formulário
   const [data, setData] = useState<Date>(
     initialValues?.data ? new Date(initialValues.data) : new Date()
@@ -50,6 +58,9 @@ export function useTransacaoForm({
   const [cartaoId, setCartaoId] = useState<string | null>(
     initialValues?.cartaoId ?? null
   );
+  const [contaId, setContaId] = useState<string | null>(
+    initialValues?.contaId ?? null
+  );
   // Aplica cartão padrão quando criando nova despesa e usuário ainda não tocou
   const [cartaoTocado, setCartaoTocado] = useState(false);
   useEffect(() => {
@@ -59,10 +70,21 @@ export function useTransacaoForm({
     if (cartaoId) return;
     if (cartaoPadraoValido) setCartaoId(cartaoPadraoValido);
   }, [isEditing, cartaoTocado, tipo, cartaoId, cartaoPadraoValido]);
+  const [contaTocada, setContaTocada] = useState(false);
+  useEffect(() => {
+    if (isEditing) return;
+    if (contaTocada) return;
+    if (contaId) return;
+    if (contaPadraoValida) setContaId(contaPadraoValida);
+  }, [isEditing, contaTocada, contaId, contaPadraoValida]);
 
   const setCartaoIdManual = useCallback((v: string | null) => {
     setCartaoTocado(true);
     setCartaoId(v);
+  }, []);
+  const setContaIdManual = useCallback((v: string | null) => {
+    setContaTocada(true);
+    setContaId(v);
   }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -127,6 +149,7 @@ export function useTransacaoForm({
           // Adicionar ganhos apenas para investimentos
           ganhos: tipo === "investimento" ? parseFloat(ganhos) || 0 : 0,
           cartaoId: tipo === "despesa" ? cartaoId : null,
+          contaId,
         };
 
         // Enviar para o handler
@@ -162,6 +185,7 @@ export function useTransacaoForm({
       onAddTransacao,
       isEditing,
       cartaoId,
+      contaId,
     ]
   );
 
@@ -189,5 +213,7 @@ export function useTransacaoForm({
     handleSubmit,
     cartaoId,
     setCartaoId: setCartaoIdManual,
+    contaId,
+    setContaId: setContaIdManual,
   };
 }

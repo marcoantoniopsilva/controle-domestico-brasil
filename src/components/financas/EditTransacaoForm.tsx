@@ -12,6 +12,7 @@ import DescriptionInput from "./form/DescriptionInput";
 import GanhosInput from "./form/GanhosInput";
 import SpenderSelector from "./form/SpenderSelector";
 import { CardSelector } from "./form/CardSelector";
+import { AccountSelector } from "./form/AccountSelector";
 
 interface EditTransacaoFormProps {
   transacao: Transacao;
@@ -49,6 +50,8 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
     handleSubmit,
     cartaoId,
     setCartaoId,
+    contaId,
+    setContaId,
   } = useTransacaoForm({ 
     onAddTransacao: async (transacao) => {
       await onSalvar(transacao);
@@ -115,9 +118,12 @@ const EditTransacaoForm: React.FC<EditTransacaoFormProps> = ({
         />
       )}
 
-      {tipo === "despesa" && (
-        <CardSelector cartaoId={cartaoId} onChange={setCartaoId} />
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {tipo === "despesa" ? (
+          <CardSelector cartaoId={cartaoId} onChange={setCartaoId} />
+        ) : <div />}
+        <AccountSelector contaId={contaId} onChange={setContaId} />
+      </div>
       
       <DescriptionInput 
         descricao={descricao} 

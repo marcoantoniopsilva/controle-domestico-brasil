@@ -32,6 +32,7 @@ interface ImportarLancamentosProps {
     tipo: "despesa";
     ganhos: number;
     cartaoId: string | null;
+    contaId: string | null;
   }>) => Promise<boolean>;
 }
 
@@ -128,7 +129,8 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
     transacoes: ExtractedTransaction[],
     quemGastou: string,
     anoImportacao: number,
-    cartaoId: string | null
+    cartaoId: string | null,
+    contaId: string | null
   ) => {
     const fallback = categoriasDespesa.includes("Outros") ? "Outros" : categoriasDespesa[0];
     const transacoesParaImportar = transacoes
@@ -155,6 +157,7 @@ export function ImportarLancamentos({ isOpen, onClose, onImportar }: ImportarLan
           tipo: "despesa" as const,
           ganhos: 0, // Campo obrigatório
           cartaoId,
+          contaId,
         };
       });
 
