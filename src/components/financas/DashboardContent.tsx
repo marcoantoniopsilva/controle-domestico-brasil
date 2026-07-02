@@ -21,6 +21,7 @@ interface DashboardContentProps {
   totalInvestimentos?: number;
   saldo: number;
   orcamentoTotal: number;
+  orcamentoReceitas?: number;
   isLoading: boolean;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
   updateKey?: number;
