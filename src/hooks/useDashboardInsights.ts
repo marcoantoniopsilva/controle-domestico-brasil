@@ -11,6 +11,7 @@ export interface DashboardInsight {
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const DAILY_AUTO_KEY = "insights-last-auto-date";
 
 interface CachedInsights {
   insights: DashboardInsight[];
@@ -93,6 +94,7 @@ export function useDashboardInsights(
         setInsights(result);
         try {
           localStorage.setItem(cacheKey, JSON.stringify({ insights: result, timestamp: Date.now() }));
+          localStorage.setItem(DAILY_AUTO_KEY, new Date().toISOString().slice(0, 10));
         } catch {}
       } catch (e: any) {
         console.error("[useDashboardInsights] erro:", e);
@@ -105,7 +107,25 @@ export function useDashboardInsights(
   );
 
   useEffect(() => {
-    fetchInsights(false);
+    // Mostrar cache do ciclo atual sem chamar a API
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const cached: CachedInsights = JSON.parse(raw);
+        setInsights(cached.insights);
+      } else {
+        setInsights([]);
+      }
+    } catch {}
+
+    // Auto-fetch apenas uma vez por dia (no primeiro carregamento do dia)
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const lastAuto = localStorage.getItem(DAILY_AUTO_KEY);
+      if (lastAuto !== today) {
+        fetchInsights(true);
+      }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheKey]);
 
