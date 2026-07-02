@@ -65,7 +65,13 @@ const DashboardMain: React.FC<DashboardMainProps> = ({
       return acc + (cat.orcamento || 0);
     }, 0) : 0;
 
+  // Calcular orçamento de receitas para exibir % realizado no card de receitas
+  const orcamentoReceitas = categorias ? categorias
+    .filter(cat => cat.tipo === "receita")
+    .reduce((acc, cat) => acc + (cat.orcamento || 0), 0) : 0;
+
   console.log(`[DashboardMain] ORÇAMENTO TOTAL CALCULADO: R$ ${orcamentoTotal}`);
+  console.log(`[DashboardMain] ORÇAMENTO DE RECEITAS: R$ ${orcamentoReceitas}`);
 
   // Log for debugging
   useEffect(() => {
