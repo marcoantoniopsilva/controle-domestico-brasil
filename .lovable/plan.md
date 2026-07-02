@@ -1,37 +1,113 @@
 ## Objetivo
 
-1. Tornar acessível a tela de **Cartões de Crédito** na versão mobile (hoje só aparece no sidebar desktop).
-2. Permitir definir um **cartão padrão** que é aplicado automaticamente em qualquer novo lançamento (manual ou via extração/importação), com possibilidade de troca pelo usuário no momento do registro.
+Adicionar três frentes que faltam à Plenna e que são padrão em Mobills/Organizze/YNAB/Monarch:
 
-## Mudanças
+1. **Metas & reservas financeiras** — objetivos com valor-alvo, prazo e progresso.
+2. **Contas bancárias & saldo real** — saldo consolidado além do ciclo.
+3. **Lançamentos recorrentes / agendados** — assinaturas, salário, aluguel automáticos.
 
-### 1. Acesso ao Cartões no mobile
-- Em `src/components/layout/NavBar.tsx`, adicionar item **"Cartões"** dentro do `DropdownMenu` de Config (junto com Categorias e Preferências), navegando para `/cartoes`. Assim fica disponível em mobile sem ocupar espaço da topbar.
+Vou entregar em 3 fases (uma por feature) para você validar cada uma antes da próxima. Este plano cobre a **Fase 1 (Metas)** em detalhe, com o desenho conceitual das Fases 2 e 3.
 
-### 2. Cartão padrão por usuário
-- Adicionar coluna `cartao_padrao_id uuid` na tabela `user_preferences` (FK lógica para `cartoes_credito.id`, `ON DELETE SET NULL`) via migration.
-- Estender `useUserPreferences`:
-  - tipo `UserPreferences` ganha `cartaoPadraoId: string | null`
-  - fetch/update lendo e gravando `cartao_padrao_id`
-- Em `src/pages/Preferencias.tsx`, adicionar uma seção **"Cartão padrão para novos lançamentos"** usando o `CardSelector` existente. Opção "Sem cartão" mantém o comportamento atual.
-- Aplicar o padrão como valor inicial nos pontos de entrada de lançamento (somente quando ainda não há `cartao_id` definido):
-  - `src/hooks/useTransacaoForm.ts` (manual): inicializar `cartaoId` com `preferences.cartaoPadraoId` quando `tipo === 'despesa'`.
-  - `src/components/financas/ImportarLancamentosReview.tsx` (extração): default do dropdown "Cartão" passa a ser o cartão padrão em vez de "Sem cartão".
-  - Em ambos os casos, o usuário continua podendo trocar para qualquer outro cartão ou "Sem cartão" antes de salvar.
-- Se o cartão padrão estiver inativo ou tiver sido excluído, tratar como "sem padrão" (fallback silencioso).
+---
 
-### 3. Pontos que NÃO mudam
-- Lançamentos via WhatsApp / edge functions não recebem default automático nesta entrega (escopo restrito a manual + extração, conforme pedido). Posso incluir se quiser depois.
-- Estrutura de `lancamentos.cartao_id` permanece igual.
+## Fase 1 — Metas & reservas financeiras (entrega agora)
 
-## Detalhes técnicos
+### Experiência do usuário
 
-Migration:
+- Nova página **/metas** no menu mobile e sidebar desktop.
+- Card por meta com: nome, ícone/emoji, valor-alvo, prazo, valor acumulado, barra de progresso, aporte mensal sugerido (calculado: `(alvo − acumulado) / meses restantes`) e status (Em dia / Atrasada / Concluída).
+- Botão "Aportar" em cada meta → registra um aporte manual (data + valor + observação).
+- Botão "Nova meta" → formulário: nome, tipo (Reserva de emergência, Viagem, Compra, Investimento, Outro), valor-alvo, prazo (data), valor inicial opcional, cor.
+- Widget compacto no Dashboard mostrando 3 metas principais com progresso.
+- Ao concluir 100%: badge "Concluída" + toast comemorativo.
+
+### Modelo de dados
+
+Duas tabelas novas:
+
+- `metas_financeiras` — nome, tipo, valor_alvo, valor_inicial, prazo (date), cor, icone, concluida (bool), ordem.
+- `metas_aportes` — meta_id, valor, data, observacao. Progresso = `valor_inicial + soma(aportes)`.
+
+Ambas com RLS por `usuario_id` seguindo o padrão de `cartoes_credito`.
+
+### Integração com o resto do app
+
+- Aportes NÃO viram lançamentos de despesa automaticamente (metas são separadas do orçamento do ciclo, como no YNAB). Se o usuário quiser, pode marcar no formulário "Registrar também como investimento" e aí criamos um `lancamento` tipo `investimento` linkado.
+- Insights do dashboard passam a mencionar metas atrasadas quando aplicável.
+
+---
+
+## Fase 2 — Contas bancárias & saldo real (próxima entrega)
+
+**Escopo pretendido** (será detalhado após aprovação da Fase 1):
+
+- Tabela `contas_bancarias` (nome, tipo: corrente/poupança/carteira/dinheiro, saldo_inicial, cor, banco, ativa).
+- Coluna opcional `conta_id` em `lancamentos` — cada lançamento debita/credita uma conta.
+- Página **/contas** com saldo atual de cada conta (`saldo_inicial + Σ receitas − Σ despesas`) e saldo consolidado.
+- Transferências entre contas (novo tipo de lançamento `transferencia`, não entra em receitas/despesas).
+- Lançamentos existentes ficam sem conta (retrocompatível); usuário pode atribuir depois em lote.
+
+---
+
+## Fase 3 — Recorrentes / agendados (última entrega)
+
+**Escopo pretendido:**
+
+- Tabela `lancamentos_recorrentes` (template: descrição, categoria, valor, frequência mensal/semanal/anual, dia do mês, cartão/conta padrão, ativo, próxima_execucao).
+- Cron diário (usa o `pg_cron` que já existe) que materializa os lançamentos do dia em `lancamentos`.
+- Página de gestão: listar, pausar, editar, excluir recorrentes.
+- Alerta no WhatsApp/dashboard N dias antes do vencimento de contas fixas.
+- Migração leve: usuário pode transformar um lançamento existente em recorrente com 1 clique.
+
+---
+
+## Detalhes técnicos (Fase 1)
+
+**Migração:**
+
 ```sql
-ALTER TABLE public.user_preferences
-  ADD COLUMN IF NOT EXISTS cartao_padrao_id uuid NULL
-  REFERENCES public.cartoes_credito(id) ON DELETE SET NULL;
-```
-RLS já existente em `user_preferences` cobre a nova coluna.
+CREATE TABLE public.metas_financeiras (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id uuid NOT NULL,
+  nome text NOT NULL,
+  tipo text NOT NULL DEFAULT 'outro',  -- reserva|viagem|compra|investimento|outro
+  valor_alvo numeric NOT NULL CHECK (valor_alvo > 0),
+  valor_inicial numeric NOT NULL DEFAULT 0,
+  prazo date,
+  cor text DEFAULT '#3b82f6',
+  icone text DEFAULT 'Target',
+  concluida boolean NOT NULL DEFAULT false,
+  ordem int NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
-Em `useTransacaoForm`, o valor inicial vai depender de `preferences.cartaoPadraoId`; quando o usuário muda o tipo para algo diferente de "despesa", o `cartaoId` é zerado como já é hoje.
+CREATE TABLE public.metas_aportes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  meta_id uuid NOT NULL REFERENCES public.metas_financeiras(id) ON DELETE CASCADE,
+  usuario_id uuid NOT NULL,
+  valor numeric NOT NULL CHECK (valor > 0),
+  data date NOT NULL DEFAULT current_date,
+  observacao text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- GRANTs + RLS por usuario_id (padrão do projeto) + trigger updated_at.
+```
+
+**Arquivos front-end novos/alterados:**
+
+- `src/hooks/useMetas.ts` — CRUD + cálculo de progresso.
+- `src/pages/Metas.tsx` — página principal.
+- `src/components/metas/MetaCard.tsx`, `MetaForm.tsx`, `AporteDialog.tsx`.
+- `src/components/financas/dashboard/MetasWidget.tsx` — resumo no dashboard.
+- `src/App.tsx` — rota `/metas`.
+- `src/components/layout/NavBar.tsx` + `AppSidebar.tsx` — item de menu.
+
+---
+
+## O que NÃO entra nesta entrega
+
+- Fase 2 e Fase 3 (planos ficam registrados, implementação depois da sua validação da Fase 1).
+- Alertas proativos, patrimônio líquido, PDF mensal, Open Finance — ficam para uma próxima rodada de priorização.
+- Aportes vindos automaticamente do WhatsApp — pode ser feature futura.

@@ -464,6 +464,92 @@ export type Database = {
           },
         ]
       }
+      metas_aportes: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          meta_id: string
+          observacao: string | null
+          usuario_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          id?: string
+          meta_id: string
+          observacao?: string | null
+          usuario_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          meta_id?: string
+          observacao?: string | null
+          usuario_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_aportes_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas_financeiras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metas_financeiras: {
+        Row: {
+          concluida: boolean
+          cor: string
+          created_at: string
+          icone: string
+          id: string
+          nome: string
+          ordem: number
+          prazo: string | null
+          tipo: string
+          updated_at: string
+          usuario_id: string
+          valor_alvo: number
+          valor_inicial: number
+        }
+        Insert: {
+          concluida?: boolean
+          cor?: string
+          created_at?: string
+          icone?: string
+          id?: string
+          nome: string
+          ordem?: number
+          prazo?: string | null
+          tipo?: string
+          updated_at?: string
+          usuario_id: string
+          valor_alvo: number
+          valor_inicial?: number
+        }
+        Update: {
+          concluida?: boolean
+          cor?: string
+          created_at?: string
+          icone?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          prazo?: string | null
+          tipo?: string
+          updated_at?: string
+          usuario_id?: string
+          valor_alvo?: number
+          valor_inicial?: number
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           address: string

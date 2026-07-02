@@ -59,3 +59,26 @@ export interface CartaoCredito {
   ativo: boolean;
   ordem: number;
 }
+
+export type MetaTipo = "reserva" | "viagem" | "compra" | "investimento" | "outro";
+
+export interface MetaFinanceira {
+  id: string;
+  nome: string;
+  tipo: MetaTipo;
+  valorAlvo: number;
+  valorInicial: number;
+  prazo: string | null; // YYYY-MM-DD
+  cor: string;
+  icone: string;
+  concluida: boolean;
+  ordem: number;
+}
+
+export interface MetaAporte {
+  id: string;
+  metaId: string;
+  valor: number;
+  data: string; // YYYY-MM-DD
+  observacao: string | null;
+}
