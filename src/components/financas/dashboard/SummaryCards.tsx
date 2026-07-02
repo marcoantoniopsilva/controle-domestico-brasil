@@ -9,6 +9,7 @@ interface SummaryCardsProps {
   totalInvestimentos?: number;
   saldo: number;
   orcamentoTotal: number;
+  orcamentoReceitas?: number;
 }
 
 interface MetricCardProps {
@@ -47,13 +48,15 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
   totalInvestimentos = 0,
   saldo,
   orcamentoTotal,
+  orcamentoReceitas = 0,
 }) => {
   const pctOrcado = orcamentoTotal > 0 ? Math.round((totalDespesas / orcamentoTotal) * 100) : 0;
+  const pctReceitas = orcamentoReceitas > 0 ? Math.round((totalReceitas / orcamentoReceitas) * 100) : 0;
 
   return (
     <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
       <MetricCard label="Saldo do ciclo" value={saldo} icon={Wallet} accent={saldo >= 0 ? "primary" : "destructive"} hint="Receitas − Despesas" />
-      <MetricCard label="Receitas" value={totalReceitas} icon={TrendingUp} accent="primary" />
+      <MetricCard label="Receitas" value={totalReceitas} icon={TrendingUp} accent="primary" hint={orcamentoReceitas > 0 ? `${pctReceitas}% de ${formatarMoeda(orcamentoReceitas)} orçado` : undefined} />
       <MetricCard label="Despesas" value={totalDespesas} icon={TrendingDown} accent="destructive" hint={orcamentoTotal > 0 ? `${pctOrcado}% de ${formatarMoeda(orcamentoTotal)} orçado` : undefined} />
       <MetricCard label="Investimentos" value={totalInvestimentos} icon={PiggyBank} accent="secondary" hint="Saldo acumulado" />
     </div>

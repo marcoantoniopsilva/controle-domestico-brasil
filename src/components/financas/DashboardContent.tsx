@@ -21,6 +21,7 @@ interface DashboardContentProps {
   totalInvestimentos?: number;
   saldo: number;
   orcamentoTotal: number;
+  orcamentoReceitas?: number;
   isLoading: boolean;
   onCicloChange: (ciclo: CicloFinanceiro) => void;
   updateKey?: number;
@@ -41,6 +42,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   totalInvestimentos = 0,
   saldo,
   orcamentoTotal,
+  orcamentoReceitas = 0,
   isLoading,
   onCicloChange,
   updateKey,
@@ -64,6 +66,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         totalInvestimentos={totalInvestimentos}
         saldo={saldo}
         orcamentoTotal={orcamentoTotal}
+        orcamentoReceitas={orcamentoReceitas}
       />
 
       <InsightsCard
