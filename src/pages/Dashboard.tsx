@@ -11,6 +11,7 @@ import { APP_VERSION, useVersionCheck } from "@/hooks/useVersionCheck";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { DashboardHeader } from "@/components/financas/DashboardHeader";
+import { MetasWidget } from "@/components/metas/MetasWidget";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -145,6 +146,9 @@ const Dashboard = () => {
           onAddTransacao={handleAdicionarTransacao}
           cicloAtual={cicloAtual}
         />
+        <div className="mt-4">
+          <MetasWidget />
+        </div>
       </div>
       
       <DashboardMain
