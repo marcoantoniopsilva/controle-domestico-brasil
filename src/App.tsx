@@ -15,6 +15,7 @@ import Categorias from "./pages/Categorias";
 import Preferencias from "./pages/Preferencias";
 import Cartoes from "./pages/Cartoes";
 import Metas from "./pages/Metas";
+import Contas from "./pages/Contas";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/categorias" element={<AuthGuard><AppLayout><Categorias /></AppLayout></AuthGuard>} />
           <Route path="/cartoes" element={<AuthGuard><AppLayout><Cartoes /></AppLayout></AuthGuard>} />
           <Route path="/metas" element={<AuthGuard><AppLayout><Metas /></AppLayout></AuthGuard>} />
+          <Route path="/contas" element={<AuthGuard><AppLayout><Contas /></AppLayout></AuthGuard>} />
           <Route path="/preferencias" element={<AuthGuard><AppLayout><Preferencias /></AppLayout></AuthGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
