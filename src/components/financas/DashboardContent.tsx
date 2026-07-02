@@ -66,6 +66,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         totalInvestimentos={totalInvestimentos}
         saldo={saldo}
         orcamentoTotal={orcamentoTotal}
+        orcamentoReceitas={orcamentoReceitas}
       />
 
       <InsightsCard
