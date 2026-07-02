@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
     const cronHeader = req.headers.get("x-cron-secret") || "";
     const token = authHeader.replace("Bearer ", "");
 
-    // Modo cron: chamado pelo pg_cron com CRON_SECRET header ou como request agendado
-    const isCron = cronSecret && cronHeader === cronSecret;
+    // Modo cron: header explícito OU token igual ao anon key (chamada agendada via pg_cron)
+    const isCron = (cronSecret && cronHeader === cronSecret) || token === anonKey;
 
     const admin = createClient(supabaseUrl, serviceKey);
 
