@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,11 @@ const LoginForm = () => {
   const [senha, setSenha] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+
+  // Same-origin relative next parameter only (e.g. /.lovable/oauth/consent?...).
+  const rawNext = params.get("next");
+  const nextPath = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +43,11 @@ const LoginForm = () => {
       }
 
       toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+      if (nextPath) {
+        window.location.href = nextPath;
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast.error("Erro ao fazer login: " + error.message);
     } finally {
