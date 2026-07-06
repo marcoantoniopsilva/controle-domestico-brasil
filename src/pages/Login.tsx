@@ -1,28 +1,35 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LoginForm from "@/components/auth/LoginForm";
 import NavBar from "@/components/layout/NavBar";
 import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Verificar se já existe um usuário logado
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      
       if (data.session) {
-        navigate("/dashboard");
+        const rawNext = params.get("next");
+        const nextPath =
+          rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+        if (nextPath) {
+          window.location.href = nextPath;
+        } else {
+          navigate("/dashboard");
+        }
       }
       
       setIsLoading(false);
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, params]);
   
   if (isLoading) {
     return (
