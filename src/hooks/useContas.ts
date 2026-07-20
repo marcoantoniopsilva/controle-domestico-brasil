@@ -11,6 +11,8 @@ function mapRow(r: any): ContaBancaria {
     tipo: (r.tipo as ContaTipo) || "corrente",
     banco: r.banco ?? null,
     saldoInicial: Number(r.saldo_inicial) || 0,
+    saldoAtual: r.saldo_atual != null ? Number(r.saldo_atual) : null,
+    saldoAtualAjustadoEm: r.saldo_atual_ajustado_em ?? null,
     cor: r.cor || "#3B82F6",
     incluirNoSaldo: !!r.incluir_no_saldo,
     ativo: !!r.ativo,
@@ -56,6 +58,8 @@ export function useContas() {
         tipo: input.tipo,
         banco: input.banco ?? null,
         saldo_inicial: input.saldoInicial,
+        saldo_atual: input.saldoAtual,
+        saldo_atual_ajustado_em: input.saldoAtualAjustadoEm,
         cor: input.cor,
         incluir_no_saldo: input.incluirNoSaldo,
         ativo: input.ativo,
@@ -79,6 +83,8 @@ export function useContas() {
       if (patch.tipo !== undefined) payload.tipo = patch.tipo;
       if (patch.banco !== undefined) payload.banco = patch.banco;
       if (patch.saldoInicial !== undefined) payload.saldo_inicial = patch.saldoInicial;
+      if (patch.saldoAtual !== undefined) payload.saldo_atual = patch.saldoAtual;
+      if (patch.saldoAtualAjustadoEm !== undefined) payload.saldo_atual_ajustado_em = patch.saldoAtualAjustadoEm;
       if (patch.cor !== undefined) payload.cor = patch.cor;
       if (patch.incluirNoSaldo !== undefined) payload.incluir_no_saldo = patch.incluirNoSaldo;
       if (patch.ativo !== undefined) payload.ativo = patch.ativo;

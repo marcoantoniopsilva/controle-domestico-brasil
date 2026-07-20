@@ -34,9 +34,7 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
   const [saving, setSaving] = useState(false);
   const { transacoes } = useTransacoes();
 
-  const movimentos = conta
-    ? calcularSaldoConta(conta, transacoes) - Number(conta.saldoInicial || 0)
-    : 0;
+  const saldoCalculado = conta ? calcularSaldoConta(conta, transacoes) : 0;
 
   useEffect(() => {
     if (open) {
@@ -44,36 +42,34 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
       setTipo(conta?.tipo || "corrente");
       setBanco(conta?.banco || "");
       setSaldoInicial(conta?.saldoInicial != null ? String(conta.saldoInicial) : "0");
-      const saldoAtualCalc = conta
-        ? Number(conta.saldoInicial || 0) + movimentos
-        : 0;
-      setSaldoAtual(String(saldoAtualCalc));
+      setSaldoAtual(String(saldoCalculado));
       setCor(conta?.cor || "#3B82F6");
       setIncluirNoSaldo(conta?.incluirNoSaldo ?? true);
       setAtivo(conta?.ativo ?? true);
       setObservacoes(conta?.observacoes || "");
     }
-  }, [open, conta, movimentos]);
+  }, [open, conta, saldoCalculado]);
 
   const handleSubmit = async () => {
     if (!nome.trim()) return;
     setSaving(true);
     const saldoInicialNum = parseFloat(saldoInicial.replace(",", ".")) || 0;
     const saldoAtualNum = parseFloat(saldoAtual.replace(",", ".")) || 0;
-    // If editing and user changed current balance, adjust initial balance so
-    // that saldoInicial + movimentos = saldoAtual informed by the user.
-    let saldoInicialFinal = saldoInicialNum;
-    if (conta) {
-      const saldoAtualCalc = Number(conta.saldoInicial || 0) + movimentos;
-      if (Math.abs(saldoAtualNum - saldoAtualCalc) > 0.001) {
-        saldoInicialFinal = saldoAtualNum - movimentos;
-      }
+    // Só persistimos "saldo atual" quando o usuário efetivamente altera o valor
+    // (comparado ao saldo calculado atualmente). O saldo inicial é preservado.
+    let saldoAtualFinal: number | null = conta?.saldoAtual ?? null;
+    let ajustadoEmFinal: string | null = conta?.saldoAtualAjustadoEm ?? null;
+    if (conta && Math.abs(saldoAtualNum - saldoCalculado) > 0.001) {
+      saldoAtualFinal = saldoAtualNum;
+      ajustadoEmFinal = new Date().toISOString();
     }
     const ok = await onSave({
       nome: nome.trim(),
       tipo,
       banco: banco || null,
-      saldoInicial: saldoInicialFinal,
+      saldoInicial: saldoInicialNum,
+      saldoAtual: saldoAtualFinal,
+      saldoAtualAjustadoEm: ajustadoEmFinal,
       cor,
       incluirNoSaldo,
       ativo,
@@ -128,7 +124,7 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
               onChange={(e) => setSaldoInicial(e.target.value)}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Saldo atual desta conta no momento do cadastro. Os lançamentos seguintes vão atualizar automaticamente.
+              Saldo da conta no momento do cadastro. Fica fixo — não muda quando você atualiza o saldo atual.
             </p>
           </div>
           {conta && (
@@ -141,7 +137,7 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
                 onChange={(e) => setSaldoAtual(e.target.value)}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Informe o saldo real da conta hoje. O saldo inicial será ajustado automaticamente para refletir esse valor, mantendo os lançamentos existentes.
+                Saldo real da conta hoje. Ao salvar, novos lançamentos passam a somar/subtrair a partir deste valor. O saldo inicial não é alterado.
               </p>
             </div>
           )}
