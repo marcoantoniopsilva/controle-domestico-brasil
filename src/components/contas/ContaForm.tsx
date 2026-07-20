@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { ContaBancaria, ContaTipo } from "@/types";
 import { TIPOS_CONTA } from "@/hooks/useContas";
 import { BANCOS } from "@/utils/cardIcons";
+import { useTransacoes } from "@/hooks/useTransacoes";
+import { calcularSaldoConta } from "@/utils/saldoContas";
 
 const CORES = ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981", "#EF4444", "#6366F1", "#14B8A6", "#F97316", "#0EA5E9"];
 
@@ -24,11 +26,17 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
   const [tipo, setTipo] = useState<ContaTipo>("corrente");
   const [banco, setBanco] = useState<string>("");
   const [saldoInicial, setSaldoInicial] = useState<string>("0");
+  const [saldoAtual, setSaldoAtual] = useState<string>("0");
   const [cor, setCor] = useState("#3B82F6");
   const [incluirNoSaldo, setIncluirNoSaldo] = useState(true);
   const [ativo, setAtivo] = useState(true);
   const [observacoes, setObservacoes] = useState("");
   const [saving, setSaving] = useState(false);
+  const { transacoes } = useTransacoes();
+
+  const movimentos = conta
+    ? calcularSaldoConta(conta, transacoes) - Number(conta.saldoInicial || 0)
+    : 0;
 
   useEffect(() => {
     if (open) {
@@ -36,21 +44,36 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
       setTipo(conta?.tipo || "corrente");
       setBanco(conta?.banco || "");
       setSaldoInicial(conta?.saldoInicial != null ? String(conta.saldoInicial) : "0");
+      const saldoAtualCalc = conta
+        ? Number(conta.saldoInicial || 0) + movimentos
+        : 0;
+      setSaldoAtual(String(saldoAtualCalc));
       setCor(conta?.cor || "#3B82F6");
       setIncluirNoSaldo(conta?.incluirNoSaldo ?? true);
       setAtivo(conta?.ativo ?? true);
       setObservacoes(conta?.observacoes || "");
     }
-  }, [open, conta]);
+  }, [open, conta, movimentos]);
 
   const handleSubmit = async () => {
     if (!nome.trim()) return;
     setSaving(true);
+    const saldoInicialNum = parseFloat(saldoInicial.replace(",", ".")) || 0;
+    const saldoAtualNum = parseFloat(saldoAtual.replace(",", ".")) || 0;
+    // If editing and user changed current balance, adjust initial balance so
+    // that saldoInicial + movimentos = saldoAtual informed by the user.
+    let saldoInicialFinal = saldoInicialNum;
+    if (conta) {
+      const saldoAtualCalc = Number(conta.saldoInicial || 0) + movimentos;
+      if (Math.abs(saldoAtualNum - saldoAtualCalc) > 0.001) {
+        saldoInicialFinal = saldoAtualNum - movimentos;
+      }
+    }
     const ok = await onSave({
       nome: nome.trim(),
       tipo,
       banco: banco || null,
-      saldoInicial: parseFloat(saldoInicial.replace(",", ".")) || 0,
+      saldoInicial: saldoInicialFinal,
       cor,
       incluirNoSaldo,
       ativo,
@@ -108,6 +131,20 @@ export function ContaForm({ open, onOpenChange, conta, onSave }: Props) {
               Saldo atual desta conta no momento do cadastro. Os lançamentos seguintes vão atualizar automaticamente.
             </p>
           </div>
+          {conta && (
+            <div>
+              <Label>Saldo atual (R$)</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={saldoAtual}
+                onChange={(e) => setSaldoAtual(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Informe o saldo real da conta hoje. O saldo inicial será ajustado automaticamente para refletir esse valor, mantendo os lançamentos existentes.
+              </p>
+            </div>
+          )}
           <div>
             <Label>Cor</Label>
             <div className="flex flex-wrap gap-2 mt-1">
