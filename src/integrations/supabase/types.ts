@@ -340,6 +340,8 @@ export type Database = {
           incluir_no_saldo: boolean
           nome: string
           observacoes: string | null
+          saldo_atual: number | null
+          saldo_atual_ajustado_em: string | null
           saldo_inicial: number
           tipo: string
           updated_at: string
@@ -354,6 +356,8 @@ export type Database = {
           incluir_no_saldo?: boolean
           nome: string
           observacoes?: string | null
+          saldo_atual?: number | null
+          saldo_atual_ajustado_em?: string | null
           saldo_inicial?: number
           tipo?: string
           updated_at?: string
@@ -368,6 +372,8 @@ export type Database = {
           incluir_no_saldo?: boolean
           nome?: string
           observacoes?: string | null
+          saldo_atual?: number | null
+          saldo_atual_ajustado_em?: string | null
           saldo_inicial?: number
           tipo?: string
           updated_at?: string
