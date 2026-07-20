@@ -92,6 +92,8 @@ export interface ContaBancaria {
   tipo: ContaTipo;
   banco: string | null;
   saldoInicial: number;
+  saldoAtual: number | null;
+  saldoAtualAjustadoEm: string | null;
   cor: string;
   incluirNoSaldo: boolean;
   ativo: boolean;
