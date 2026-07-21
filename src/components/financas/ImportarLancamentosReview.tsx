@@ -122,7 +122,22 @@ export function ImportarLancamentosReview({
   const [dataGlobal, setDataGlobal] = useState<string>("");
   const aplicarDataGlobal = () => {
     if (!dataGlobal.trim()) return;
-    const updated = transacoes.map((t) => ({ ...t, data: dataGlobal.trim() }));
+    const raw = dataGlobal.trim();
+    const match = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const updated = transacoes.map((t) => {
+      if (!match) return { ...t, data: raw };
+      const dia = parseInt(match[1], 10);
+      const mes = parseInt(match[2], 10);
+      const ano = parseInt(match[3], 10);
+      const offset = Math.max(0, (t.parcelaAtual || 1) - 1);
+      const base = new Date(ano, mes - 1 + offset, 1);
+      const ultimoDia = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      const diaFinal = Math.min(dia, ultimoDia);
+      const dd = String(diaFinal).padStart(2, "0");
+      const mm = String(base.getMonth() + 1).padStart(2, "0");
+      const yyyy = String(base.getFullYear());
+      return { ...t, data: `${dd}/${mm}/${yyyy}` };
+    });
     onTransacoesChange(updated);
   };
 
