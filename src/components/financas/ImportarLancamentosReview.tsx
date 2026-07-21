@@ -119,6 +119,13 @@ export function ImportarLancamentosReview({
     onTransacoesChange(updated);
   };
 
+  const [dataGlobal, setDataGlobal] = useState<string>("");
+  const aplicarDataGlobal = () => {
+    if (!dataGlobal.trim()) return;
+    const updated = transacoes.map((t) => ({ ...t, data: dataGlobal.trim() }));
+    onTransacoesChange(updated);
+  };
+
   const handleDescricaoChange = (index: number, descricao: string) => {
     const updated = [...transacoes];
     updated[index].descricao = descricao;
@@ -167,6 +174,25 @@ export function ImportarLancamentosReview({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Label className="text-sm shrink-0">Data p/ todos:</Label>
+            <Input
+              value={dataGlobal}
+              onChange={(e) => setDataGlobal(e.target.value)}
+              placeholder="DD/MM/AAAA"
+              className="h-9 w-full sm:w-32 text-sm"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={aplicarDataGlobal}
+              disabled={!dataGlobal.trim()}
+            >
+              Aplicar
+            </Button>
           </div>
 
           {cartoesAtivos.length > 0 && (
