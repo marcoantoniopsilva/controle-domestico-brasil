@@ -129,7 +129,7 @@ const InvestmentsList: React.FC<InvestmentsListProps> = ({
 
       {/* Dialog para edição de investimento */}
       <Dialog open={dialogAberta} onOpenChange={setDialogAberta}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Investimento</DialogTitle>
           </DialogHeader>
