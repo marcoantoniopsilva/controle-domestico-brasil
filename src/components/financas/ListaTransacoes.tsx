@@ -225,7 +225,7 @@ const ListaTransacoes: React.FC<ListaTransacoesProps> = ({ transacoes, onExcluir
 
       {/* Dialog para edição de transação */}
       <Dialog open={dialogAberta} onOpenChange={setDialogAberta}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Transação</DialogTitle>
           </DialogHeader>
