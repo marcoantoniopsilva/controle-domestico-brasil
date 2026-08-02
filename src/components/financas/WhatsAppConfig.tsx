@@ -11,6 +11,7 @@ import { MessageSquare, Bell, Clock, Trash2, Save, Plus, CheckCircle } from "luc
 import { useWhatsAppConfig, MAX_PHONES, WhatsAppPreferences } from "@/hooks/useWhatsAppConfig";
 import { useCategorias } from "@/hooks/useCategorias";
 import { Checkbox } from "@/components/ui/checkbox";
+import WhatsAppRelatorioSemanal from "./WhatsAppRelatorioSemanal";
 
 const formatPhone = (raw: string) => {
   const c = raw.replace(/\D/g, "");
@@ -48,13 +49,7 @@ const WhatsAppConfig = () => {
     setDraft(preferences);
   }, [preferences]);
 
-  const hasPrefChanges =
-    draft.is_active !== preferences.is_active ||
-    draft.report_frequency !== preferences.report_frequency ||
-    draft.report_hour !== preferences.report_hour ||
-    draft.report_type !== preferences.report_type ||
-    draft.selected_categories.length !== preferences.selected_categories.length ||
-    draft.selected_categories.some((c) => !preferences.selected_categories.includes(c));
+  const hasPrefChanges = JSON.stringify(draft) !== JSON.stringify(preferences);
 
   const toggleCategory = (nome: string) => {
     setDraft((prev) => {
@@ -248,6 +243,8 @@ const WhatsAppConfig = () => {
               </p>
             </div>
           )}
+
+          <WhatsAppRelatorioSemanal draft={draft} setDraft={setDraft} />
 
           <Button
             onClick={() => savePreferences(draft)}
