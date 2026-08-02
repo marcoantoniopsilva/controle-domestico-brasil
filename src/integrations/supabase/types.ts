@@ -1131,6 +1131,14 @@ export type Database = {
           selected_categories: string[]
           updated_at: string
           usuario_id: string
+          weekly_month_categorias: string[]
+          weekly_report_day: number
+          weekly_report_enabled: boolean
+          weekly_report_hour: number
+          weekly_scope_categorias: string[]
+          weekly_scope_nome: string | null
+          weekly_scope_tipo: string
+          weekly_week_start: number
         }
         Insert: {
           created_at?: string
@@ -1144,6 +1152,14 @@ export type Database = {
           selected_categories?: string[]
           updated_at?: string
           usuario_id: string
+          weekly_month_categorias?: string[]
+          weekly_report_day?: number
+          weekly_report_enabled?: boolean
+          weekly_report_hour?: number
+          weekly_scope_categorias?: string[]
+          weekly_scope_nome?: string | null
+          weekly_scope_tipo?: string
+          weekly_week_start?: number
         }
         Update: {
           created_at?: string
@@ -1157,6 +1173,14 @@ export type Database = {
           selected_categories?: string[]
           updated_at?: string
           usuario_id?: string
+          weekly_month_categorias?: string[]
+          weekly_report_day?: number
+          weekly_report_enabled?: boolean
+          weekly_report_hour?: number
+          weekly_scope_categorias?: string[]
+          weekly_scope_nome?: string | null
+          weekly_scope_tipo?: string
+          weekly_week_start?: number
         }
         Relationships: []
       }
