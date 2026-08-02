@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.dashboard-insights]
 verify_jwt = false
+
+[functions.whatsapp-weekly-report]
+verify_jwt = false
