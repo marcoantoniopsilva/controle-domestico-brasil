@@ -15,6 +15,14 @@ export interface WhatsAppPreferences {
   report_hour: number;
   report_type: "completo" | "despesas" | "receitas" | "categorias";
   selected_categories: string[];
+  weekly_report_enabled: boolean;
+  weekly_report_day: number;
+  weekly_report_hour: number;
+  weekly_week_start: number;
+  weekly_scope_tipo: "grupo" | "categoria";
+  weekly_scope_nome: string;
+  weekly_scope_categorias: string[];
+  weekly_month_categorias: string[];
 }
 
 const DEFAULT_PREFS: WhatsAppPreferences = {
@@ -23,6 +31,14 @@ const DEFAULT_PREFS: WhatsAppPreferences = {
   report_hour: 20,
   report_type: "completo",
   selected_categories: [],
+  weekly_report_enabled: false,
+  weekly_report_day: 0,
+  weekly_report_hour: 9,
+  weekly_week_start: 0,
+  weekly_scope_tipo: "grupo",
+  weekly_scope_nome: "",
+  weekly_scope_categorias: [],
+  weekly_month_categorias: [],
 };
 
 const phoneRegex = /^55\d{10,11}$/;
@@ -65,6 +81,14 @@ export function useWhatsAppConfig() {
           report_hour: first.report_hour,
           report_type: (first.report_type ?? "completo"),
           selected_categories: (first.selected_categories ?? []),
+          weekly_report_enabled: first.weekly_report_enabled ?? false,
+          weekly_report_day: first.weekly_report_day ?? 0,
+          weekly_report_hour: first.weekly_report_hour ?? 9,
+          weekly_week_start: first.weekly_week_start ?? 0,
+          weekly_scope_tipo: (first.weekly_scope_tipo ?? "grupo"),
+          weekly_scope_nome: first.weekly_scope_nome ?? "",
+          weekly_scope_categorias: first.weekly_scope_categorias ?? [],
+          weekly_month_categorias: first.weekly_month_categorias ?? [],
         });
       } else {
         setPhones([]);
@@ -97,8 +121,16 @@ export function useWhatsAppConfig() {
           report_hour: prefs.report_hour,
           report_type: prefs.report_type,
           selected_categories: prefs.selected_categories,
+          weekly_report_enabled: prefs.weekly_report_enabled,
+          weekly_report_day: prefs.weekly_report_day,
+          weekly_report_hour: prefs.weekly_report_hour,
+          weekly_week_start: prefs.weekly_week_start,
+          weekly_scope_tipo: prefs.weekly_scope_tipo,
+          weekly_scope_nome: prefs.weekly_scope_nome,
+          weekly_scope_categorias: prefs.weekly_scope_categorias,
+          weekly_month_categorias: prefs.weekly_month_categorias,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .in("id", phones.map((p) => p.id));
 
       if (error) throw error;
@@ -143,7 +175,15 @@ export function useWhatsAppConfig() {
         report_type: preferences.report_type,
         selected_categories: preferences.selected_categories,
         is_verified: true,
-      });
+        weekly_report_enabled: preferences.weekly_report_enabled,
+        weekly_report_day: preferences.weekly_report_day,
+        weekly_report_hour: preferences.weekly_report_hour,
+        weekly_week_start: preferences.weekly_week_start,
+        weekly_scope_tipo: preferences.weekly_scope_tipo,
+        weekly_scope_nome: preferences.weekly_scope_nome,
+        weekly_scope_categorias: preferences.weekly_scope_categorias,
+        weekly_month_categorias: preferences.weekly_month_categorias,
+      } as any);
       if (error) throw error;
 
       toast({ title: "Telefone adicionado!", description: cleanPhone });
