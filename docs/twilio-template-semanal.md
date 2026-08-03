@@ -9,39 +9,37 @@ Crie em Twilio Console > Messaging > Content Template Builder > **Create new** >
 
 ## Body (copiar exatamente, com as quebras de linha)
 
-```
-📅 *Resumo semanal* — {{1}}
+> **Importante:** cada variável deve estar no meio de uma linha (nunca no início ou no fim do template, nem no início ou fim de uma linha).
 
-🎯 *{{2}}*
+```
+📅 *Resumo semanal do período {{1}}*
+
+🎯 *Categoria: {{2}}*
 Total na semana: *{{3}}*
-Média por dia: {{4}}
+Média por dia: *{{4}}*
 Comparativo: {{5}}
 
 🔎 *Onde foi o dinheiro*
-{{6}}
-{{7}}
-{{8}}
+1) {{6}}
+2) {{7}}
+3) {{8}}
 
-💥 Maior gasto: {{9}}
+💥 *Maior gasto:* {{9}}
 
 ━━━━━━━━━━━━━━
 
 📊 *Saldo do mês por categoria*
 
-{{10}}
-
-{{11}}
-
-{{12}}
-
-{{13}}
-
-{{14}}
+1) {{10}}
+2) {{11}}
+3) {{12}}
+4) {{13}}
+5) {{14}}
 
 ━━━━━━━━━━━━━━
 
-💰 Saldo do ciclo: *{{15}}*
-🗓️ {{16}}
+💰 *Saldo do ciclo: {{15}}*
+🗓️ *Período: {{16}}*
 ```
 
 ## Sample values (preencher no Twilio, variável por variável)
@@ -72,38 +70,34 @@ No formulário de criação do template, o Twilio pede um exemplo para cada vari
 ## Exemplo de como fica a mensagem com os samples acima
 
 ```
-📅 *Resumo semanal* — 27/07 a 02/08
+📅 *Resumo semanal do período 27/07 a 02/08*
 
-🎯 *Alimentação*
+🎯 *Categoria: Alimentação*
 Total na semana: *R$ 743,20*
-Média por dia: R$ 106,17
+Média por dia: *R$ 106,17*
 Comparativo: 🔻 12% abaixo (semana anterior: R$ 845,00)
 
 🔎 *Onde foi o dinheiro*
-🛒 Supermercado: R$ 420,00
-🍽️ Restaurantes: R$ 230,20
-📦 Outros: R$ 93,00
+1) 🛒 Supermercado: R$ 420,00
+2) 🍽️ Restaurantes: R$ 230,20
+3) 📦 Outros: R$ 93,00
 
-💥 Maior gasto: Feira do mês — R$ 312,40
+💥 *Maior gasto:* Feira do mês — R$ 312,40
 
 ━━━━━━━━━━━━━━
 
 📊 *Saldo do mês por categoria*
 
-🛒 Supermercado: R$ 1.240 de R$ 1.500 🟡 83% • restam R$ 260
-
-🍽️ Restaurantes: R$ 980 de R$ 1.200 🟡 82% • restam R$ 220
-
-⛽ Transporte: R$ 450 de R$ 500 🟢 90% • restam R$ 50
-
-💡 Contas: R$ 320 de R$ 300 🔴 107% • estourou R$ 20
-
-🎮 Lazer: R$ 150 de R$ 200 🟢 75% • restam R$ 50
+1) 🛒 Supermercado: R$ 1.240 de R$ 1.500 🟡 83% • restam R$ 260
+2) 🍽️ Restaurantes: R$ 980 de R$ 1.200 🟡 82% • restam R$ 220
+3) ⛽ Transporte: R$ 450 de R$ 500 🟢 90% • restam R$ 50
+4) 💡 Contas: R$ 320 de R$ 300 🔴 107% • estourou R$ 20
+5) 🎮 Lazer: R$ 150 de R$ 200 🟢 75% • restam R$ 50
 
 ━━━━━━━━━━━━━━
 
-💰 Saldo do ciclo: *R$ 1.480,55*
-🗓️ Jul/Ago 2026 • faltam 12 dias
+💰 *Saldo do ciclo: R$ 1.480,55*
+🗓️ *Período: Jul/Ago 2026 • faltam 12 dias*
 ```
 
 ## Depois de aprovar
