@@ -409,5 +409,7 @@ function renderPlainText(v: Record<string, string>): string {
     ``,
     `💰 *Saldo do ciclo: ${v["15"]}*`,
     `🗓️ *Período: ${v["16"]}*`,
+    ``,
+    `Enviado pelo Planner Plenna.`,
   ].join('\n');
 }
