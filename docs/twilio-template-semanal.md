@@ -40,6 +40,8 @@ Comparativo: {{5}}
 
 💰 *Saldo do ciclo: {{15}}*
 🗓️ *Período: {{16}}*
+
+Enviado pelo Planner Plenna.
 ```
 
 ## Sample values (preencher no Twilio, variável por variável)
@@ -98,6 +100,8 @@ Comparativo: 🔻 12% abaixo (semana anterior: R$ 845,00)
 
 💰 *Saldo do ciclo: R$ 1.480,55*
 🗓️ *Período: Jul/Ago 2026 • faltam 12 dias*
+
+Enviado pelo Planner Plenna.
 ```
 
 ## Depois de aprovar
