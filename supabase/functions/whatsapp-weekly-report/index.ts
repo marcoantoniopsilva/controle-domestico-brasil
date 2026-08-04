@@ -336,7 +336,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
     const pct = Math.round(Math.abs(diff / totalSemanaAnterior) * 100);
     const seta = diff > 0 ? '🔺' : diff < 0 ? '🔻' : '➖';
     const palavra = diff > 0 ? 'acima' : diff < 0 ? 'abaixo' : 'igual';
-    comparativo = `${seta} ${pct}% ${palavra} (mesmo período da semana anterior: R$ ${fmtBRL(totalSemanaAnterior)})`;
+    comparativo = `${seta} ${pct}% ${palavra} (semana anterior completa: R$ ${fmtBRL(totalSemanaAnterior)})`;
   }
 
   // Linhas de detalhe da semana (categorias do escopo com gasto)
