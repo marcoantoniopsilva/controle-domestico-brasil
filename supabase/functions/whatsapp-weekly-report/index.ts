@@ -181,14 +181,13 @@ function fmtDateBR(d: Date) {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Última semana COMPLETA anterior a hoje, respeitando o dia inicial (0=domingo).
-function lastCompleteWeek(weekStart: number) {
+// Semana EM ANDAMENTO (do dia inicial escolhido até hoje), respeitando o dia inicial (0=domingo).
+function currentWeek(weekStart: number) {
   const hoje = startOfDay(brasiliaNow());
   const diff = (hoje.getDay() - weekStart + 7) % 7;
-  const inicioSemanaAtual = addDays(hoje, -diff);
-  const inicio = addDays(inicioSemanaAtual, -7);
+  const inicio = addDays(hoje, -diff);
   const fim = addDays(inicio, 6);
-  return { inicio, fim };
+  return { inicio, fim, hoje, diasDecorridos: diff + 1 };
 }
 
 function getCurrentCycle(cycleStartDay = 25) {
