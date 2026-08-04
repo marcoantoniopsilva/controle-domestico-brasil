@@ -250,7 +250,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
   const semanaFimParcial = semana.hoje; // só até hoje (semana em andamento)
   const anterior = {
     inicio: addDays(semana.inicio, -7),
-    fim: addDays(semana.inicio, -7 + (semana.diasDecorridos - 1)),
+    fim: addDays(semana.inicio, -1), // semana anterior completa
   };
   const ciclo = getCurrentCycle(cycleStartDay);
 
