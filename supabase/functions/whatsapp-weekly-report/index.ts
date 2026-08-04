@@ -246,8 +246,12 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
     .maybeSingle();
   const cycleStartDay = prefs?.cycle_start_day ?? 25;
 
-  const semana = lastCompleteWeek(user.weekly_week_start ?? 0);
-  const anterior = { inicio: addDays(semana.inicio, -7), fim: addDays(semana.fim, -7) };
+  const semana = currentWeek(user.weekly_week_start ?? 0);
+  const semanaFimParcial = semana.hoje; // só até hoje (semana em andamento)
+  const anterior = {
+    inicio: addDays(semana.inicio, -7),
+    fim: addDays(semana.inicio, -7 + (semana.diasDecorridos - 1)),
+  };
   const ciclo = getCurrentCycle(cycleStartDay);
 
   const escopo = (user.weekly_scope_categorias || []).filter(Boolean);
@@ -255,7 +259,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
 
   // Lançamentos das duas semanas + do ciclo
   const menorData = anterior.inicio < ciclo.inicio ? anterior.inicio : ciclo.inicio;
-  const maiorData = semana.fim > ciclo.fim ? semana.fim : ciclo.fim;
+  const maiorData = semanaFimParcial > ciclo.fim ? semanaFimParcial : ciclo.fim;
 
   const { data: lancamentos } = await supabase
     .from('lancamentos')
@@ -287,7 +291,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
     const valor = Math.abs(Number(t.valor));
 
     if (t.tipo === 'despesa' && escopo.includes(t.categoria)) {
-      if (dentro(d, semana.inicio, semana.fim)) {
+      if (dentro(d, semana.inicio, semanaFimParcial)) {
         totalSemana += valor;
         porCategoriaSemana[t.categoria] = (porCategoriaSemana[t.categoria] || 0) + valor;
         topLancamentos.push({ desc: t.descricao?.trim() || t.categoria, valor });
@@ -323,7 +327,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
   }
 
   // Variações
-  const media = totalSemana / 7;
+  const media = totalSemana / Math.max(1, semana.diasDecorridos);
   let comparativo: string;
   if (totalSemanaAnterior <= 0) {
     comparativo = totalSemana > 0 ? 'sem base de comparação na semana anterior' : 'sem gastos nas duas semanas';
@@ -332,7 +336,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
     const pct = Math.round(Math.abs(diff / totalSemanaAnterior) * 100);
     const seta = diff > 0 ? '🔺' : diff < 0 ? '🔻' : '➖';
     const palavra = diff > 0 ? 'acima' : diff < 0 ? 'abaixo' : 'igual';
-    comparativo = `${seta} ${pct}% ${palavra} (semana anterior: R$ ${fmtBRL(totalSemanaAnterior)})`;
+    comparativo = `${seta} ${pct}% ${palavra} (mesmo período da semana anterior: R$ ${fmtBRL(totalSemanaAnterior)})`;
   }
 
   // Linhas de detalhe da semana (categorias do escopo com gasto)
@@ -367,7 +371,7 @@ async function buildWeeklyVariables(supabase: any, user: WeeklyUser): Promise<Re
   const diasRestantes = Math.max(0, Math.ceil((ciclo.fim.getTime() - hoje.getTime()) / 86400000));
 
   return {
-    "1": `${fmtDateBR(semana.inicio)} a ${fmtDateBR(semana.fim)}`,
+    "1": `${fmtDateBR(semana.inicio)} a ${fmtDateBR(semanaFimParcial)} (semana em andamento)`,
     "2": escopoNome,
     "3": `R$ ${fmtBRL(totalSemana)}`,
     "4": `R$ ${fmtBRL(media)}`,
