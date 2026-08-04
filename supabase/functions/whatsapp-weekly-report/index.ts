@@ -10,6 +10,7 @@ interface WeeklyUser {
   phone_number: string;
   weekly_report_enabled: boolean;
   weekly_report_day: number;
+  weekly_report_days: number[] | null;
   weekly_report_hour: number;
   weekly_week_start: number;
   weekly_scope_tipo: string;
@@ -21,7 +22,7 @@ interface WeeklyUser {
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
 
 const SELECT_COLS =
-  'usuario_id, phone_number, weekly_report_enabled, weekly_report_day, weekly_report_hour, weekly_week_start, weekly_scope_tipo, weekly_scope_nome, weekly_scope_categorias, weekly_month_categorias';
+  'usuario_id, phone_number, weekly_report_enabled, weekly_report_day, weekly_report_days, weekly_report_hour, weekly_week_start, weekly_scope_tipo, weekly_scope_nome, weekly_scope_categorias, weekly_month_categorias';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -75,13 +76,21 @@ Deno.serve(async (req) => {
       .eq('weekly_report_enabled', true);
 
     if (!forceTest) {
-      query = query.eq('weekly_report_hour', brasiliaHour).eq('weekly_report_day', dayOfWeek);
+      query = query.eq('weekly_report_hour', brasiliaHour);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
     let users = (data || []) as WeeklyUser[];
+    if (!forceTest) {
+      users = users.filter((u) => {
+        const dias = (u.weekly_report_days && u.weekly_report_days.length > 0)
+          ? u.weekly_report_days
+          : [u.weekly_report_day];
+        return dias.includes(dayOfWeek);
+      });
+    }
     if (phoneFilter) users = users.filter((u) => u.phone_number === phoneFilter);
 
     console.log(`[WeeklyReport] ${users.length} usuários (hora BR ${brasiliaHour}h, dia ${dayOfWeek})`);
