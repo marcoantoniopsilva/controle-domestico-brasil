@@ -1133,6 +1133,7 @@ export type Database = {
           usuario_id: string
           weekly_month_categorias: string[]
           weekly_report_day: number
+          weekly_report_days: number[]
           weekly_report_enabled: boolean
           weekly_report_hour: number
           weekly_scope_categorias: string[]
@@ -1154,6 +1155,7 @@ export type Database = {
           usuario_id: string
           weekly_month_categorias?: string[]
           weekly_report_day?: number
+          weekly_report_days?: number[]
           weekly_report_enabled?: boolean
           weekly_report_hour?: number
           weekly_scope_categorias?: string[]
@@ -1175,6 +1177,7 @@ export type Database = {
           usuario_id?: string
           weekly_month_categorias?: string[]
           weekly_report_day?: number
+          weekly_report_days?: number[]
           weekly_report_enabled?: boolean
           weekly_report_hour?: number
           weekly_scope_categorias?: string[]

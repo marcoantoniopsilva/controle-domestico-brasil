@@ -17,6 +17,7 @@ export interface WhatsAppPreferences {
   selected_categories: string[];
   weekly_report_enabled: boolean;
   weekly_report_day: number;
+  weekly_report_days: number[];
   weekly_report_hour: number;
   weekly_week_start: number;
   weekly_scope_tipo: "grupo" | "categoria";
@@ -33,6 +34,7 @@ const DEFAULT_PREFS: WhatsAppPreferences = {
   selected_categories: [],
   weekly_report_enabled: false,
   weekly_report_day: 0,
+  weekly_report_days: [0],
   weekly_report_hour: 9,
   weekly_week_start: 0,
   weekly_scope_tipo: "grupo",
@@ -83,6 +85,9 @@ export function useWhatsAppConfig() {
           selected_categories: (first.selected_categories ?? []),
           weekly_report_enabled: first.weekly_report_enabled ?? false,
           weekly_report_day: first.weekly_report_day ?? 0,
+          weekly_report_days: (first.weekly_report_days && first.weekly_report_days.length > 0)
+            ? first.weekly_report_days
+            : [first.weekly_report_day ?? 0],
           weekly_report_hour: first.weekly_report_hour ?? 9,
           weekly_week_start: first.weekly_week_start ?? 0,
           weekly_scope_tipo: (first.weekly_scope_tipo ?? "grupo"),
@@ -123,6 +128,7 @@ export function useWhatsAppConfig() {
           selected_categories: prefs.selected_categories,
           weekly_report_enabled: prefs.weekly_report_enabled,
           weekly_report_day: prefs.weekly_report_day,
+          weekly_report_days: prefs.weekly_report_days,
           weekly_report_hour: prefs.weekly_report_hour,
           weekly_week_start: prefs.weekly_week_start,
           weekly_scope_tipo: prefs.weekly_scope_tipo,
@@ -177,6 +183,7 @@ export function useWhatsAppConfig() {
         is_verified: true,
         weekly_report_enabled: preferences.weekly_report_enabled,
         weekly_report_day: preferences.weekly_report_day,
+        weekly_report_days: preferences.weekly_report_days,
         weekly_report_hour: preferences.weekly_report_hour,
         weekly_week_start: preferences.weekly_week_start,
         weekly_scope_tipo: preferences.weekly_scope_tipo,

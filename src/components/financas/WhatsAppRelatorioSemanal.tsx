@@ -45,6 +45,17 @@ const WhatsAppRelatorioSemanal = ({ draft, setDraft }: Props) => {
     }
   };
 
+  const toggleDia = (dia: number) => {
+    setDraft((prev) => {
+      const atuais = prev.weekly_report_days ?? [];
+      const novos = atuais.includes(dia)
+        ? atuais.filter((d) => d !== dia)
+        : [...atuais, dia].sort((a, b) => a - b);
+      if (novos.length === 0) return prev;
+      return { ...prev, weekly_report_days: novos, weekly_report_day: novos[0] };
+    });
+  };
+
   const toggleMonthCategory = (nome: string) => {
     setDraft((prev) => {
       if (prev.weekly_month_categorias.includes(nome)) {
@@ -75,22 +86,33 @@ const WhatsAppRelatorioSemanal = ({ draft, setDraft }: Props) => {
 
       {draft.weekly_report_enabled && (
         <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Enviar toda</Label>
-              <Select
-                value={String(draft.weekly_report_day)}
-                onValueChange={(v) => setDraft((d) => ({ ...d, weekly_report_day: parseInt(v) }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {DIAS.map((dia, i) => (
-                    <SelectItem key={i} value={String(i)}>{dia}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label>Enviar nos dias</Label>
+            <div className="flex flex-wrap gap-2">
+              {DIAS.map((dia, i) => {
+                const ativo = (draft.weekly_report_days ?? []).includes(i);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => toggleDia(i)}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      ativo
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {dia.slice(0, 3)}
+                  </button>
+                );
+              })}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Selecione um ou mais dias. Pelo menos um dia precisa ficar ativo.
+            </p>
+          </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Horário</Label>
               <Select
