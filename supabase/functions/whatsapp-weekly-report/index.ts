@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     let query = supabase
       .from('whatsapp_finance_users')
       .select(SELECT_COLS)
-      .eq('is_active', true)
+      .eq('weekly_report_enabled', true);
       .eq('weekly_report_enabled', true);
 
     if (!forceTest) {
