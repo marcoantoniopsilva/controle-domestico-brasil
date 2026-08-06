@@ -157,9 +157,11 @@ const WhatsAppConfig = () => {
             <div className="space-y-0.5">
               <Label className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
-                Notificações Ativas
+                Relatório diário ativo
               </Label>
-              <p className="text-sm text-muted-foreground">Receber relatórios automáticos via WhatsApp</p>
+              <p className="text-sm text-muted-foreground">
+                Controla apenas o relatório diário. O relatório semanal é ativado separadamente abaixo.
+              </p>
             </div>
             <Switch
               checked={draft.is_active}
