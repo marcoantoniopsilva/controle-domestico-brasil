@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
       .from('whatsapp_finance_users')
       .select(SELECT_COLS)
       .eq('weekly_report_enabled', true);
-      .eq('weekly_report_enabled', true);
 
     if (!forceTest) {
       query = query.eq('weekly_report_hour', brasiliaHour);
